@@ -1,0 +1,76 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  venue       String
+  date        DateTime
+  capacity    Int
+  isOpen      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tickets     Ticket[]
+}
+
+model Ticket {
+  id              String         @id @default(cuid())
+  token           String         @unique @default(cuid())
+  eventId         String
+  event           Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  attendeeName    String?
+  attendeeEmail   String?
+  distributorName String?
+  category        TicketCategory @default(GENERAL)
+  status          TicketStatus   @default(UNUSED)
+  source          TicketSource   @default(ADMIN)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  checkIn         CheckIn?
+}
+
+enum TicketCategory {
+  GENERAL
+  VIP
+}
+
+enum TicketStatus {
+  UNUSED
+  USED
+  CANCELLED
+}
+
+enum TicketSource {
+  ADMIN
+  SELF_REGISTERED
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  ticketId  String   @unique
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  scannedAt DateTime @default(now())
+}
