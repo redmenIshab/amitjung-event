@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
@@ -25,12 +26,38 @@ export const authOptions: NextAuthOptions = {
         return { id: user.id, email: user.email, name: user.name, role: user.role }
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'google') {
+        const participant = await prisma.participant.upsert({
+          where: { email: profile?.email ?? '' },
+          update: { name: profile?.name ?? '', image: profile?.picture ?? '' },
+          create: {
+            googleId: account.providerAccountId,
+            email: profile?.email ?? '',
+            name: profile?.name ?? '',
+            image: profile?.picture ?? '',
+          },
+        })
+        user.id = participant.id
+        return true
+      }
+      return true
+    },
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id
-        token.role = (user as { role: 'ADMIN' | 'STAFF' }).role
+        if (account?.provider === 'google') {
+          token.id = user.id
+          token.role = 'PARTICIPANT'
+        } else {
+          token.id = user.id
+          token.role = (user as { role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' }).role
+        }
       }
       return token
     },
