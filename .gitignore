@@ -41,5 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 # Large media — host externally (Cloudinary / S3)
-public/video/*.mov
 public/video/*.mp4
