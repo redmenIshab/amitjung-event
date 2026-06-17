@@ -18,6 +18,25 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Participant {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  googleId  String   @unique
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Participants {
+  id        String   @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime
+}
+
 enum Role {
   ADMIN
   STAFF
@@ -74,4 +93,5 @@ model CheckIn {
   ticketId  String   @unique
   ticket    Ticket   @relation(fields: [ticketId], references: [id])
   scannedAt DateTime @default(now())
+  createdAt DateTime @default(now())
 }
