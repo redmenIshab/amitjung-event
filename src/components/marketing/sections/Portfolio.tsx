@@ -7,17 +7,17 @@ const FILTERS = ['ALL', 'CONCERTS', 'CREATIVE'] as const
 type Filter = typeof FILTERS[number]
 
 const ITEMS: { id: number; category: Exclude<Filter, 'ALL'>; title: string; image: string; tall: boolean }[] = [
-  { id: 2,  category: 'CONCERTS',  title: 'Kathmandu Live Fest',    image: '/images/photo-2.jpg',  tall: true  },
-  { id: 3,  category: 'CREATIVE',  title: 'Nepal Heritage Night',   image: '/images/photo-4.jpg',  tall: false },
-  { id: 4,  category: 'CREATIVE',  title: 'Sharma Wedding',         image: '/images/photo-5.jpg',  tall: true  },
-  { id: 5,  category: 'CONCERTS',  title: 'Acoustic Sessions Vol.2',image: '/images/photo-6.jpg',  tall: false },
-  { id: 6,  category: 'CONCERTS',  title: 'Annual Gala 2024',       image: '/images/photo-7.jpg',  tall: true  },
-  { id: 7,  category: 'CREATIVE',  title: 'Dashain Celebration',    image: '/images/photo-8.jpg',  tall: false },
-  { id: 8,  category: 'CREATIVE',  title: 'Thapa Reception',        image: '/images/photo-9.jpg',  tall: true  },
-  { id: 9,  category: 'CONCERTS',  title: 'Rooftop Sessions',       image: '/images/photo-10.jpg', tall: false },
-  { id: 10, category: 'CREATIVE',  title: 'Tihar Street Festival',  image: '/images/photo-11.jpg', tall: false },
-  { id: 11, category: 'CONCERTS',  title: 'Unplugged Night',        image: '/images/photo-12.jpg', tall: true  },
-  { id: 12, category: 'CREATIVE',  title: 'Brand Launch Event',     image: '/images/photo-14.jpg', tall: false },
+  { id: 2,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-2.jpg',  tall: true  },
+  { id: 3,  category: 'CREATIVE',  title: 'Xtreme Action Shot',   image: '/images/photo-4.jpg',  tall: false },
+  { id: 4,  category: 'CREATIVE',  title: 'Xtreme Action Shot',         image: '/images/photo-5.jpg',  tall: true  },
+  { id: 5,  category: 'CREATIVE',  title: 'Xtreme Action Shot',image: '/images/photo-6.jpg',  tall: false },
+  { id: 6,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-7.jpg',  tall: true  },
+  { id: 7,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-8.jpg',  tall: false },
+  { id: 8,  category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-9.jpg',  tall: true  },
+  { id: 9,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-10.jpg', tall: false },
+  { id: 10, category: 'CONCERTS',  title: 'Amit Jung & Gorkhey',  image: '/images/photo-11.jpg', tall: false },
+  { id: 11, category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-12.jpg', tall: true  },
+  { id: 12, category: 'CREATIVE',  title: 'Xtreme Action Shot',     image: '/images/photo-14.jpg', tall: false },
 ]
 
 export default function Portfolio() {
