@@ -12,7 +12,10 @@ export default async function EventsPage() {
 
   const events = await prisma.event.findMany({
     orderBy: { date: 'asc' },
-    include: { _count: { select: { tickets: true } } },
+    include: {
+      _count: { select: { tickets: true } },
+      artist: { select: { id: true, artistName: true, artistImage: true } },
+    },
   })
 
   return (

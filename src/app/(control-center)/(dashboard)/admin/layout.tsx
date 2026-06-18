@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
-import { LogOut, LayoutDashboard, Calendar, ScanLine } from 'lucide-react'
+import { LogOut, LayoutDashboard, Calendar, ScanLine, Music } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { MobileNav } from '@/components/layout/MobileNav'
 
@@ -43,6 +43,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             <ScanLine size={16} />
             Scanner
+          </Link>
+          <Link
+            href="/admin/artists"
+            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <Music size={16} />
+            Artists
           </Link>
         </nav>
         <Separator />

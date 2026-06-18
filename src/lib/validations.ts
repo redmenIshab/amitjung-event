@@ -5,8 +5,15 @@ export const createEventSchema = z.object({
   venue: z.string().min(1, 'Venue is required').max(200),
   date: z.string().datetime({ message: 'Invalid date format' }),
   capacity: z.number().int().positive('Capacity must be a positive integer'),
+  baseTicketPrice: z.number().int().min(0, 'Price must be non-negative'),
+  hasDiscount: z.boolean().optional().default(false),
+  discountPercentage: z.number().int().min(0).max(100).optional().default(0),
+  discountUpto: z.string().datetime().optional(),
   description: z.string().max(1000).optional(),
   isOpen: z.boolean().optional().default(true),
+  image: z.string().url().optional().or(z.literal('')),
+  genres: z.array(z.string()).default([]),
+  artistId: z.string().optional(),
 })
 
 export const updateEventSchema = createEventSchema.partial()

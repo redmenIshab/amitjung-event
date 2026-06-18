@@ -19,7 +19,10 @@ type Event = {
   venue: string
   date: Date | string
   isOpen: boolean
+  image?: string | null
+  genres?: string[]
   _count: { tickets: number }
+  artist?: { id: string; artistName: string; artistImage: string } | null
 }
 
 export function EventList({ events }: { events: Event[] }) {
@@ -46,6 +49,24 @@ export function EventList({ events }: { events: Event[] }) {
                 {event.isOpen ? 'Open' : 'Closed'}
               </Badge>
             </div>
+            {event.artist && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className="text-xs text-gray-400">Artist:</span>
+                <span>{event.artist.artistName}</span>
+              </div>
+            )}
+            {event.genres && event.genres.length > 0 && (
+              <div className="flex gap-1 flex-wrap">
+                {event.genres.map((g) => (
+                  <span
+                    key={g}
+                    className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded uppercase font-semibold tracking-wider"
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>
                 {new Date(event.date).toLocaleDateString()} · {event._count.tickets} tickets
@@ -68,6 +89,7 @@ export function EventList({ events }: { events: Event[] }) {
             <TableRow>
               <TableHead>Event</TableHead>
               <TableHead>Venue</TableHead>
+              <TableHead>Artist</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Tickets</TableHead>
               <TableHead>Registration</TableHead>
@@ -77,8 +99,33 @@ export function EventList({ events }: { events: Event[] }) {
           <TableBody>
             {events.map((event) => (
               <TableRow key={event.id}>
-                <TableCell className="font-medium">{event.name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {event.image && (
+                      <img
+                        src={event.image}
+                        alt=""
+                        className="w-8 h-8 rounded object-cover bg-gray-100 shrink-0"
+                      />
+                    )}
+                    <span>{event.name}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{event.venue}</TableCell>
+                <TableCell>
+                  {event.artist ? (
+                    <div className="flex items-center gap-1.5">
+                      <img
+                        src={event.artist.artistImage}
+                        alt=""
+                        className="w-6 h-6 rounded-full object-cover bg-gray-100"
+                      />
+                      <span className="text-sm">{event.artist.artistName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                </TableCell>
                 <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
                 <TableCell>{event._count.tickets}</TableCell>
                 <TableCell>

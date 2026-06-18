@@ -7,17 +7,30 @@ import { updateEventSchema } from '@/lib/validations'
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const { eventId } = await params
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        _count: { select: { tickets: true } },
+        artist: {
+          include: {
+            musics: {
+              where: { deletedAt: null },
+              orderBy: { createdAt: 'asc' },
+              select: { id: true, musicTitle: true },
+            },
+          },
+        },
+      },
+    })
+    if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const { eventId } = await params
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: { _count: { select: { tickets: true } } },
-  })
-  if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  return NextResponse.json(event)
+    return NextResponse.json(event)
+  } catch (e) {
+    console.error('GET /api/events/[eventId]:', e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function PATCH(request: Request, { params }: Params) {
