@@ -19,22 +19,14 @@ model User {
 }
 
 model Participant {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String
-  googleId  String   @unique
+  googleId  String    @unique
   image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-}
-
-model Participants {
-  id        String   @id @default(cuid())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime
 }
 
 enum Role {
@@ -44,16 +36,55 @@ enum Role {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  venue       String
-  date        DateTime
-  capacity    Int
-  isOpen      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tickets     Ticket[]
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  venue              String
+  date               DateTime
+  capacity           Int
+  isOpen             Boolean  @default(true)
+  image              String?
+  genres             String[]
+  baseTicketPrice    Int
+  hasDiscount        Boolean
+  discountPercentage Int
+  discountUpto       DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artistId String?
+  artist   Artist? @relation(fields: [artistId], references: [id])
+
+  tickets Ticket[]
+}
+
+model Artist {
+  id                String   @id @default(cuid())
+  artistName        String
+  artistImage       String
+  artistBand        String
+  artistDescription String
+  artistGenere      String[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  events Event[]
+  musics Music[]
+}
+
+model Music {
+  id         String @id @default(cuid())
+  musicTitle String
+
+  artistId String
+  artist   Artist @relation(fields: [artistId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Ticket {

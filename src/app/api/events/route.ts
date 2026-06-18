@@ -2,35 +2,62 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { createEventSchema } from '@/lib/validations'
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const events = await prisma.event.findMany({
+      orderBy: { date: 'asc' },
+      include: {
+        _count: { select: { tickets: true } },
+        artist: true,
+      },
+    })
 
-  const events = await prisma.event.findMany({
-    orderBy: { date: 'asc' },
-    include: { _count: { select: { tickets: true } } },
-  })
-
-  return NextResponse.json(events)
+    return NextResponse.json(events)
+  } catch (e) {
+    console.error('GET /api/events:', e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const parsed = createEventSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    }
+
+    const data: Prisma.EventUncheckedCreateInput = {
+      name: parsed.data.name,
+      venue: parsed.data.venue,
+      date: new Date(parsed.data.date),
+      capacity: parsed.data.capacity,
+      baseTicketPrice: parsed.data.baseTicketPrice,
+      hasDiscount: parsed.data.hasDiscount,
+      discountPercentage: parsed.data.discountPercentage,
+      discountUpto: parsed.data.discountUpto
+        ? new Date(parsed.data.discountUpto)
+        : new Date(parsed.data.date),
+      isOpen: parsed.data.isOpen,
+      genres: parsed.data.genres,
+    }
+    if (parsed.data.description) data.description = parsed.data.description
+    if (parsed.data.image) data.image = parsed.data.image
+    if (parsed.data.artistId) data.artistId = parsed.data.artistId
+
+    const event = await prisma.event.create({ data })
+
+    return NextResponse.json(event, { status: 201 })
+  } catch (e) {
+    console.error('POST /api/events:', e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  const body = await request.json()
-  const parsed = createEventSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
-  }
-
-  const event = await prisma.event.create({
-    data: { ...parsed.data, date: new Date(parsed.data.date) },
-  })
-
-  return NextResponse.json(event, { status: 201 })
 }
