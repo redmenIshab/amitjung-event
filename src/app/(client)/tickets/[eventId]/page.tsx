@@ -80,7 +80,7 @@ export default function EventTicketsPage() {
         </Link>
 
         {event.image && (
-          <div className="w-full h-48 rounded-xl overflow-hidden mb-6">
+          <div className="w-full h-48 overflow-hidden mb-6">
             <img
               src={event.image}
               alt={event.name}
@@ -116,7 +116,7 @@ export default function EventTicketsPage() {
             <Link
               key={t.id}
               href={`/tickets/${eventId}/${t.id}`}
-              className="block rounded-xl overflow-hidden border transition-colors hover:border-[#c8922a]/40"
+              className="block overflow-hidden border transition-colors hover:border-[#c8922a]/40"
               style={{ background: '#111111', borderColor: '#1c1c1c' }}
             >
               <div className="flex items-center p-4 gap-4">
@@ -124,7 +124,7 @@ export default function EventTicketsPage() {
                   <img
                     src={t.qrDataUrl}
                     alt="QR Code"
-                    className="w-20 h-20 rounded-lg"
+                    className="w-20 h-20"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -138,7 +138,7 @@ export default function EventTicketsPage() {
                   )}
                   <div className="flex items-center gap-2 mt-2">
                     <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5"
                       style={{
                         background: t.category === 'VIP' ? 'rgba(245,200,66,0.2)' : 'rgba(200,146,42,0.1)',
                         color: t.category === 'VIP' ? '#f5c842' : '#c8922a',
@@ -147,7 +147,7 @@ export default function EventTicketsPage() {
                       {t.category}
                     </span>
                     <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5"
                       style={{
                         background:
                           t.status === 'UNUSED' ? 'rgba(34,197,94,0.15)' :
