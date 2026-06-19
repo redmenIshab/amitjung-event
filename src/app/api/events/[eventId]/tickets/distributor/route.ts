@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { distributorTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -33,11 +34,13 @@ export async function POST(request: Request, { params }: Params) {
 
   const { distributorName, quantity, category } = parsed.data
 
+  const bookingId = await ensureSystemBooking(eventId)
+
   // Create all tickets in one transaction
   const tickets = await prisma.$transaction(
     Array.from({ length: quantity }, () =>
       prisma.ticket.create({
-        data: { eventId, distributorName, category, source: 'ADMIN' },
+        data: { eventId, bookingId, distributorName, category, source: 'ADMIN' },
       }),
     ),
   )

@@ -59,7 +59,7 @@ export type TicketLookup =
         status: 'UNUSED' | 'USED' | 'CANCELLED'
         attendeeName: string | null
         distributorName: string | null
-        event: { name: string; venue: string; date: Date; description: string | null }
+        event: { name: string; venue: string; bookingDeadline: Date; description: string | null }
       }
       checkedInAt: Date | null
     }
@@ -69,7 +69,7 @@ export async function lookupTicket(token: string): Promise<TicketLookup> {
   const ticket = await prisma.ticket.findUnique({
     where: { token },
     include: {
-      event: { select: { name: true, venue: true, date: true, description: true } },
+      event: { select: { name: true, venue: true, bookingDeadline: true, description: true } },
       checkIn: { select: { scannedAt: true } },
     },
   })

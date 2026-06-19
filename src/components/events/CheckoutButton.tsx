@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Ticket } from 'lucide-react'
 
@@ -17,10 +17,10 @@ export function CheckoutButton({ eventId, finalPrice, discountActive, baseTicket
 
   function handleClick() {
     if (!session) {
-      signIn(undefined, { callbackUrl: `/events/${eventId}` })
+      router.push(`/auth/login?callbackUrl=/booking/${eventId}/checkout`)
       return
     }
-    router.push(`/events/${eventId}/checkout`)
+    router.push(`/booking/${eventId}/checkout`)
   }
 
   return (

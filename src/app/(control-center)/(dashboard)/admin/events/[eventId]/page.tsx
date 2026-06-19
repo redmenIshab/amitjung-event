@@ -7,6 +7,7 @@ import { TicketTable } from '@/components/tickets/TicketTable'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { getCachedEvent } from '@/lib/upstash/services/event-cache'
 
 type Props = { params: Promise<{ eventId: string }> }
 
@@ -15,20 +16,19 @@ export default async function EventDetailPage({ params }: Props) {
   if (!session) redirect('/login')
 
   const { eventId } = await params
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      tickets: { include: { checkIn: true }, orderBy: { createdAt: 'desc' } },
-      artist: { select: { id: true, artistName: true, artistImage: true } },
-    },
-  })
-
+  const event = await getCachedEvent(eventId)
   if (!event) notFound()
 
-  const used = event.tickets.filter((t) => t.status === 'USED').length
-  const unused = event.tickets.filter((t) => t.status === 'UNUSED').length
+  const rawTickets = await prisma.ticket.findMany({
+    where: { eventId },
+    include: { checkIn: true },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  const tickets = event.tickets.map((t) => ({
+  const used = rawTickets.filter((t) => t.status === 'USED').length
+  const unused = rawTickets.filter((t) => t.status === 'UNUSED').length
+
+  const tickets = rawTickets.map((t) => ({
     id: t.id,
     attendeeName: t.attendeeName,
     attendeeEmail: t.attendeeEmail,
@@ -86,7 +86,7 @@ export default async function EventDetailPage({ params }: Props) {
 
       <div className="flex flex-wrap gap-4 text-sm mb-6">
         <span className="text-gray-700">
-          <strong>{event.tickets.length}</strong> total
+          <strong>{rawTickets.length}</strong> total
         </span>
         <span className="text-green-600">
           <strong>{used}</strong> checked in

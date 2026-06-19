@@ -31,10 +31,10 @@ export default async function PublicTicketPage({ params }: Props) {
 
     const { ticket } = result
     const isVip     = ticket.category === 'VIP'
-    const eventDate = new Date(ticket.event.date).toLocaleDateString('en-US', {
+    const eventDate = new Date(ticket.event.bookingDeadline).toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     })
-    const eventTime = new Date(ticket.event.date).toLocaleTimeString('en-US', {
+    const eventTime = new Date(ticket.event.bookingDeadline).toLocaleTimeString('en-US', {
       hour: '2-digit', minute: '2-digit',
     })
 
@@ -185,7 +185,7 @@ export default async function PublicTicketPage({ params }: Props) {
   const isUsed      = ticket.status === 'USED'
   const isCancelled = ticket.status === 'CANCELLED'
 
-  const eventDate = new Date(ticket.event.date).toLocaleString('en-US', {
+  const eventDate = new Date(ticket.event.bookingDeadline).toLocaleString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })

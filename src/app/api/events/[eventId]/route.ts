@@ -3,27 +3,14 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { updateEventSchema } from '@/lib/validations'
+import { getCachedEvent, invalidateEventCache } from '@/lib/upstash/services/event-cache'
 
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   try {
     const { eventId } = await params
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      include: {
-        _count: { select: { tickets: true } },
-        artist: {
-          include: {
-            musics: {
-              where: { deletedAt: null },
-              orderBy: { createdAt: 'asc' },
-              select: { id: true, musicTitle: true },
-            },
-          },
-        },
-      },
-    })
+    const event = await getCachedEvent(eventId)
     if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     return NextResponse.json(event)
@@ -50,6 +37,9 @@ export async function PATCH(request: Request, { params }: Params) {
   if (parsed.data.date) data.date = new Date(parsed.data.date)
 
   const event = await prisma.event.update({ where: { id: eventId }, data })
+
+  await invalidateEventCache(eventId)
+
   return NextResponse.json(event)
 }
 
@@ -61,5 +51,8 @@ export async function DELETE(_req: Request, { params }: Params) {
 
   const { eventId } = await params
   await prisma.event.delete({ where: { id: eventId } })
+
+  await invalidateEventCache(eventId)
+
   return new NextResponse(null, { status: 204 })
 }

@@ -4,16 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { createEventSchema } from '@/lib/validations'
+import { getCachedEvents, invalidateEventCache } from '@/lib/upstash/services/event-cache'
 
 export async function GET() {
   try {
-    const events = await prisma.event.findMany({
-      orderBy: { date: 'asc' },
-      include: {
-        _count: { select: { tickets: true } },
-        artist: true,
-      },
-    })
+    const events = await getCachedEvents()
 
     return NextResponse.json(events)
   } catch (e) {
@@ -38,7 +33,7 @@ export async function POST(request: Request) {
     const data: Prisma.EventUncheckedCreateInput = {
       name: parsed.data.name,
       venue: parsed.data.venue,
-      date: new Date(parsed.data.date),
+      bookingDeadline: new Date(parsed.data.date),
       capacity: parsed.data.capacity,
       baseTicketPrice: parsed.data.baseTicketPrice,
       hasDiscount: parsed.data.hasDiscount,
@@ -54,6 +49,8 @@ export async function POST(request: Request) {
     if (parsed.data.artistId) data.artistId = parsed.data.artistId
 
     const event = await prisma.event.create({ data })
+
+    await invalidateEventCache()
 
     return NextResponse.json(event, { status: 201 })
   } catch (e) {

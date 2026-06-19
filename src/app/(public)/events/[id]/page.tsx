@@ -42,7 +42,7 @@ export default async function EventDetailPage({ params }: Props) {
                         unoptimized
                     />
                 )}
-                <div className="relative z-10 p-6 md:p-12 bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full">
+                <div className="relative z-10 p-6 md:p-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full">
                     <h1 className="text-[40px] md:text-[52px] font-extrabold text-white uppercase leading-[0.9] max-w-[400px] mb-8">
                         {event.name}
                     </h1>
@@ -101,10 +101,9 @@ export default async function EventDetailPage({ params }: Props) {
                     </h2>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-24 md:pb-32 space-y-1">
+                <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-24 md:pb-32 space-y-1 custom-scrollbar">
                     {artist ? (
                         <>
-
                             {artist.musics.length > 0 && artist.musics.map((music) => (
                                 <div key={music.id} className="flex items-center justify-between py-4 border-b border-[#1C1C1C] hover:bg-[#141414] transition-colors group px-2 -mx-2">
                                     <div className="flex items-center gap-4">

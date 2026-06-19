@@ -13,7 +13,7 @@ export default async function NewTicketPage({ params }: Props) {
   const { eventId } = await params
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { name: true, venue: true, date: true },
+    select: { name: true, venue: true, bookingDeadline: true },
   })
   if (!event) redirect('/events')
 
@@ -25,7 +25,7 @@ export default async function NewTicketPage({ params }: Props) {
         eventId={eventId}
         eventName={event.name}
         eventVenue={event.venue}
-        eventDate={event.date.toISOString()}
+        eventDate={event.bookingDeadline.toISOString()}
         emailEnabled={process.env.ENABLE_EMAIL === 'true'}
       />
     </div>
