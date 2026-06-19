@@ -2,8 +2,8 @@ config:
   target: "http://localhost:3000"
   phases:
     - duration: 1
-      arrivalRate: 900
-      maxVusers: 900
+      arrivalRate: 1900
+      maxVusers: 1900
 scenarios:
   - name: "Full booking pipeline"
     flow:
@@ -13,8 +13,8 @@ scenarios:
             Content-Type: application/json
             x-stress-key: "test-secret-123"
           json:
-            eventId: "cmqjnkbjl0001kfdc5iiyzaf8"
-            participantId: "cmqjx4gwt0000kf50zpg4sw7k"
+            eventId: "cmqkw4qmu0001kfes4yjn8yz9"
+            participantId: "cmqkvjeam0000kfesndhmqmd1"
             attendees:
               - name: "User {{ $arrivalCount }}"
                 email: "user{{ $arrivalCount }}@example.com"
