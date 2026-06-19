@@ -1,4 +1,7 @@
 import type { Metadata } from 'next'
+import { getServerSession } from 'next-auth/next'
+import { redirect } from 'next/navigation'
+import { authOptions } from '@/lib/auth'
 import {
   Cormorant_Garamond,
   Bebas_Neue,
@@ -40,11 +43,18 @@ export const metadata: Metadata = {
     "Nepal's premier creative event production company. Pre-production, live coverage, post-production, smart ticketing, and lifetime event documentation.",
 }
 
-export default function MarketingLayout({
+const MANAGER_ROLES = ['ADMIN', 'MANAGER'] as const
+
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions)
+  if (!session || !MANAGER_ROLES.includes(session.user.role as typeof MANAGER_ROLES[number])) {
+    redirect('/')
+  }
+
   return (
     <div
       className={`${cormorant.variable} ${bebas.variable} ${dmSans.variable} ${dmMono.variable}`}

@@ -5,10 +5,13 @@ import { verifyTicket } from '@/lib/verify'
 
 type Params = { params: Promise<{ token: string }> }
 
-// Only authenticated staff/admin scanners may perform check-in.
+const SCANNER_ROLES = ['ADMIN', 'STAFF'] as const
+
 export async function POST(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || !SCANNER_ROLES.includes(session.user.role as typeof SCANNER_ROLES[number])) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { token } = await params
   const result = await verifyTicket(token)
