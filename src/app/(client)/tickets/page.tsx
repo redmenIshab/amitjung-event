@@ -62,7 +62,7 @@ export default function MyTicketsPage() {
             <p className="mb-4" style={{ color: '#9a9590' }}>No tickets yet</p>
             <Link
               href="/events"
-              className="inline-block font-semibold px-6 py-2.5 rounded hover:opacity-90 transition-opacity"
+              className="inline-block font-semibold px-6 py-2.5 hover:opacity-90 transition-opacity"
               style={{ background: '#c8922a', color: '#080808' }}
             >
               Browse Events
@@ -79,7 +79,7 @@ export default function MyTicketsPage() {
                 <Link
                   key={group.event.id}
                   href={`/tickets/${group.event.id}`}
-                  className="block rounded-xl overflow-hidden border transition-colors"
+                  className="block overflow-hidden border transition-colors"
                   style={{ background: '#111111', borderColor: '#1c1c1c' }}
                 >
                   <div className="flex items-center">
@@ -98,7 +98,7 @@ export default function MyTicketsPage() {
                           {group.event.name}
                         </h2>
                         <span
-                          className="shrink-0 text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded"
+                          className="shrink-0 text-xs font-semibold uppercase tracking-wider px-2 py-1"
                           style={{ background: 'rgba(200,146,42,0.15)', color: '#c8922a' }}
                         >
                           ×{group.count}
