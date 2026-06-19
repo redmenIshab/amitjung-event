@@ -4,27 +4,28 @@ import { eventsResponseSchema } from '@/types/event'
 export default async function PublicEventsPage() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const res = await fetch(`${baseUrl}/api/events`, { cache: 'no-store' })
+  console.log(res)
 
-  if (!res.ok) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500 text-lg">Failed to load events.</p>
-      </div>
-    )
-  }
+  // if (!res.ok) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <p className="text-gray-500 text-lg">Failed to load events.</p>
+  //     </div>
+  //   )
+  // }
 
   const raw = await res.json()
   const parsed = eventsResponseSchema.safeParse(raw)
 
-  if (!parsed.success) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500 text-lg">Failed to load events.</p>
-      </div>
-    )
-  }
+  // if (!parsed.success) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <p className="text-gray-500 text-lg">Failed to load events.</p>
+  //     </div>
+  //   )
+  // }
 
-  const events = parsed.data.filter((e) => e.isOpen)
+  const events = (parsed.data ?? []).filter((e) => e.isOpen)
 
   if (events.length === 0) {
     return (

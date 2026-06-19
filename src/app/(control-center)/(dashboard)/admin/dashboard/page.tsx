@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { CheckInChart } from '@/components/dashboard/CheckInChart'
 import { Separator } from '@/components/ui/separator'
+import { getCachedUpcomingEvents } from '@/lib/upstash/services/event-cache'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -17,12 +18,7 @@ export default async function DashboardPage() {
       select: { scannedAt: true },
       orderBy: { scannedAt: 'asc' },
     }),
-    prisma.event.findMany({
-      where: { date: { gte: new Date() } },
-      orderBy: { date: 'asc' },
-      take: 5,
-      include: { _count: { select: { tickets: true } } },
-    }),
+    getCachedUpcomingEvents(),
   ])
 
   const counts = { UNUSED: 0, USED: 0, CANCELLED: 0 }

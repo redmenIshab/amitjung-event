@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -31,9 +32,12 @@ export async function POST(request: Request, { params }: Params) {
     )
   }
 
+  const bookingId = await ensureSystemBooking(eventId)
+
   const ticket = await prisma.ticket.create({
     data: {
       eventId,
+      bookingId,
       attendeeName: parsed.data.attendeeName,
       attendeeEmail: parsed.data.attendeeEmail,
       source: 'SELF_REGISTERED',
@@ -48,7 +52,7 @@ export async function POST(request: Request, { params }: Params) {
       to: parsed.data.attendeeEmail,
       attendeeName: parsed.data.attendeeName,
       eventName: event.name,
-      eventDate: event.date,
+      eventDate: event.bookingDeadline,
       eventVenue: event.venue,
       qrCodeDataUrl,
       verifyUrl,

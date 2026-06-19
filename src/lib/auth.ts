@@ -36,12 +36,12 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google') {
         const participant = await prisma.participant.upsert({
           where: { email: profile?.email ?? '' },
-          update: { name: profile?.name ?? '', image: profile?.picture ?? '' },
+          update: { name: profile?.name ?? '', image: (profile as any)?.picture ?? '' },
           create: {
             googleId: account.providerAccountId,
             email: profile?.email ?? '',
             name: profile?.name ?? '',
-            image: profile?.picture ?? '',
+            image: (profile as any)?.picture ?? '',
           },
         })
         user.id = participant.id

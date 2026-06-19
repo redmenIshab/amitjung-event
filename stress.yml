@@ -1,0 +1,27 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 1
+      arrivalRate: 900
+      maxVusers: 900
+scenarios:
+  - name: "Full booking pipeline"
+    flow:
+      - post:
+          url: "/api/stress/book"
+          headers:
+            Content-Type: application/json
+            x-stress-key: "test-secret-123"
+          json:
+            eventId: "cmqjnkbjl0001kfdc5iiyzaf8"
+            participantId: "cmqjx4gwt0000kf50zpg4sw7k"
+            attendees:
+              - name: "User {{ $arrivalCount }}"
+                email: "user{{ $arrivalCount }}@example.com"
+                category: "GENERAL"
+            amounts:
+              totalAmount: 1000
+              discountAmount: 0
+              discountPercentage: 0
+              finalAmount: 1000
+

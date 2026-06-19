@@ -2,21 +2,15 @@ import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { EventList } from '@/components/events/EventList'
 import { buttonVariants } from '@/components/ui/button'
+import { getCachedEvents } from '@/lib/upstash/services/event-cache'
 
 export default async function EventsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 
-  const events = await prisma.event.findMany({
-    orderBy: { date: 'asc' },
-    include: {
-      _count: { select: { tickets: true } },
-      artist: { select: { id: true, artistName: true, artistImage: true } },
-    },
-  })
+  const events = await getCachedEvents()
 
   return (
     <div>
@@ -31,7 +25,7 @@ export default async function EventsPage() {
           </Link>
         )}
       </div>
-      <EventList events={events} />
+      <EventList events={events as any} />
     </div>
   )
 }

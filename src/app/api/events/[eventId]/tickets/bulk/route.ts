@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { bulkGenerateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -36,11 +37,14 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   // Create all tickets in a single transaction
+  const bookingId = await ensureSystemBooking(eventId)
+
   const createdTickets = await prisma.$transaction(
     parsed.data.tickets.map((t) =>
       prisma.ticket.create({
         data: {
           eventId,
+          bookingId,
           attendeeName: t.attendeeName,
           attendeeEmail: t.attendeeEmail,
           source: 'ADMIN',
@@ -64,7 +68,7 @@ export async function POST(request: Request, { params }: Params) {
             to: ticket.attendeeEmail ?? '',
             attendeeName: ticket.attendeeName ?? '',
             eventName: event.name,
-            eventDate: event.date,
+            eventDate: event.bookingDeadline,
             eventVenue: event.venue,
             qrCodeDataUrl,
             verifyUrl,

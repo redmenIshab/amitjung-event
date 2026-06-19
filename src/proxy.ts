@@ -5,11 +5,7 @@ export async function proxy(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
   const { pathname } = request.nextUrl
 
-  if (
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/events') ||
-    pathname === '/scanner'
-  ) {
+  if (pathname.startsWith('/dashboard') || pathname === '/scanner') {
     if (!token || token.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -29,7 +25,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard',
-    '/events/:path*',
     '/scanner',
     '/work',
     '/ticketing',
