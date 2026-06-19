@@ -6,9 +6,12 @@ import { LogOut, LayoutDashboard, Calendar, ScanLine, Music } from 'lucide-react
 import { Separator } from '@/components/ui/separator'
 import { MobileNav } from '@/components/layout/MobileNav'
 
+const ADMIN_ROLES = ['ADMIN', 'STAFF', 'MANAGER'] as const
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
+  if (!ADMIN_ROLES.includes(session.user.role as typeof ADMIN_ROLES[number])) redirect('/')
 
   return (
     <div className="dashboard-scope flex min-h-screen bg-gray-50">

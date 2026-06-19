@@ -9,9 +9,13 @@ import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
+const ADMIN_ROLES = ['ADMIN', 'STAFF', 'MANAGER'] as const
+
 export async function GET(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || !ADMIN_ROLES.includes(session.user.role as typeof ADMIN_ROLES[number])) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { eventId } = await params
   const tickets = await prisma.ticket.findMany({
