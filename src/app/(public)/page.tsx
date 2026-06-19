@@ -1,3 +1,4 @@
+import Nav from '@/components/marketing/layout/Nav'
 import Hero from '@/components/marketing/sections/Hero'
 import Manifesto from '@/components/marketing/sections/Manifesto'
 import Services from '@/components/marketing/sections/Services'
@@ -10,6 +11,7 @@ import Contact from '@/components/marketing/sections/Contact'
 export default function Home() {
   return (
     <>
+      <Nav />
       <Hero />
       <Manifesto />
       <Services />
