@@ -49,6 +49,72 @@ export const registerSchema = z.object({
   attendeeEmail: z.string().email('Invalid email address'),
 })
 
+export const ticketEventIdSchema = z.object({
+  eventId: z.string().min(1, 'eventId is required'),
+})
+
+export const ticketDetailIdSchema = z.object({
+  eventId: z.string().min(1, 'eventId is required'),
+  ticketId: z.string().min(1, 'ticketId is required'),
+})
+
+// ── Response schemas for client-side validation ──
+
+export const ticketsMineResponseSchema = z.object({
+  groups: z.array(z.object({
+    event: z.object({
+      id: z.string(),
+      name: z.string(),
+      venue: z.string(),
+      bookingDeadline: z.string(),
+      image: z.string().nullable(),
+    }),
+    count: z.number(),
+  })),
+})
+
+export const eventTicketsResponseSchema = z.object({
+  event: z.object({
+    id: z.string(),
+    name: z.string(),
+    venue: z.string(),
+    bookingDeadline: z.string(),
+    image: z.string().nullable(),
+    description: z.string().nullable(),
+  }),
+  tickets: z.array(z.object({
+    id: z.string(),
+    token: z.string(),
+    attendeeName: z.string().nullable(),
+    attendeeEmail: z.string().nullable(),
+    category: z.enum(['GENERAL', 'VIP']),
+    status: z.enum(['UNUSED', 'USED', 'CANCELLED']),
+    source: z.string(),
+    qrDataUrl: z.string(),
+  })),
+})
+
+export const ticketDetailResponseSchema = z.object({
+  id: z.string(),
+  token: z.string(),
+  attendeeName: z.string().nullable(),
+  attendeeEmail: z.string().nullable(),
+  distributorName: z.string().nullable(),
+  category: z.enum(['GENERAL', 'VIP']),
+  status: z.enum(['UNUSED', 'USED', 'CANCELLED']),
+  source: z.string(),
+  qrDataUrl: z.string(),
+  event: z.object({
+    id: z.string(),
+    name: z.string(),
+    venue: z.string(),
+    bookingDeadline: z.string(),
+    image: z.string().nullable(),
+    description: z.string().nullable(),
+  }),
+  checkIn: z.object({ scannedAt: z.string() }).nullable(),
+})
+
 export type CreateEventInput = z.infer<typeof createEventSchema>
 export type UpdateEventInput = z.infer<typeof updateEventSchema>
 export type GenerateTicketInput = z.infer<typeof generateTicketSchema>
