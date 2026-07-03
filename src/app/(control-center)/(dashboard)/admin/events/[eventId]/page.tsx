@@ -19,6 +19,7 @@ export default async function EventDetailPage({ params }: Props) {
     where: { id: eventId },
     include: {
       tickets: { include: { checkIn: true }, orderBy: { createdAt: 'desc' } },
+      artist: { select: { id: true, artistName: true, artistImage: true } },
     },
   })
 
@@ -42,11 +43,32 @@ export default async function EventDetailPage({ params }: Props) {
   return (
     <div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-gray-900 truncate">{event.name}</h1>
-          <p className="text-gray-500 text-sm">
-            {event.venue} · {new Date(event.date).toLocaleString()}
-          </p>
+        <div className="min-w-0 space-y-1">
+          <div className="flex items-center gap-3">
+            {event.image && (
+              <img
+                src={event.image}
+                alt=""
+                className="w-12 h-12 rounded-lg object-cover bg-gray-100 shrink-0"
+              />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 truncate">{event.name}</h1>
+              <p className="text-gray-500 text-sm">
+                {event.venue} · {new Date(event.date).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          {event.artist && (
+            <div className="flex items-center gap-2 pt-1">
+              <img
+                src={event.artist.artistImage}
+                alt=""
+                className="w-7 h-7 rounded-full object-cover bg-gray-100"
+              />
+              <span className="text-sm text-gray-600">{event.artist.artistName}</span>
+            </div>
+          )}
         </div>
         <Badge variant={event.isOpen ? 'default' : 'secondary'} className="self-start shrink-0">
           {event.isOpen ? 'Registration Open' : 'Registration Closed'}

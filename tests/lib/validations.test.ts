@@ -8,6 +8,7 @@ describe('createEventSchema', () => {
       venue: 'Central Park',
       date: '2026-08-15T20:00:00Z',
       capacity: 500,
+      baseTicketPrice: 4500,
       description: 'Annual music festival',
       isOpen: true,
     })
@@ -20,6 +21,7 @@ describe('createEventSchema', () => {
       venue: 'Central Park',
       date: '2026-08-15T20:00:00Z',
       capacity: -1,
+      baseTicketPrice: 4500,
     })
     expect(result.success).toBe(false)
   })
@@ -29,6 +31,7 @@ describe('createEventSchema', () => {
       venue: 'Central Park',
       date: '2026-08-15T20:00:00Z',
       capacity: 100,
+      baseTicketPrice: 4500,
     })
     expect(result.success).toBe(false)
   })
