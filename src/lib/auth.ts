@@ -34,14 +34,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
+        // Google's profile includes `picture`, but the base NextAuth `Profile` type doesn't.
+        const picture = (profile as { picture?: string } | undefined)?.picture ?? ''
         const participant = await prisma.participant.upsert({
           where: { email: profile?.email ?? '' },
-          update: { name: profile?.name ?? '', image: profile?.picture ?? '' },
+          update: { name: profile?.name ?? '', image: picture },
           create: {
             googleId: account.providerAccountId,
             email: profile?.email ?? '',
             name: profile?.name ?? '',
-            image: profile?.picture ?? '',
+            image: picture,
           },
         })
         user.id = participant.id
