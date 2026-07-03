@@ -1,10 +1,5 @@
-/*
-  Warnings:
-
-  - Added the required column `deletedAt` to the `Event` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `expiresAt` to the `Event` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- AlterTable
-ALTER TABLE "Event" ADD COLUMN     "deletedAt" TIMESTAMP(3) NOT NULL,
-ADD COLUMN     "expiresAt" TIMESTAMP(3) NOT NULL;
+-- Added as nullable so this migration applies to a non-empty Event table.
+-- Both columns are dropped again in 20260617162536_add_artist_model.
+ALTER TABLE "Event" ADD COLUMN     "deletedAt" TIMESTAMP(3),
+ADD COLUMN     "expiresAt" TIMESTAMP(3);

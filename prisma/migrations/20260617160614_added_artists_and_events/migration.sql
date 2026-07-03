@@ -1,11 +1,8 @@
-/*
-  Warnings:
-
-  - Added the required column `artistId` to the `Event` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- AlterTable
-ALTER TABLE "Event" ADD COLUMN     "artistId" TEXT NOT NULL;
+-- artistId is added as nullable so this migration can apply to a non-empty Event table.
+-- The relation is optional in the final schema (see 20260617162536_add_artist_model,
+-- which drops NOT NULL on this column).
+ALTER TABLE "Event" ADD COLUMN     "artistId" TEXT;
 
 -- CreateTable
 CREATE TABLE "Artist" (

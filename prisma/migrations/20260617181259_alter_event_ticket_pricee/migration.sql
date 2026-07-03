@@ -1,14 +1,13 @@
-/*
-  Warnings:
-
-  - Added the required column `baseTicketPrice` to the `Event` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `discountPercentage` to the `Event` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `discountUpto` to the `Event` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `hasDiscount` to the `Event` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- AlterTable
-ALTER TABLE "Event" ADD COLUMN     "baseTicketPrice" INTEGER NOT NULL,
-ADD COLUMN     "discountPercentage" INTEGER NOT NULL,
-ADD COLUMN     "discountUpto" TIMESTAMP(3) NOT NULL,
-ADD COLUMN     "hasDiscount" BOOLEAN NOT NULL;
+-- These columns are required in the final schema. To apply to a non-empty Event table,
+-- add them with a temporary default (which backfills existing rows), then drop the
+-- default so the resulting schema matches prisma/schema.prisma (no default).
+ALTER TABLE "Event" ADD COLUMN     "baseTicketPrice" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "discountPercentage" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "discountUpto" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "hasDiscount" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "Event" ALTER COLUMN "baseTicketPrice" DROP DEFAULT,
+ALTER COLUMN "discountPercentage" DROP DEFAULT,
+ALTER COLUMN "discountUpto" DROP DEFAULT,
+ALTER COLUMN "hasDiscount" DROP DEFAULT;
