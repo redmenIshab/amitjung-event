@@ -16,13 +16,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (['/', '/work', '/ticketing', '/branding', '/contact'].includes(pathname)) {
-    if (!token || token.role !== 'MANAGER') {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    return NextResponse.next()
-  }
-
   return NextResponse.next()
 }
 
@@ -31,9 +24,5 @@ export const config = {
     '/dashboard',
     '/events/:path*',
     '/scanner',
-    '/work',
-    '/ticketing',
-    '/branding',
-    '/contact',
   ],
 }
