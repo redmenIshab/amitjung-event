@@ -40,6 +40,19 @@ export default function Contact() {
             </p>
 
             <div className="mt-10 flex flex-col gap-4">
+               <a
+                href="https://wa.me/9779740833796" target="_blank" 
+                className="flex items-center gap-3 text-ash hover:text-gold transition-colors text-sm group"
+              >
+                <span className="w-8 h-8 rounded-full border border-coal group-hover:border-gold flex items-center justify-center transition-colors">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" className="w-4 h-4">
+                    <rect x="2" y="4" width="16" height="12" rx="2" />
+                    <path d="M2 7l8 5 8-5" />
+                  </svg>
+                </span>
+                +977-9740833796
+              </a>
+
               <a
                 href="mailto:lyanteprod@gmail.com"
                 className="flex items-center gap-3 text-ash hover:text-gold transition-colors text-sm group"
@@ -52,6 +65,7 @@ export default function Contact() {
                 </span>
                 lyanteprod@gmail.com
               </a>
+              
               <a
                 href="https://www.instagram.com/lyanteprod/"
                 target="_blank"

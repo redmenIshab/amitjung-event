@@ -10,11 +10,23 @@ const FOOTER_LINKS = {
   COMPANY: [
     { label: 'About', href: '/#about' },
     { label: 'Work', href: '/work' },
+    { label: 'Careers', href: '/careers' },
     { label: 'Contact', href: '/contact' },
   ],
 }
 
 const SOCIALS = [
+   {
+    label: 'WhatsApp',
+    href: 'https://wa.me/9779740833796',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
   {
     label: 'Instagram',
     href: 'https://www.instagram.com/lyanteprod/',
