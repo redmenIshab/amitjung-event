@@ -48,7 +48,12 @@ export default function Footer() {
             <Logo variant="white" height={40} className="mb-4" />
             <p className="font-bebas text-2xl tracking-widest text-ivory mt-2">LYANTE</p>
             <p className="text-ash text-sm mt-1 leading-relaxed">
-              Creative Event Production<br />Kathmandu, Nepal
+              Creative Event Production<br /> Itahari, Nepal
+            </p>
+             <p className="text-ash text-sm mt-1 leading-relaxed">
+              WhatsApp<br /><a href="https://wa.me/9779740833796" target="_blank" className="hover:text-gold transition-colors">
+                +977-9740833796
+              </a>
             </p>
 
             {/* Social icons */}
