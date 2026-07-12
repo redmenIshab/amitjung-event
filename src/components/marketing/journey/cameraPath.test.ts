@@ -45,6 +45,11 @@ describe('getCameraState', () => {
     }
   })
 
+  it('camera is stationary during the dwell', () => {
+    const at = (t: number) => BEATS[2].start + t * (BEATS[2].end - BEATS[2].start)
+    expect(getCameraState(at(0.7))).toEqual(getCameraState(at(0.95)))
+  })
+
   it('clamps out-of-range progress', () => {
     expect(getCameraState(-1)).toEqual(getCameraState(0))
     expect(getCameraState(2)).toEqual(getCameraState(1))
@@ -75,6 +80,11 @@ describe('overlayOpacity', () => {
     expect(overlayOpacity(2, at(0.56))).toBeGreaterThan(0)
     expect(overlayOpacity(2, at(0.56))).toBeLessThan(1)
     expect(overlayOpacity(2, at(1.0))).toBe(0)
+  })
+
+  it('keeps the final CTA overlay fully visible at the end of the scroll', () => {
+    expect(overlayOpacity(BEATS.length - 1, 1)).toBe(1)
+    expect(overlayOpacity(BEATS.length - 1, 0.99)).toBe(1)
   })
 
   it('overlays never exceed opacity 1 combined at any progress', () => {

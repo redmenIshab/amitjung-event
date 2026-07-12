@@ -84,7 +84,8 @@ export function getCameraState(progress: number): CameraState {
 }
 
 // Overlay is readable during the dwell: fade in over localT .5->.62,
-// hold at 1 until .92, fade out by 1.0.
+// hold at 1 until .92, fade out by 1.0. The last beat (CTA) never fades
+// out — it stays fully visible at the end of the scroll.
 export function overlayOpacity(beatIndex: number, progress: number): number {
   const beat = BEATS[beatIndex]
   const p = clamp01(progress)
@@ -92,6 +93,7 @@ export function overlayOpacity(beatIndex: number, progress: number): number {
   const t = beatLocalT(beatIndex, p)
   if (t < 0.5) return 0
   if (t < 0.62) return smoothstep((t - 0.5) / 0.12)
-  if (t <= 0.92) return 1
+  const isLastBeat = beatIndex === BEATS.length - 1
+  if (isLastBeat || t <= 0.92) return 1
   return 1 - smoothstep((t - 0.92) / 0.08)
 }
