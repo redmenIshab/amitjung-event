@@ -1,24 +1,24 @@
-# Lyante 3D Scroll Journey Home Page — Implementation Plan
+# Lyante 3D Scroll Journey — Branding Page Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild the Lyante home page as a continuous 3D concert-venue flythrough where scroll scrubs a cinematic camera path, with the 8 existing content sections appearing as DOM overlays at camera stops.
+**Goal:** Rebuild the `/branding` page as a continuous 3D concert-venue flythrough where scroll scrubs a cinematic camera path, with the page's 6 existing content sections appearing as DOM overlays at camera stops. The home page is NOT touched.
 
-**Architecture:** A fixed full-viewport react-three-fiber `<Canvas>` renders a procedural stylized venue. A tall (800vh) scroll driver plus one GSAP ScrollTrigger (`scrub: 1`) maps native scroll to progress 0→1, which drives (a) the camera along keyframed paths defined in a pure, unit-tested `cameraPath.ts`, (b) progress-keyed scene events, and (c) overlay opacity via direct style writes (no per-frame React re-renders). Browsers without WebGL get the existing flat sections unchanged.
+**Architecture:** A fixed full-viewport react-three-fiber `<Canvas>` renders a procedural stylized venue. A tall (600vh) scroll driver plus one GSAP ScrollTrigger (`scrub: 1`) maps native scroll to progress 0→1, which drives (a) the camera along keyframed paths defined in a pure, unit-tested `cameraPath.ts`, (b) progress-keyed scene events, and (c) overlay opacity via direct style writes (no per-frame React re-renders). Browsers without WebGL get the existing flat branding sections unchanged.
 
 **Tech Stack:** Next.js 16 (App Router), React 19, TypeScript strict, `three` + `@react-three/fiber` + `@react-three/drei` (new), `gsap` ScrollTrigger (already installed), Vitest.
 
-**Reference spec:** `docs/superpowers/specs/2026-06-30-3d-scroll-home-design.md`
+**Reference spec:** `docs/superpowers/specs/2026-06-30-3d-scroll-branding-design.md`
 
 ## Global Constraints
 
 - Work in `/Users/redmen/Projects/event-tickets`. Package manager is **pnpm**.
 - **Node 22 required:** the shell's default Node is v12. Every `pnpm`/`tsc`/node command must be prefixed in the SAME bash invocation: `source ~/.nvm/nvm.sh && nvm use 22 && <command>`. Shell state does not persist between tool calls.
-- Palette (from `src/app/globals.css` `@theme`): gold `#C8922A`, gold-light `#F5C842`, gold-deep `#8B5E10`, bg `#080808`, ivory `#F0EDE6`, ash `#9A9590`.
-- Existing marketing section components in `src/components/marketing/sections/` must NOT be modified — they are the no-WebGL fallback.
-- All new code lives under `src/components/marketing/journey/`.
+- Palette (from `src/app/globals.css` `@theme`): gold `#C8922A`, gold-light `#F5C842`, gold-deep `#8B5E10`, bg `#080808`, ivory `#F0EDE6`, ash `#9A9590`. BrandBoard swatches: Ink `#0E1522`, Gold `#C8922A`, Bone `#E8E2D5`, Clay `#B4443C`, Sage `#6B8F71`.
+- **Do NOT modify** `src/app/(marketing)/page.tsx` (home page) or any existing file in `src/components/marketing/sections/` — existing branding sections are the no-WebGL fallback. (Adding NEW files under `sections/branding/` is allowed where a task says so.)
+- All other new code lives under `src/components/marketing/journey/`.
 - `tsc --noEmit` clean and existing Vitest suite passing at the end of every task.
-- Prettier: 2-space indent, single quotes, no semicolons is NOT the convention here — match the existing marketing components' style (2-space, single quotes, semicolons omitted as in `page.tsx`). Follow whatever `pnpm exec prettier --check` accepts.
+- Match the existing marketing components' code style (2-space indent, single quotes, no semicolons, Tailwind classes with the theme tokens like `text-ivory`, `bg-bg`, `font-cormorant`, `section-label`).
 
 ---
 
@@ -52,7 +52,7 @@ Expected: tsc silent; existing tests pass.
 
 ```bash
 git add package.json pnpm-lock.yaml
-git commit -m "chore: add three.js and react-three-fiber for 3D home journey"
+git commit -m "chore: add three.js and react-three-fiber for 3D branding journey"
 ```
 
 ---
@@ -67,7 +67,7 @@ git commit -m "chore: add three.js and react-three-fiber for 3D home journey"
 - Produces (exact, later tasks depend on these):
   - `type Vec3 = [number, number, number]`
   - `interface Beat { id: string; start: number; end: number }`
-  - `const BEATS: Beat[]` — 8 beats, ids: `'hero' | 'manifesto' | 'services' | 'process' | 'ticketing' | 'portfolio' | 'testimonials' | 'contact'`, windows exactly `[0,.12] [.12,.24] [.24,.36] [.36,.48] [.48,.62] [.62,.78] [.78,.88] [.88,1]`
+  - `const BEATS: Beat[]` — 6 beats, ids: `'hero' | 'coreServices' | 'brandBoard' | 'deliverables' | 'buildPhases' | 'cta'`, windows exactly `[0,.16] [.16,.33] [.33,.52] [.52,.70] [.70,.86] [.86,1]`
   - `interface CameraState { position: Vec3; lookAt: Vec3 }`
   - `getCameraState(progress: number): CameraState` — clamped to [0,1], continuous, finite
   - `beatLocalT(beatIndex: number, progress: number): number` — 0→1 within a beat's window, clamped outside
@@ -81,13 +81,24 @@ import { describe, expect, it } from 'vitest'
 import { BEATS, beatLocalT, getCameraState, overlayOpacity } from './cameraPath'
 
 describe('BEATS', () => {
-  it('has 8 beats covering exactly 0..1 with contiguous windows', () => {
-    expect(BEATS).toHaveLength(8)
+  it('has 6 beats covering exactly 0..1 with contiguous windows', () => {
+    expect(BEATS).toHaveLength(6)
     expect(BEATS[0].start).toBe(0)
     expect(BEATS[BEATS.length - 1].end).toBe(1)
     for (let i = 1; i < BEATS.length; i++) {
       expect(BEATS[i].start).toBe(BEATS[i - 1].end)
     }
+  })
+
+  it('uses the branding beat ids in order', () => {
+    expect(BEATS.map((b) => b.id)).toEqual([
+      'hero',
+      'coreServices',
+      'brandBoard',
+      'deliverables',
+      'buildPhases',
+      'cta',
+    ])
   })
 })
 
@@ -101,7 +112,7 @@ describe('getCameraState', () => {
     }
   })
 
-  it('is continuous at every beat boundary (no jump larger than one smooth step)', () => {
+  it('is continuous at every beat boundary', () => {
     const eps = 0.0005
     for (const beat of BEATS.slice(1)) {
       const before = getCameraState(beat.start - eps)
@@ -122,8 +133,8 @@ describe('getCameraState', () => {
 describe('beatLocalT', () => {
   it('maps a beat window to 0..1 and clamps outside it', () => {
     expect(beatLocalT(0, 0)).toBe(0)
-    expect(beatLocalT(0, 0.06)).toBeCloseTo(0.5)
-    expect(beatLocalT(0, 0.12)).toBe(1)
+    expect(beatLocalT(0, 0.08)).toBeCloseTo(0.5)
+    expect(beatLocalT(0, 0.16)).toBe(1)
     expect(beatLocalT(0, 0.5)).toBe(1)
     expect(beatLocalT(3, 0)).toBe(0)
   })
@@ -132,7 +143,7 @@ describe('beatLocalT', () => {
 describe('overlayOpacity', () => {
   it('is 0 outside the beat window', () => {
     expect(overlayOpacity(2, 0.1)).toBe(0)
-    expect(overlayOpacity(2, 0.5)).toBe(0)
+    expect(overlayOpacity(2, 0.9)).toBe(0)
   })
 
   it('is fully visible during the dwell plateau and fades at the edges', () => {
@@ -145,7 +156,7 @@ describe('overlayOpacity', () => {
     expect(overlayOpacity(2, at(1.0))).toBe(0)
   })
 
-  it('adjacent overlays never exceed opacity 1 combined at any progress', () => {
+  it('overlays never exceed opacity 1 combined at any progress', () => {
     for (let p = 0; p <= 1.0001; p += 0.005) {
       let sum = 0
       for (let i = 0; i < BEATS.length; i++) sum += overlayOpacity(i, Math.min(p, 1))
@@ -168,7 +179,7 @@ Expected: FAIL — module `./cameraPath` not found.
 
 ```ts
 // src/components/marketing/journey/cameraPath.ts
-// Pure scroll-progress math for the 3D home journey. No three.js imports —
+// Pure scroll-progress math for the 3D branding journey. No three.js imports —
 // keeps this unit-testable in plain Vitest.
 
 export type Vec3 = [number, number, number]
@@ -180,14 +191,12 @@ export interface Beat {
 }
 
 export const BEATS: Beat[] = [
-  { id: 'hero', start: 0, end: 0.12 },
-  { id: 'manifesto', start: 0.12, end: 0.24 },
-  { id: 'services', start: 0.24, end: 0.36 },
-  { id: 'process', start: 0.36, end: 0.48 },
-  { id: 'ticketing', start: 0.48, end: 0.62 },
-  { id: 'portfolio', start: 0.62, end: 0.78 },
-  { id: 'testimonials', start: 0.78, end: 0.88 },
-  { id: 'contact', start: 0.88, end: 1 },
+  { id: 'hero', start: 0, end: 0.16 },
+  { id: 'coreServices', start: 0.16, end: 0.33 },
+  { id: 'brandBoard', start: 0.33, end: 0.52 },
+  { id: 'deliverables', start: 0.52, end: 0.7 },
+  { id: 'buildPhases', start: 0.7, end: 0.86 },
+  { id: 'cta', start: 0.86, end: 1 },
 ]
 
 export interface CameraState {
@@ -195,9 +204,9 @@ export interface CameraState {
   lookAt: Vec3
 }
 
-// 9 keyframes: beat i travels keyframe[i] -> keyframe[i+1].
-// Venue coordinates: stage centered at z=-8, entrance/QR portal at +z,
-// trusses at y≈10, LED screens at y≈6.
+// 7 keyframes: beat i travels keyframe[i] -> keyframe[i+1].
+// Venue coordinates: stage centered at z=-8, brand panels around y≈6,
+// trusses at y≈10, crowd on the floor in front of the stage.
 interface Keyframe {
   position: Vec3
   lookAt: Vec3
@@ -206,13 +215,11 @@ interface Keyframe {
 const KEYFRAMES: Keyframe[] = [
   { position: [0, 26, 30], lookAt: [0, 2, -8] }, // K0 high above venue
   { position: [0, 14, 22], lookAt: [0, 3, -8] }, // K1 hero push-in done
-  { position: [0, 4, 14], lookAt: [0, 4, -8] }, // K2 facing stage (manifesto)
-  { position: [-10, 9, 4], lookAt: [0, 10, -8] }, // K3 at the trusses (services)
-  { position: [10, 3, 2], lookAt: [-4, 2, -8] }, // K4 stage-edge dolly (process)
-  { position: [0, 4, 16], lookAt: [0, 4, 24] }, // K5 facing entrance / QR portal (ticketing)
-  { position: [-6, 6, 0], lookAt: [6, 6, -6] }, // K6 among LED screens (portfolio)
-  { position: [0, 10, 24], lookAt: [0, 3, -8] }, // K7 pulled back, crowd reveal (testimonials)
-  { position: [0, 20, 18], lookAt: [0, 1, -8] }, // K8 risen above venue (contact)
+  { position: [-10, 9, 4], lookAt: [0, 10, -8] }, // K2 at the trusses (core services)
+  { position: [-6, 6, 0], lookAt: [6, 6, -6] }, // K3 among brand panels (brand board)
+  { position: [10, 3, 2], lookAt: [-4, 2, -8] }, // K4 stage-edge dolly (deliverables)
+  { position: [0, 10, 24], lookAt: [0, 3, -8] }, // K5 pulled back, crowd reveal (build phases)
+  { position: [0, 20, 18], lookAt: [0, 1, -8] }, // K6 risen above venue (cta)
 ]
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -275,16 +282,16 @@ export function overlayOpacity(beatIndex: number, progress: number): number {
 
 ```bash
 cd /Users/redmen/Projects/event-tickets
-source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec vitest run src/components/marketing/journey/cameraPath.test.ts
+source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec vitest run
 ```
 
-Expected: PASS — all tests green. Also run the full suite once (`pnpm exec vitest run`) to confirm nothing else broke.
+Expected: PASS — new tests green, full suite still green.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add src/components/marketing/journey/cameraPath.ts src/components/marketing/journey/cameraPath.test.ts
-git commit -m "feat: add camera path math for 3D home journey"
+git commit -m "feat: add camera path math for 3D branding journey"
 ```
 
 ---
@@ -295,14 +302,16 @@ git commit -m "feat: add camera path math for 3D home journey"
 - Create: `src/components/marketing/journey/progressContext.ts`
 - Create: `src/components/marketing/journey/Scene.tsx`
 - Create: `src/components/marketing/journey/EventJourney.tsx`
-- Modify: `src/app/(marketing)/page.tsx`
+- Create: `src/components/marketing/sections/branding/ClosingCta.tsx` (extracted verbatim from the page's inline CTA JSX)
+- Modify: `src/app/(marketing)/branding/page.tsx`
 
 **Interfaces:**
 - Consumes: `getCameraState`, `BEATS`, `overlayOpacity` from `./cameraPath` (Task 2).
 - Produces:
-  - `ProgressContext: React.Context<React.MutableRefObject<number>>` and hook `useProgress(): React.MutableRefObject<number>` from `progressContext.ts` — scene element components (Tasks 4–5) read `useProgress().current` inside `useFrame`.
-  - `Scene` accepts no props; renders inside `<Canvas>`; contains the camera rig that applies `getCameraState` every frame.
-  - `EventJourney` accepts an `overlays?: React.ReactNode[]` prop (array indexed by beat; Task 6 fills it). Each overlay node is wrapped in a full-viewport fixed div whose opacity EventJourney drives via `overlayOpacity`.
+  - `ProgressContext` + `useProgress(): React.MutableRefObject<number>` from `progressContext.ts` — scene element components (Tasks 4–5) read `useProgress().current` inside `useFrame`.
+  - `Scene` — no props; renders inside `<Canvas>`; camera rig applies `getCameraState` every frame.
+  - `EventJourney` — props `{ overlays?: React.ReactNode[] }` (array indexed by beat; Task 6 fills it). Each overlay is wrapped in a fixed full-viewport div whose opacity EventJourney drives via `overlayOpacity`.
+  - `ClosingCta` — the existing closing-CTA section markup as a reusable component (default export).
 
 - [ ] **Step 1: Write `progressContext.ts`**
 
@@ -355,14 +364,31 @@ export function Scene() {
       <fog attach="fog" args={['#080808', 12, 55]} />
       <ambientLight intensity={0.15} />
       <CameraRig />
-      {/* Venue elements (Stage, Trusses, SpotBeams, CrowdParticles, LedScreens, QrPortal)
+      {/* Venue elements (Stage, Trusses, SpotBeams, CrowdParticles, BrandPanels)
           are added in Tasks 4 and 5. */}
     </>
   )
 }
 ```
 
-- [ ] **Step 3: Write `EventJourney.tsx`**
+- [ ] **Step 3: Extract `ClosingCta.tsx`**
+
+Create `src/components/marketing/sections/branding/ClosingCta.tsx` containing exactly the current closing-CTA `<section>` JSX from `src/app/(marketing)/branding/page.tsx` (the block starting `{/* Closing CTA */}` through its closing `</section>`), wrapped as:
+
+```tsx
+import Link from 'next/link'
+import Button from '@/components/marketing/ui/Button'
+
+export default function ClosingCta() {
+  return (
+    /* paste the existing <section>…</section> JSX verbatim from the page — read the page file first */
+  )
+}
+```
+
+Copy the JSX exactly — do not restyle it.
+
+- [ ] **Step 4: Write `EventJourney.tsx`**
 
 ```tsx
 // src/components/marketing/journey/EventJourney.tsx
@@ -376,14 +402,12 @@ import { BEATS, overlayOpacity } from './cameraPath'
 import { ProgressContext } from './progressContext'
 import { Scene } from './Scene'
 
-import Hero from '@/components/marketing/sections/Hero'
-import Manifesto from '@/components/marketing/sections/Manifesto'
-import Services from '@/components/marketing/sections/Services'
-import ProcessTimeline from '@/components/marketing/sections/ProcessTimeline'
-import TicketingCallout from '@/components/marketing/sections/TicketingCallout'
-import Portfolio from '@/components/marketing/sections/Portfolio'
-import Testimonials from '@/components/marketing/sections/Testimonials'
-import Contact from '@/components/marketing/sections/Contact'
+import BrandingHero from '@/components/marketing/sections/branding/BrandingHero'
+import CoreServices from '@/components/marketing/sections/branding/CoreServices'
+import BrandBoard from '@/components/marketing/sections/branding/BrandBoard'
+import BrandingDeliverables from '@/components/marketing/sections/branding/BrandingDeliverables'
+import BrandBuildPhases from '@/components/marketing/sections/branding/BrandBuildPhases'
+import ClosingCta from '@/components/marketing/sections/branding/ClosingCta'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -392,14 +416,12 @@ const SCROLL_VH_PER_BEAT = 100
 function FlatFallback() {
   return (
     <>
-      <Hero />
-      <Manifesto />
-      <Services />
-      <ProcessTimeline />
-      <TicketingCallout />
-      <Portfolio />
-      <Testimonials />
-      <Contact />
+      <BrandingHero />
+      <CoreServices />
+      <BrandBoard />
+      <BrandingDeliverables />
+      <BrandBuildPhases />
+      <ClosingCta />
     </>
   )
 }
@@ -497,41 +519,47 @@ export default function EventJourney({ overlays = [] }: { overlays?: ReactNode[]
 
 Note: overlays use `pointer-events-none` on the wrapper; interactive overlay content (links/buttons in Task 6) re-enables with `pointer-events-auto` on itself.
 
-- [ ] **Step 4: Swap the home page**
+- [ ] **Step 5: Swap the branding page**
 
-Replace the full contents of `src/app/(marketing)/page.tsx` with:
+Replace the contents of `src/app/(marketing)/branding/page.tsx` with (keeping the metadata export — the page stays a server component):
 
 ```tsx
 import EventJourney from '@/components/marketing/journey/EventJourney'
 
-export default function Home() {
+export const metadata = {
+  title: 'Branding — Lyante Production',
+  description:
+    'Full-service brand building — strategy, identity, color, typography, brand boards, websites, social media, local SEO, content, paid ads and sustainable marketing.',
+}
+
+export default function BrandingPage() {
   return <EventJourney />
 }
 ```
 
-(Overlays are added to this call in Task 6.)
+(Overlays are added to this call in Task 6. Do NOT touch `src/app/(marketing)/page.tsx` — the home page keeps its current flat sections.)
 
-- [ ] **Step 5: Verify**
+- [ ] **Step 6: Verify**
 
 ```bash
 cd /Users/redmen/Projects/event-tickets
 source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec tsc --noEmit && pnpm exec vitest run
 ```
 
-Expected: clean tsc, all tests pass. Then boot the dev server briefly and confirm the page compiles and renders (a dark viewport with fog; camera moves on scroll):
+Expected: clean tsc, all tests pass. Then boot the dev server briefly and confirm `/branding` compiles (dark viewport with fog; camera moves on scroll):
 
 ```bash
 cd /Users/redmen/Projects/event-tickets
 source ~/.nvm/nvm.sh && nvm use 22 && timeout 40 pnpm dev || true
 ```
 
-Expected: "Ready" message, no compile errors for `/`. (Full visual verification happens in Task 7.)
+Expected: "Ready" message, no compile errors. (Full visual verification happens in Task 7.)
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/components/marketing/journey/progressContext.ts src/components/marketing/journey/Scene.tsx src/components/marketing/journey/EventJourney.tsx "src/app/(marketing)/page.tsx"
-git commit -m "feat: add EventJourney scaffold with scroll-scrubbed camera and WebGL fallback"
+git add src/components/marketing/journey/progressContext.ts src/components/marketing/journey/Scene.tsx src/components/marketing/journey/EventJourney.tsx src/components/marketing/sections/branding/ClosingCta.tsx "src/app/(marketing)/branding/page.tsx"
+git commit -m "feat: add EventJourney scaffold on /branding with scroll-scrubbed camera and WebGL fallback"
 ```
 
 ---
@@ -547,6 +575,7 @@ git commit -m "feat: add EventJourney scaffold with scroll-scrubbed camera and W
 **Interfaces:**
 - Consumes: `useProgress()` from `../progressContext`; `beatLocalT` from `../cameraPath`.
 - Produces: `<Stage />`, `<Trusses />`, `<SpotBeams />` — no props.
+- Beat indices used by SpotBeams: **1** (coreServices: beams sweep on), **3** (deliverables: 4 pools ignite), **5** (cta: dim all but center pair).
 
 - [ ] **Step 1: Write `scene/Stage.tsx`**
 
@@ -626,7 +655,7 @@ export function Trusses() {
 
 - [ ] **Step 3: Write `scene/SpotBeams.tsx`**
 
-Six beams hang from the trusses. During the **services** beat (index 2) they sweep on one-by-one; during the **process** beat (index 3) the first four brighten sequentially as the "spotlight pools". During the **contact** beat (index 7) all but the center pair fade out. Beams are additive-blended cones (fake volumetrics).
+Six beams hang from the trusses. During the **coreServices** beat (index 1) they sweep on one-by-one; during the **deliverables** beat (index 3) the first four brighten sequentially as "spotlight pools"; during the **cta** beat (index 5) all but the center pair fade out. Beams are additive-blended cones (fake volumetrics).
 
 ```tsx
 // src/components/marketing/journey/scene/SpotBeams.tsx
@@ -648,24 +677,24 @@ export function SpotBeams() {
 
   useFrame(() => {
     const p = progress.current
-    const servicesT = beatLocalT(2, p)
-    const processT = beatLocalT(3, p)
-    const contactT = beatLocalT(7, p)
+    const servicesT = beatLocalT(1, p)
+    const deliverablesT = beatLocalT(3, p)
+    const ctaT = beatLocalT(5, p)
 
     BEAM_XS.forEach((_, i) => {
       const mat = materials.current[i]
       if (!mat) return
-      // services: beam i ignites when the sweep passes its slot
+      // core services: beam i ignites when the sweep passes its slot
       const ignite = clamp01(servicesT * BEAM_XS.length - i)
       let intensity = 0.28 * ignite
-      // process: first 4 beams pulse up sequentially
+      // deliverables: first 4 beams pulse up sequentially
       if (i < 4) {
-        const pool = clamp01(processT * 4 - i)
+        const pool = clamp01(deliverablesT * 4 - i)
         intensity = Math.max(intensity, 0.45 * pool)
       }
-      // contact: dim everything except the center pair
-      if (contactT > 0 && i !== 2 && i !== 3) {
-        intensity *= 1 - contactT
+      // cta: dim everything except the center pair
+      if (ctaT > 0 && i !== 2 && i !== 3) {
+        intensity *= 1 - ctaT
       }
       mat.opacity = intensity
     })
@@ -729,21 +758,21 @@ git commit -m "feat: add stage, trusses, and progress-driven spotlight beams"
 
 ---
 
-### Task 5: Venue elements B — CrowdParticles, LedScreens, QrPortal
+### Task 5: Venue elements B — CrowdParticles, BrandPanels
 
 **Files:**
 - Create: `src/components/marketing/journey/scene/CrowdParticles.tsx`
-- Create: `src/components/marketing/journey/scene/LedScreens.tsx`
-- Create: `src/components/marketing/journey/scene/QrPortal.tsx`
-- Modify: `src/components/marketing/journey/Scene.tsx` (render the three new elements)
+- Create: `src/components/marketing/journey/scene/BrandPanels.tsx`
+- Modify: `src/components/marketing/journey/Scene.tsx` (render the two new elements)
 
 **Interfaces:**
 - Consumes: `useProgress()`, `beatLocalT` (same as Task 4).
-- Produces: `<CrowdParticles />`, `<LedScreens />`, `<QrPortal />` — no props.
+- Produces: `<CrowdParticles />`, `<BrandPanels />` — no props.
+- Beat indices used: CrowdParticles brightens during **buildPhases** (index 4) in 4 waves; BrandPanels light up during **brandBoard** (index 2).
 
 - [ ] **Step 1: Write `scene/CrowdParticles.tsx`**
 
-~2,000 instanced glowing dots in front of the stage, gentle sway; they brighten in waves during the **testimonials** beat (index 6).
+~2,000 instanced glowing dots in front of the stage, gentle sway; they brighten in 4 sequential waves during the **buildPhases** beat (one wave per phase: Discover → Design → Deploy → Amplify), grouped by z-depth rows.
 
 ```tsx
 // src/components/marketing/journey/scene/CrowdParticles.tsx
@@ -757,11 +786,12 @@ import { useProgress } from '../progressContext'
 
 const COUNT = 2000
 const dummy = new THREE.Object3D()
+const color = new THREE.Color()
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 export function CrowdParticles() {
   const progress = useProgress()
   const meshRef = useRef<THREE.InstancedMesh>(null)
-  const matRef = useRef<THREE.MeshBasicMaterial>(null)
 
   // Deterministic pseudo-random layout (seeded by index) in the crowd area.
   const seeds = useMemo(() => {
@@ -771,9 +801,11 @@ export function CrowdParticles() {
       const r3 = Math.abs(Math.sin(i * 3.7) * 2751.3) % 1
       return {
         x: (r1 - 0.5) * 34,
-        z: 0 + r2 * 22,
+        z: r2 * 22,
         y: 1.4 + r3 * 0.5,
         phase: r1 * Math.PI * 2,
+        // wave 0..3 by depth row: nearest-to-stage quarter is wave 0
+        wave: Math.min(3, Math.floor(r2 * 4)),
       }
     })
   }, [])
@@ -782,27 +814,29 @@ export function CrowdParticles() {
     const mesh = meshRef.current
     if (!mesh) return
     const t = clock.getElapsedTime()
+    const phasesT = beatLocalT(4, progress.current)
+
     seeds.forEach((s, i) => {
       dummy.position.set(s.x, s.y + Math.sin(t * 1.4 + s.phase) * 0.12, s.z)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
+      // brighten wave-by-wave during buildPhases
+      const lit = clamp01(phasesT * 4 - s.wave)
+      const brightness = 0.35 + lit * 0.65
+      color.set('#F5C842').multiplyScalar(brightness)
+      mesh.setColorAt(i, color)
     })
     mesh.instanceMatrix.needsUpdate = true
-
-    const testimonialsT = beatLocalT(6, progress.current)
-    if (matRef.current) {
-      matRef.current.opacity = 0.35 + testimonialsT * 0.65
-    }
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
   })
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, COUNT]}>
       <sphereGeometry args={[0.07, 6, 6]} />
       <meshBasicMaterial
-        ref={matRef}
-        color="#F5C842"
+        color="#ffffff"
         transparent
-        opacity={0.35}
+        opacity={0.8}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -811,75 +845,78 @@ export function CrowdParticles() {
 }
 ```
 
-- [ ] **Step 2: Write `scene/LedScreens.tsx`**
+- [ ] **Step 2: Write `scene/BrandPanels.tsx`**
 
-Six floating screens textured with existing portfolio photos; each brightens as the camera approaches during the **portfolio** beat (index 5). Textures load lazily via drei's `useTexture` inside `<Suspense>` (Scene.tsx wraps it in Step 4).
+Six floating framed panels hung around the brand-board camera path (K3 area): the 5 BrandBoard color swatches (Ink `#0E1522`, Gold `#C8922A`, Bone `#E8E2D5`, Clay `#B4443C`, Sage `#6B8F71`) plus one dark "typography" panel with a gold rule. Panels light up sequentially during the **brandBoard** beat (index 2). Fully procedural — no textures.
 
 ```tsx
-// src/components/marketing/journey/scene/LedScreens.tsx
+// src/components/marketing/journey/scene/BrandPanels.tsx
 'use client'
 
-import { useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import * as THREE from 'three'
 import { beatLocalT } from '../cameraPath'
 import { useProgress } from '../progressContext'
 
-const PHOTOS = [
-  '/images/photo-2.jpg',
-  '/images/photo-4.jpg',
-  '/images/photo-5.jpg',
-  '/images/photo-6.jpg',
-  '/images/photo-7.jpg',
-  '/images/photo-8.jpg',
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+
+const PANELS: {
+  color: string
+  position: [number, number, number]
+  rotationY: number
+}[] = [
+  { color: '#0E1522', position: [-8, 6, -2], rotationY: Math.PI / 5 },
+  { color: '#C8922A', position: [-4, 6.5, -6], rotationY: Math.PI / 10 },
+  { color: '#E8E2D5', position: [0, 6, -3], rotationY: 0 },
+  { color: '#B4443C', position: [4, 6.5, -6], rotationY: -Math.PI / 10 },
+  { color: '#6B8F71', position: [8, 6, -2], rotationY: -Math.PI / 5 },
+  { color: '#111111', position: [0, 7.5, 2], rotationY: Math.PI }, // typography panel
 ]
 
-// Hung around the camera's portfolio-beat path (K6 area: x -6..6, y 6, z -6..0)
-const PLACEMENTS: { position: [number, number, number]; rotationY: number }[] = [
-  { position: [-8, 6, -2], rotationY: Math.PI / 5 },
-  { position: [-4, 6.5, -6], rotationY: Math.PI / 10 },
-  { position: [0, 6, -3], rotationY: 0 },
-  { position: [4, 6.5, -6], rotationY: -Math.PI / 10 },
-  { position: [8, 6, -2], rotationY: -Math.PI / 5 },
-  { position: [0, 7.5, 2], rotationY: Math.PI },
-]
-
-export function LedScreens() {
+export function BrandPanels() {
   const progress = useProgress()
-  const textures = useTexture(PHOTOS)
-  const materials = useRef<(THREE.MeshBasicMaterial | null)[]>([])
+  const materials = useRef<(THREE.MeshStandardMaterial | null)[]>([])
 
   useFrame(() => {
-    const portfolioT = beatLocalT(5, progress.current)
+    const boardT = beatLocalT(2, progress.current)
     materials.current.forEach((mat, i) => {
       if (!mat) return
-      // screens light up sequentially as the beat advances
-      const lit = Math.min(1, Math.max(0, portfolioT * PLACEMENTS.length - i * 0.7))
-      mat.color.setScalar(0.12 + lit * 0.88)
+      // panels light up sequentially as the beat advances
+      const lit = clamp01(boardT * PANELS.length - i * 0.7)
+      mat.emissiveIntensity = 0.05 + lit * 0.9
     })
   })
 
   return (
     <group>
-      {PLACEMENTS.map((placement, i) => (
-        <group key={i} position={placement.position} rotation={[0, placement.rotationY, 0]}>
+      {PANELS.map((panel, i) => (
+        <group key={i} position={panel.position} rotation={[0, panel.rotationY, 0]}>
           {/* gold frame */}
           <mesh position={[0, 0, -0.03]}>
-            <boxGeometry args={[4.3, 2.6, 0.05]} />
+            <boxGeometry args={[3.4, 2.2, 0.05]} />
             <meshStandardMaterial color="#C8922A" emissive="#8B5E10" emissiveIntensity={0.4} />
           </mesh>
-          {/* screen */}
+          {/* swatch face */}
           <mesh>
-            <planeGeometry args={[4.1, 2.4]} />
-            <meshBasicMaterial
+            <planeGeometry args={[3.2, 2]} />
+            <meshStandardMaterial
               ref={(m) => {
                 materials.current[i] = m
               }}
-              map={textures[i]}
-              toneMapped={false}
+              color={panel.color}
+              emissive={panel.color}
+              emissiveIntensity={0.05}
+              roughness={0.6}
             />
           </mesh>
+          {/* gold rule on the typography panel */}
+          {i === PANELS.length - 1 && (
+            <mesh position={[0, 0, 0.01]}>
+              <planeGeometry args={[2.4, 0.08]} />
+              <meshStandardMaterial color="#C8922A" emissive="#C8922A" emissiveIntensity={1.2} />
+            </mesh>
+          )}
         </group>
       ))}
     </group>
@@ -887,104 +924,13 @@ export function LedScreens() {
 }
 ```
 
-- [ ] **Step 3: Write `scene/QrPortal.tsx`**
+- [ ] **Step 3: Render them in `Scene.tsx`**
 
-A gate of emissive cubes at the venue entrance (+z, where the ticketing-beat camera looks). Cubes materialize one-by-one during the **ticketing** beat (index 4) with a scan-line pulse. Uses a deterministic pseudo-QR pattern (17×17, seeded) — visual aesthetic only, not a scannable code.
-
-```tsx
-// src/components/marketing/journey/scene/QrPortal.tsx
-'use client'
-
-import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
-import * as THREE from 'three'
-import { beatLocalT } from '../cameraPath'
-import { useProgress } from '../progressContext'
-
-const GRID = 17
-const CELL = 0.32
-const dummy = new THREE.Object3D()
-
-function isDark(row: number, col: number): boolean {
-  // Deterministic pseudo-QR: finder squares in three corners + hash noise.
-  const inFinder = (r: number, c: number) =>
-    (r < 5 && c < 5) || (r < 5 && c >= GRID - 5) || (r >= GRID - 5 && c < 5)
-  if (inFinder(row, col)) {
-    const lr = row < 5 ? row : row - (GRID - 5)
-    const lc = col < 5 ? col : col - (GRID - 5)
-    return lr === 0 || lr === 4 || lc === 0 || lc === 4 || (lr === 2 && lc === 2)
-  }
-  return Math.abs(Math.sin(row * 37.11 + col * 17.77) * 941.7) % 1 > 0.52
-}
-
-export function QrPortal() {
-  const progress = useProgress()
-  const meshRef = useRef<THREE.InstancedMesh>(null)
-  const scanRef = useRef<THREE.MeshBasicMaterial>(null)
-
-  const cells = useMemo(() => {
-    const out: { x: number; y: number }[] = []
-    for (let r = 0; r < GRID; r++) {
-      for (let c = 0; c < GRID; c++) {
-        if (isDark(r, c)) out.push({ x: (c - GRID / 2) * CELL, y: (GRID / 2 - r) * CELL + 4 })
-      }
-    }
-    return out
-  }, [])
-
-  useFrame(({ clock }) => {
-    const mesh = meshRef.current
-    if (!mesh) return
-    const ticketingT = beatLocalT(4, progress.current)
-    const visibleCount = Math.floor(ticketingT * cells.length)
-
-    cells.forEach((cell, i) => {
-      const scale = i < visibleCount ? 1 : 0.001
-      dummy.position.set(cell.x, cell.y, 24)
-      dummy.scale.setScalar(scale)
-      dummy.updateMatrix()
-      mesh.setMatrixAt(i, dummy.matrix)
-    })
-    mesh.instanceMatrix.needsUpdate = true
-
-    if (scanRef.current) {
-      const pulse = ticketingT > 0 && ticketingT < 1 ? (Math.sin(clock.getElapsedTime() * 4) + 1) / 2 : 0
-      scanRef.current.opacity = 0.35 * pulse * ticketingT
-    }
-  })
-
-  return (
-    <group>
-      <instancedMesh ref={meshRef} args={[undefined, undefined, cells.length]}>
-        <boxGeometry args={[CELL * 0.85, CELL * 0.85, CELL * 0.85]} />
-        <meshStandardMaterial color="#C8922A" emissive="#C8922A" emissiveIntensity={1.6} />
-      </instancedMesh>
-      {/* scan-line */}
-      <mesh position={[0, 4, 24.2]}>
-        <planeGeometry args={[GRID * CELL * 1.1, 0.12]} />
-        <meshBasicMaterial
-          ref={scanRef}
-          color="#F5C842"
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-    </group>
-  )
-}
-```
-
-- [ ] **Step 4: Render them in `Scene.tsx`**
-
-Add imports and render, wrapping `LedScreens` (which loads textures) in `Suspense`:
+Add imports and render:
 
 ```tsx
-import { Suspense } from 'react'
 import { CrowdParticles } from './scene/CrowdParticles'
-import { LedScreens } from './scene/LedScreens'
-import { QrPortal } from './scene/QrPortal'
+import { BrandPanels } from './scene/BrandPanels'
 ```
 
 ```tsx
@@ -993,13 +939,10 @@ import { QrPortal } from './scene/QrPortal'
       <Trusses />
       <SpotBeams />
       <CrowdParticles />
-      <QrPortal />
-      <Suspense fallback={null}>
-        <LedScreens />
-      </Suspense>
+      <BrandPanels />
 ```
 
-- [ ] **Step 5: Verify**
+- [ ] **Step 4: Verify**
 
 ```bash
 cd /Users/redmen/Projects/event-tickets
@@ -1008,32 +951,30 @@ source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec tsc --noEmit && pnpm exec vitest
 
 Expected: clean.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/marketing/journey/scene/CrowdParticles.tsx src/components/marketing/journey/scene/LedScreens.tsx src/components/marketing/journey/scene/QrPortal.tsx src/components/marketing/journey/Scene.tsx
-git commit -m "feat: add crowd particles, LED portfolio screens, and QR portal"
+git add src/components/marketing/journey/scene/CrowdParticles.tsx src/components/marketing/journey/scene/BrandPanels.tsx src/components/marketing/journey/Scene.tsx
+git commit -m "feat: add crowd particles and brand-board panels"
 ```
 
 ---
 
-### Task 6: Overlays — 8 beat overlays wired into the journey
+### Task 6: Overlays — 6 beat overlays wired into the journey
 
 **Files:**
 - Create: `src/components/marketing/journey/overlays/OverlayShell.tsx`
 - Create: `src/components/marketing/journey/overlays/HeroOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/ManifestoOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/ServicesOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/ProcessOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/TicketingOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/PortfolioOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/TestimonialsOverlay.tsx`
-- Create: `src/components/marketing/journey/overlays/ContactOverlay.tsx`
-- Modify: `src/app/(marketing)/page.tsx` (pass overlays)
+- Create: `src/components/marketing/journey/overlays/CoreServicesOverlay.tsx`
+- Create: `src/components/marketing/journey/overlays/BrandBoardOverlay.tsx`
+- Create: `src/components/marketing/journey/overlays/DeliverablesOverlay.tsx`
+- Create: `src/components/marketing/journey/overlays/BuildPhasesOverlay.tsx`
+- Create: `src/components/marketing/journey/overlays/CtaOverlay.tsx`
+- Modify: `src/app/(marketing)/branding/page.tsx` (pass overlays)
 
 **Interfaces:**
-- Consumes: `EventJourney`'s `overlays?: ReactNode[]` prop (Task 3) — array order MUST match `BEATS` order: hero, manifesto, services, process, ticketing, portfolio, testimonials, contact.
-- Copy source: reuse headline/card/quote text **verbatim** from the corresponding files in `src/components/marketing/sections/` (read each before writing its overlay). Do not modify those files.
+- Consumes: `EventJourney`'s `overlays?: ReactNode[]` prop (Task 3) — array order MUST match `BEATS` order: hero, coreServices, brandBoard, deliverables, buildPhases, cta.
+- Copy source: reuse headline/card/phase text **verbatim** from the corresponding files in `src/components/marketing/sections/branding/` (read each before writing its overlay). Do not modify those files.
 
 - [ ] **Step 1: Write the shared shell**
 
@@ -1055,62 +996,55 @@ export function OverlayShell({
       className={`mx-auto px-6 py-10 rounded-2xl ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}
       style={{ backgroundColor: 'rgba(8,8,8,0.55)', backdropFilter: 'blur(6px)' }}
     >
-      {label && (
-        <p
-          className="font-mono text-xs tracking-[0.25em] mb-4"
-          style={{ color: '#C8922A' }}
-        >
-          {label}
-        </p>
-      )}
+      {label && <p className="section-label mb-4">{label}</p>}
       {children}
     </div>
   )
 }
 ```
 
-- [ ] **Step 2: Write the 8 overlays**
+- [ ] **Step 2: Write the 6 overlays**
 
 Each overlay is a thin presentational component. Pull copy verbatim from the matching section file (read it first). Concrete requirements per overlay:
 
-- `HeroOverlay` — LYANTE wordmark (reuse `src/components/marketing/ui/Logo.tsx` if it renders standalone; otherwise the text "LYANTE" in the site's Bebas-style heading class) + the hero tagline from `sections/Hero.tsx`. No shell scrim (hero floats directly over the scene); center-screen, large.
-- `ManifestoOverlay` — the manifesto line from `sections/Manifesto.tsx` ("We don't just cover events. We preserve them." — confirm exact copy in the file) in large italic serif, inside `OverlayShell`.
-- `ServicesOverlay` — `OverlayShell wide` + `label="WHAT WE DO"`; a 2×3 grid of the 6 service titles + one-line descriptions from `sections/Services.tsx` (number, label, title, description fields of its data array).
-- `ProcessOverlay` — `OverlayShell wide` + `label="HOW WE WORK"`; the 4 phases (PRE-EVENT / EVENT DAY / POST-EVENT / FOREVER) with their item lists from `sections/ProcessTimeline.tsx`, rendered as a horizontal 4-column row (stacks on small screens with `grid-cols-2 md:grid-cols-4`).
-- `TicketingOverlay` — `OverlayShell` + `label="SMART TICKETING"`; headline "Zero hassle. Zero fakes." + the checklist items from `sections/TicketingCallout.tsx`; a "GET A DEMO →" link to `/ticketing` with `pointer-events-auto` on the anchor.
-- `PortfolioOverlay` — minimal by design (the LED screens carry the visuals): `label="OUR WORK"` + one line, e.g. the section heading text from `sections/Portfolio.tsx`, positioned bottom-center rather than center (use a wrapper `self-end mb-24`).
-- `TestimonialsOverlay` — `OverlayShell` + `label="WHAT CLIENTS SAY"`; copy the `testimonials` array verbatim from `sections/Testimonials.tsx` into the overlay file and render the first quote + attribution (name, role). Static — no carousel; YAGNI.
-- `ContactOverlay` — `OverlayShell` + heading "Let's create" (confirm exact copy in `sections/Contact.tsx`) + a gold "SEND YOUR BRIEF →" anchor to `/contact` with `pointer-events-auto`.
+- `HeroOverlay` — the BrandingHero headline and tagline copy from `sections/branding/BrandingHero.tsx` (uses `section-label` "CREATIVE & BRANDING" and the `font-cormorant` headline). No shell scrim — floats directly over the scene, center-screen, large type (`font-cormorant font-bold text-ivory`, `style={{ fontSize: 'var(--t-display)' }}`).
+- `CoreServicesOverlay` — `OverlayShell wide` + `label="CORE SERVICES"`; a stacking `md:grid-cols-3` grid of the 3 services from `sections/branding/CoreServices.tsx` (label + title + first descriptive line each: CONTENT CREATION / SOCIAL MEDIA MANAGEMENT / WEBSITE BUILDING).
+- `BrandBoardOverlay` — `OverlayShell` + `label="THE BRAND BOARD"`; the section heading copy from `sections/branding/BrandBoard.tsx`, plus a compact row of the 5 swatch names + hexes (Ink, Gold, Bone, Clay, Sage — render each as a small colored square + name) and the 3 type faces (Display · Cormorant, Impact · Bebas Neue, Body · DM Sans) — the 3D panels behind carry the visual weight, keep this text-light.
+- `DeliverablesOverlay` — `OverlayShell wide` + `label="WHAT YOU GET"`; the deliverables list from `sections/branding/BrandingDeliverables.tsx` (read the file; render its items as a 2-column checklist with gold ✓ markers).
+- `BuildPhasesOverlay` — `OverlayShell wide` + `label="HOW WE BUILD"`; the 4 phases verbatim from `sections/branding/BrandBuildPhases.tsx`: 01 DISCOVER / 02 DESIGN / 03 DEPLOY / 04 AMPLIFY with their body copy, in a `grid-cols-2 md:grid-cols-4` row.
+- `CtaOverlay` — `OverlayShell` + `label="LET'S BUILD"`; heading "Ready to become unforgettable?" + the supporting line ("Tell us about your brand and where you want it to go. We'll show you exactly how we'd get you there."), and the two buttons (reuse `@/components/marketing/ui/Button`: `href="/contact" variant="gold"` "BRIEF US →" and `href="/work" variant="outline"` "SEE OUR WORK") wrapped in a div with `pointer-events-auto`.
 
-Styling: use existing Tailwind theme tokens/classes found in the section files (e.g. heading font classes) so typography matches the site. Text colors: ivory `#F0EDE6` for body, gold `#C8922A` for accents.
+Styling: `text-ivory` body, `text-ash` secondary, gold accents, existing utility classes (`section-label`, `font-cormorant`) so typography matches the site.
 
 - [ ] **Step 3: Pass overlays from the page**
 
-Replace `src/app/(marketing)/page.tsx` contents with:
+Replace `src/app/(marketing)/branding/page.tsx` contents with:
 
 ```tsx
 import EventJourney from '@/components/marketing/journey/EventJourney'
 import { HeroOverlay } from '@/components/marketing/journey/overlays/HeroOverlay'
-import { ManifestoOverlay } from '@/components/marketing/journey/overlays/ManifestoOverlay'
-import { ServicesOverlay } from '@/components/marketing/journey/overlays/ServicesOverlay'
-import { ProcessOverlay } from '@/components/marketing/journey/overlays/ProcessOverlay'
-import { TicketingOverlay } from '@/components/marketing/journey/overlays/TicketingOverlay'
-import { PortfolioOverlay } from '@/components/marketing/journey/overlays/PortfolioOverlay'
-import { TestimonialsOverlay } from '@/components/marketing/journey/overlays/TestimonialsOverlay'
-import { ContactOverlay } from '@/components/marketing/journey/overlays/ContactOverlay'
+import { CoreServicesOverlay } from '@/components/marketing/journey/overlays/CoreServicesOverlay'
+import { BrandBoardOverlay } from '@/components/marketing/journey/overlays/BrandBoardOverlay'
+import { DeliverablesOverlay } from '@/components/marketing/journey/overlays/DeliverablesOverlay'
+import { BuildPhasesOverlay } from '@/components/marketing/journey/overlays/BuildPhasesOverlay'
+import { CtaOverlay } from '@/components/marketing/journey/overlays/CtaOverlay'
 
-export default function Home() {
+export const metadata = {
+  title: 'Branding — Lyante Production',
+  description:
+    'Full-service brand building — strategy, identity, color, typography, brand boards, websites, social media, local SEO, content, paid ads and sustainable marketing.',
+}
+
+export default function BrandingPage() {
   return (
     <EventJourney
       overlays={[
         <HeroOverlay key="hero" />,
-        <ManifestoOverlay key="manifesto" />,
-        <ServicesOverlay key="services" />,
-        <ProcessOverlay key="process" />,
-        <TicketingOverlay key="ticketing" />,
-        <PortfolioOverlay key="portfolio" />,
-        <TestimonialsOverlay key="testimonials" />,
-        <ContactOverlay key="contact" />,
+        <CoreServicesOverlay key="coreServices" />,
+        <BrandBoardOverlay key="brandBoard" />,
+        <DeliverablesOverlay key="deliverables" />,
+        <BuildPhasesOverlay key="buildPhases" />,
+        <CtaOverlay key="cta" />,
       ]}
     />
   )
@@ -1129,8 +1063,8 @@ Expected: clean.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/marketing/journey/overlays/ "src/app/(marketing)/page.tsx"
-git commit -m "feat: add journey overlays for all eight beats"
+git add src/components/marketing/journey/overlays/ "src/app/(marketing)/branding/page.tsx"
+git commit -m "feat: add journey overlays for all six branding beats"
 ```
 
 ---
@@ -1155,7 +1089,7 @@ cd /Users/redmen/Projects/event-tickets
 source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec next build
 ```
 
-Note: `pnpm run build` runs prisma migrate first (needs the DB); `pnpm exec next build` skips that. If `next build` fails on prisma generate, run `source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec prisma generate` first. Expected: build succeeds; `/` compiles as a static or client route without prerender errors. (If prerender fails because `EventJourney` touches `document` at module scope, the fix is the existing `webgl === null` first-paint guard — `supportsWebgl()` is only called inside `useEffect`, so this should already be safe.)
+Note: `pnpm run build` runs prisma migrate first (needs the DB); `pnpm exec next build` skips that. If `next build` fails on prisma generate, run `source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec prisma generate` first. Expected: build succeeds; `/branding` compiles without prerender errors (`supportsWebgl()` is only called inside `useEffect`, so SSR never touches `document`). Also confirm `/` (home) still builds unchanged.
 
 - [ ] **Step 3: Dev-server visual smoke test**
 
@@ -1164,13 +1098,15 @@ cd /Users/redmen/Projects/event-tickets
 source ~/.nvm/nvm.sh && nvm use 22 && pnpm dev
 ```
 
-Open `http://localhost:3000` in the in-app browser and verify, scrolling top to bottom:
-1. Beat 1: high aerial view of dark venue, camera pushes in, LYANTE hero overlay fades in during the dwell.
-2. Beat 3: beams sweep on left-to-right while the services overlay is readable.
-3. Beat 5: QR portal materializes cube-by-cube ahead of the camera.
-4. Beat 6: LED screens show portfolio photos and light up as the camera weaves past.
-5. Beat 8: lights dim to the center pair, contact overlay with working "SEND YOUR BRIEF" link (hover/click works despite `pointer-events-none` wrapper).
-6. No console errors; scrolling is smooth (no long-task jank warnings).
+Open `http://localhost:3000/branding` in the in-app browser and verify, scrolling top to bottom:
+1. Beat 1: high aerial view of dark venue, camera pushes in, branding hero overlay fades in during the dwell.
+2. Beat 2: beams sweep on left-to-right while the core-services overlay is readable.
+3. Beat 3: brand panels (5 swatches + type panel) light up sequentially as the camera weaves past.
+4. Beat 4: spotlight pools ignite along the stage edge behind the deliverables checklist.
+5. Beat 5: crowd brightens in 4 waves behind the build-phases overlay.
+6. Beat 6: lights dim to the center pair; CTA overlay with working "BRIEF US" / "SEE OUR WORK" buttons (hover/click works despite `pointer-events-none` wrapper).
+7. `http://localhost:3000/` (home) is unchanged — flat sections, no canvas.
+8. No console errors; scrolling is smooth.
 
 Fix anything broken (small tweaks to positions/opacity windows are expected tuning, not plan deviations). Stop the dev server when done.
 
@@ -1179,17 +1115,17 @@ Fix anything broken (small tweaks to positions/opacity windows are expected tuni
 ```bash
 cd /Users/redmen/Projects/event-tickets
 git add -A
-git commit -m "polish: tune 3D journey timings after visual verification" --allow-empty
+git commit -m "polish: tune 3D branding journey timings after visual verification" --allow-empty
 ```
 
 ---
 
 ## Manual review (not automatable)
 
-After Task 7, a human should scroll the page end-to-end and judge:
+After Task 7, a human should scroll `/branding` end-to-end and judge:
 - Does each dwell give enough reading time at a natural scroll pace?
-- Do any overlays collide visually with bright scene elements behind them?
-- Does the QR portal read as "ticketing" or does it need the overlay's copy to land first?
-- Mobile feel (user explicitly chose full-quality 3D everywhere — check it's tolerable on a real phone).
+- Do overlays collide visually with bright scene elements behind them?
+- Do the brand panels read as a "brand board" or do they need the overlay copy to land first?
+- Mobile feel (user explicitly chose full-quality 3D everywhere — check on a real phone).
 
 Tuning knobs, all one-line changes: `KEYFRAMES` in `cameraPath.ts`, `TRAVEL_FRACTION`, overlay ramp constants in `overlayOpacity`, `SCROLL_VH_PER_BEAT` in `EventJourney.tsx`.
