@@ -88,6 +88,7 @@ export function getCameraState(progress: number): CameraState {
 // out — it stays fully visible at the end of the scroll.
 export function overlayOpacity(beatIndex: number, progress: number): number {
   const beat = BEATS[beatIndex]
+  if (!beat) return 0
   const p = clamp01(progress)
   if (p < beat.start || p > beat.end) return 0
   const t = beatLocalT(beatIndex, p)

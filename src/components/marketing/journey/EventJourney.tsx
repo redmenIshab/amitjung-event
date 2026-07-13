@@ -54,19 +54,14 @@ function supportsWebgl(): boolean {
   }
 }
 
-export default function EventJourney({ overlays = [] }: { overlays?: ReactNode[] }) {
-  // null = not yet checked (SSR/first paint), then true/false after mount.
-  const [webgl, setWebgl] = useState<boolean | null>(null)
+function JourneyExperience({ overlays }: { overlays: ReactNode[] }) {
+  const [contextLost, setContextLost] = useState(false)
   const progressRef = useRef(0)
   const driverRef = useRef<HTMLDivElement>(null)
   const overlayRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    setWebgl(supportsWebgl())
-  }, [])
-
-  useEffect(() => {
-    if (!webgl || !driverRef.current) return
+    if (contextLost || !driverRef.current) return
     const trigger = ScrollTrigger.create({
       trigger: driverRef.current,
       start: 'top top',
@@ -84,40 +79,62 @@ export default function EventJourney({ overlays = [] }: { overlays?: ReactNode[]
       },
     })
     return () => trigger.kill()
-  }, [webgl])
+  }, [contextLost])
 
-  if (webgl === null) {
-    return <div style={{ height: '100vh', backgroundColor: '#080808' }} />
-  }
-  if (!webgl) return <FlatFallback />
+  if (contextLost) return <FlatFallback />
 
   return (
     <ProgressContext.Provider value={progressRef}>
-      <div ref={driverRef} style={{ height: `${BEATS.length * SCROLL_VH_PER_BEAT}vh` }}>
-        <div className="fixed inset-0">
-          <CanvasErrorBoundary fallback={<FlatFallback />}>
-            <Canvas
-              dpr={[1, 2]}
-              camera={{ fov: 55, near: 0.1, far: 120, position: [0, 26, 30] }}
-              gl={{ antialias: true, powerPreference: 'high-performance' }}
-            >
-              <Scene />
-            </Canvas>
-          </CanvasErrorBoundary>
-        </div>
-        {overlays.map((overlay, i) => (
-          <div
-            key={BEATS[i]?.id ?? i}
-            ref={(el) => {
-              overlayRefs.current[i] = el
+      <div
+        ref={driverRef}
+        className="relative"
+        style={{ height: `${BEATS.length * SCROLL_VH_PER_BEAT}vh` }}
+      >
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
+          <Canvas
+            dpr={[1, 2]}
+            camera={{ fov: 55, near: 0.1, far: 120, position: [0, 26, 30] }}
+            gl={{ antialias: true, powerPreference: 'high-performance' }}
+            onCreated={({ gl }) => {
+              gl.domElement.addEventListener('webglcontextlost', () => setContextLost(true))
             }}
-            className="fixed inset-0 pointer-events-none flex items-center justify-center"
-            style={{ opacity: 0, visibility: 'hidden' }}
           >
-            {overlay}
-          </div>
-        ))}
+            <Scene />
+          </Canvas>
+          {/* wrapper is pointer-events-none; interactive overlay content must set pointer-events-auto */}
+          {overlays.map((overlay, i) => (
+            <div
+              key={BEATS[i]?.id ?? i}
+              ref={(el) => {
+                overlayRefs.current[i] = el
+              }}
+              className="absolute inset-0 pointer-events-none flex items-center justify-center"
+              style={{ opacity: 0, visibility: 'hidden' }}
+            >
+              {overlay}
+            </div>
+          ))}
+        </div>
       </div>
     </ProgressContext.Provider>
+  )
+}
+
+export default function EventJourney({ overlays = [] }: { overlays?: ReactNode[] }) {
+  // false until the post-mount WebGL check passes: the server HTML and no-JS
+  // users get the full flat marketing content; the 3D journey progressively
+  // enhances after hydration.
+  const [webgl, setWebgl] = useState(false)
+
+  useEffect(() => {
+    setWebgl(supportsWebgl())
+  }, [])
+
+  if (!webgl) return <FlatFallback />
+
+  return (
+    <CanvasErrorBoundary fallback={<FlatFallback />}>
+      <JourneyExperience overlays={overlays} />
+    </CanvasErrorBoundary>
   )
 }

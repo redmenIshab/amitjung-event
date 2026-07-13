@@ -82,6 +82,10 @@ describe('overlayOpacity', () => {
     expect(overlayOpacity(2, at(1.0))).toBe(0)
   })
 
+  it('returns 0 for out-of-range beat indices', () => {
+    expect(overlayOpacity(BEATS.length, 0.5)).toBe(0)
+  })
+
   it('keeps the final CTA overlay fully visible at the end of the scroll', () => {
     expect(overlayOpacity(BEATS.length - 1, 1)).toBe(1)
     expect(overlayOpacity(BEATS.length - 1, 0.99)).toBe(1)
