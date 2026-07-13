@@ -11,7 +11,7 @@ export function OverlayShell({
 }) {
   return (
     <div
-      className={`mx-auto px-8 py-11 rounded-2xl ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}
+      className={`mx-auto w-fit px-7 py-7 rounded-2xl ${wide ? 'max-w-5xl' : 'max-w-2xl'}`}
       style={{
         // Soft raised panel: a subtle top-lit gradient with a faint gold rim
         // and glow so text separates from the near-black venue behind it.
