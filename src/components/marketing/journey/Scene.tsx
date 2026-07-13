@@ -5,6 +5,9 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import { getCameraState } from './cameraPath'
 import { useProgress } from './progressContext'
+import { Stage } from './scene/Stage'
+import { Trusses } from './scene/Trusses'
+import { SpotBeams } from './scene/SpotBeams'
 
 function CameraRig() {
   const progress = useProgress()
@@ -28,8 +31,10 @@ export function Scene() {
       <fog attach="fog" args={['#080808', 12, 55]} />
       <ambientLight intensity={0.15} />
       <CameraRig />
-      {/* Venue elements (Stage, Trusses, SpotBeams, CrowdParticles, BrandPanels)
-          are added in Tasks 4 and 5. */}
+      <Stage />
+      <Trusses />
+      <SpotBeams />
+      {/* CrowdParticles and BrandPanels are added in Task 5. */}
     </>
   )
 }
