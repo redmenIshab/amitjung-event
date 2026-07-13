@@ -29,7 +29,7 @@ export function Trusses() {
       ))}
       {/* vertical supports down to the stage */}
       {[-9.5, 9.5].map((x) => (
-        <TrussBar key={x} position={[x, -4.5, 2]} size={[0.3, 9, 0.3]} />
+        <TrussBar key={x} position={[x, -5, 2]} size={[0.3, 10, 0.3]} />
       ))}
     </group>
   )

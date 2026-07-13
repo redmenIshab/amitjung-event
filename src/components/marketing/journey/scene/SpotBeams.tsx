@@ -20,9 +20,9 @@ export function SpotBeams() {
     const deliverablesT = beatLocalT(3, p)
     const ctaT = beatLocalT(5, p)
 
-    BEAM_XS.forEach((_, i) => {
+    for (let i = 0; i < BEAM_XS.length; i++) {
       const mat = materials.current[i]
-      if (!mat) return
+      if (!mat) continue
       // core services: beam i ignites when the sweep passes its slot
       const ignite = clamp01(servicesT * BEAM_XS.length - i)
       let intensity = 0.28 * ignite
@@ -36,7 +36,7 @@ export function SpotBeams() {
         intensity *= 1 - ctaT
       }
       mat.opacity = intensity
-    })
+    }
   })
 
   return (
@@ -54,6 +54,7 @@ export function SpotBeams() {
             blending={THREE.AdditiveBlending}
             depthWrite={false}
             side={THREE.DoubleSide}
+            fog={false}
           />
         </mesh>
       ))}
