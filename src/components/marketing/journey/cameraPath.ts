@@ -11,10 +11,10 @@ export interface Beat {
 
 export const BEATS: Beat[] = [
   { id: 'hero', start: 0, end: 0.16 },
-  { id: 'coreServices', start: 0.16, end: 0.33 },
-  { id: 'brandBoard', start: 0.33, end: 0.52 },
-  { id: 'deliverables', start: 0.52, end: 0.7 },
-  { id: 'buildPhases', start: 0.7, end: 0.86 },
+  { id: 'features', start: 0.16, end: 0.33 },
+  { id: 'tickets', start: 0.33, end: 0.52 },
+  { id: 'scanner', start: 0.52, end: 0.7 },
+  { id: 'scale', start: 0.7, end: 0.86 },
   { id: 'cta', start: 0.86, end: 1 },
 ]
 
@@ -24,7 +24,7 @@ export interface CameraState {
 }
 
 // 7 keyframes: beat i travels keyframe[i] -> keyframe[i+1].
-// Venue coordinates: stage centered at z=-8, brand panels around y≈6,
+// Venue coordinates: stage centered at z=-8, ticket panels around y≈6,
 // trusses at y≈10, crowd on the floor in front of the stage.
 interface Keyframe {
   position: Vec3
@@ -34,10 +34,10 @@ interface Keyframe {
 const KEYFRAMES: Keyframe[] = [
   { position: [0, 26, 30], lookAt: [0, 2, -8] }, // K0 high above venue
   { position: [0, 14, 22], lookAt: [0, 3, -8] }, // K1 hero push-in done
-  { position: [-10, 9, 4], lookAt: [0, 10, -8] }, // K2 at the trusses (core services)
-  { position: [-6, 6, 0], lookAt: [6, 6, -6] }, // K3 among brand panels (brand board)
-  { position: [10, 3, 2], lookAt: [-4, 2, -8] }, // K4 stage-edge dolly (deliverables)
-  { position: [0, 10, 24], lookAt: [0, 3, -8] }, // K5 pulled back, crowd reveal (build phases)
+  { position: [-10, 9, 4], lookAt: [0, 10, -8] }, // K2 at the trusses (features)
+  { position: [-6, 6, 0], lookAt: [6, 6, -6] }, // K3 among ticket panels (tickets)
+  { position: [10, 3, 2], lookAt: [-4, 2, -8] }, // K4 stage-edge dolly (scanner)
+  { position: [0, 10, 24], lookAt: [0, 3, -8] }, // K5 pulled back, crowd reveal (scale)
   { position: [0, 20, 18], lookAt: [0, 1, -8] }, // K6 risen above venue (cta)
 ]
 

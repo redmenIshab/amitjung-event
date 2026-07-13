@@ -14,10 +14,10 @@ describe('BEATS', () => {
   it('uses the branding beat ids in order', () => {
     expect(BEATS.map((b) => b.id)).toEqual([
       'hero',
-      'coreServices',
-      'brandBoard',
-      'deliverables',
-      'buildPhases',
+      'features',
+      'tickets',
+      'scanner',
+      'scale',
       'cta',
     ])
   })

@@ -9,7 +9,7 @@ import { Stage } from './scene/Stage'
 import { Trusses } from './scene/Trusses'
 import { SpotBeams } from './scene/SpotBeams'
 import { CrowdParticles } from './scene/CrowdParticles'
-import { BrandPanels } from './scene/BrandPanels'
+import { TicketPanels } from './scene/TicketPanels'
 
 function CameraRig() {
   const progress = useProgress()
@@ -37,7 +37,7 @@ export function Scene() {
       <Trusses />
       <SpotBeams />
       <CrowdParticles />
-      <BrandPanels />
+      <TicketPanels />
     </>
   )
 }
