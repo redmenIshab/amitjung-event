@@ -8,6 +8,8 @@ import { useProgress } from './progressContext'
 import { Stage } from './scene/Stage'
 import { Trusses } from './scene/Trusses'
 import { SpotBeams } from './scene/SpotBeams'
+import { CrowdParticles } from './scene/CrowdParticles'
+import { BrandPanels } from './scene/BrandPanels'
 
 function CameraRig() {
   const progress = useProgress()
@@ -34,7 +36,8 @@ export function Scene() {
       <Stage />
       <Trusses />
       <SpotBeams />
-      {/* CrowdParticles and BrandPanels are added in Task 5. */}
+      <CrowdParticles />
+      <BrandPanels />
     </>
   )
 }

@@ -62,6 +62,15 @@ function JourneyExperience({ overlays }: { overlays: ReactNode[] }) {
 
   useEffect(() => {
     if (contextLost || !driverRef.current) return
+    const applyOverlayStyles = (progress: number) => {
+      overlayRefs.current.forEach((el, i) => {
+        if (!el) return
+        const o = overlayOpacity(i, progress)
+        el.style.opacity = String(o)
+        el.style.visibility = o === 0 ? 'hidden' : 'visible'
+        el.style.transform = `translateY(${(1 - o) * 24}px)`
+      })
+    }
     const trigger = ScrollTrigger.create({
       trigger: driverRef.current,
       start: 'top top',
@@ -69,15 +78,13 @@ function JourneyExperience({ overlays }: { overlays: ReactNode[] }) {
       scrub: 1,
       onUpdate: (self) => {
         progressRef.current = self.progress
-        overlayRefs.current.forEach((el, i) => {
-          if (!el) return
-          const o = overlayOpacity(i, self.progress)
-          el.style.opacity = String(o)
-          el.style.visibility = o === 0 ? 'hidden' : 'visible'
-          el.style.transform = `translateY(${(1 - o) * 24}px)`
-        })
+        applyOverlayStyles(self.progress)
       },
     })
+    // onUpdate does not fire at creation — apply the initial state so the
+    // hero overlay is visible before any scrolling happens.
+    progressRef.current = trigger.progress
+    applyOverlayStyles(trigger.progress)
     return () => trigger.kill()
   }, [contextLost])
 
