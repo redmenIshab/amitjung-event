@@ -1,3 +1,6 @@
+packages:
+  - sites/amit
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

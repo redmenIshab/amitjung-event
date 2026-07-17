@@ -13,6 +13,9 @@ const FOOTER_LINKS = {
     { label: 'Careers', href: '/careers' },
     { label: 'Contact', href: '/contact' },
   ],
+  ARTISTS: [
+    { label: 'Amit Jung', href: 'https://amit.lyante.art' },
+  ],
 }
 
 const SOCIALS = [
@@ -53,7 +56,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#040404] border-t border-gold/20 pt-16 pb-8 px-4 md:px-20">
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
 
           {/* Brand column */}
           <div className="md:col-span-1">
