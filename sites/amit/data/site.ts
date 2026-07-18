@@ -29,7 +29,7 @@ export interface Site {
     youtube: string
   }
   videos: { id: string; title: string }[]
-  tracks: { url: string; title: string }[]
+  tracks: { id: string; title: string }[]
   works: SiteWork[]
   stats: { n: string; l: string }[]
   bookedDates: string[]
@@ -57,26 +57,18 @@ export const site: Site = {
     tiktok: 'https://www.tiktok.com/@amitjung555',
     facebook: 'https://www.facebook.com/amithustle/',
     soundcloud: 'https://soundcloud.com/amit-jung-official',
-    youtube: 'https://www.youtube.com/watch?v=j3i9QU8bYqQ',
+    youtube: 'https://www.youtube.com/@Amitjung_gorkhey',
   },
 
   // YouTube video IDs shown in the Music section
-  videos: [{ id: 'j3i9QU8bYqQ', title: 'Barsa Bhayecha Nepal Nafarkeko' }],
+  videos: [{ id: 'jJDSD3lKPB8', title: 'Mann Ka Lahar' }],
 
-  // SoundCloud track pages shown in the Music section
+  // Spotify track IDs shown in the Music section
+  // (embed URL: https://open.spotify.com/embed/track/<id>)
   tracks: [
-    {
-      url: 'https://soundcloud.com/amit-jung-official/siddhartha-amit-jung',
-      title: 'Siddhartha',
-    },
-    {
-      url: 'https://soundcloud.com/amit-jung-official/samjhana-timilai-amit-jung-final-audio',
-      title: 'Samjhana Timilai',
-    },
-    {
-      url: 'https://soundcloud.com/amit-jung-official/barsha-bhayecha-nepal-na-farkayeko-unansweredby-amit-jung',
-      title: 'Barsha Bhayecha Nepal Na Farkayeko',
-    },
+    { id: '3z24YhPCSe0Y47cYZ3dI6c', title: 'Amit Jung on Spotify' },
+    { id: '0SRB0xk5qjYiTjlq64Brir', title: 'Amit Jung on Spotify' },
+    { id: '6cQWD5O576kqHm1i0zJFaV', title: 'Amit Jung on Spotify' },
   ],
 
   works: [

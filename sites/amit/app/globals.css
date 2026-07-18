@@ -395,7 +395,7 @@ section {
 }
 .track iframe {
   width: 100%;
-  height: 120px;
+  height: 152px;
   border: 0;
 }
 @media (max-width: 880px) {
@@ -567,7 +567,8 @@ section {
 }
 .cal-legend {
   display: flex;
-  gap: 22px;
+  flex-wrap: wrap;
+  gap: 12px 22px;
   margin-top: 20px;
   font-size: 0.75rem;
   color: var(--ink-dim);
@@ -721,4 +722,71 @@ footer {
 .reveal.in {
   opacity: 1;
   transform: none;
+}
+
+/* ── mobile refinements ────────────────────────────────────── */
+@media (max-width: 640px) {
+  section {
+    padding: 72px 0;
+  }
+  .sec-head {
+    margin-bottom: 40px;
+  }
+  .hero-inner {
+    padding: 116px 0 64px;
+  }
+  .hero-sub {
+    font-size: 0.98rem;
+  }
+  .cal {
+    padding: 18px;
+  }
+  .cal-grid {
+    gap: 4px;
+  }
+  .cal-day {
+    font-size: 0.82rem;
+  }
+  .stat {
+    padding: 24px 18px;
+  }
+  .stat b {
+    font-size: 1.8rem;
+  }
+  .booking-grid {
+    gap: 32px;
+  }
+  footer {
+    padding: 56px 0 32px;
+  }
+  .foot-line {
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 380px) {
+  .cal {
+    padding: 14px;
+  }
+  .cal-nav button {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .grain::after,
+  .marquee-track,
+  .hero-scroll {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

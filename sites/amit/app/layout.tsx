@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 
@@ -12,6 +12,12 @@ export const metadata: Metadata = {
       'Nepali singer-songwriter. Debut album मेरो देश को कथा (2026). Book for live events.',
     type: 'website',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0a0908',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

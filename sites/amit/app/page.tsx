@@ -4,11 +4,6 @@ import Reveal from '@/components/Reveal'
 import Booking from '@/components/Booking'
 import { site } from '@/data/site'
 
-const sc = (url: string) =>
-  `https://w.soundcloud.com/player/?url=${encodeURIComponent(
-    url
-  )}&color=%23dc2f3f&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=false`
-
 export default function Page() {
   const marquee = (
     <span className="marquee-item">
@@ -78,16 +73,20 @@ export default function Page() {
                   allowFullScreen
                 />
                 <figcaption>
-                  “{site.videos[0].title}” — the song that connected Amit to
-                  Nepalis around the world.
+                  “{site.videos[0].title}” — the latest release, out now.
                 </figcaption>
               </figure>
             </Reveal>
 
             <Reveal className="tracks">
               {site.tracks.map((t) => (
-                <div className="track" key={t.url}>
-                  <iframe src={sc(t.url)} title={t.title} loading="lazy" />
+                <div className="track" key={t.id}>
+                  <iframe
+                    src={`https://open.spotify.com/embed/track/${t.id}?utm_source=generator`}
+                    title={t.title}
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                  />
                 </div>
               ))}
             </Reveal>
