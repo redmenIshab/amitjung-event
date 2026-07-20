@@ -459,6 +459,53 @@ section {
   }
 }
 
+/* ── technical rider preview ───────────────────────────────── */
+.tech-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.tech-row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  background: var(--bg-2);
+}
+.tech-row dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.tech-row dd {
+  color: var(--ink-dim);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+.tech-note {
+  margin-top: 28px;
+  padding: 18px 22px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.tech-note a {
+  color: var(--crimson);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.tech-note a:hover {
+  color: var(--ink);
+}
+@media (max-width: 720px) {
+  .tech-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── booking ───────────────────────────────────────────────── */
 #booking {
   background: var(--bg-2);

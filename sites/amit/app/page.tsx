@@ -116,6 +116,37 @@ export default function Page() {
         </div>
       </section>
 
+      {/* technical rider preview */}
+      <section id="technical" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <Reveal className="sec-head">
+            <p className="sec-kicker">Stage &amp; technical</p>
+            <h2>Amit Jung and the Gorkhey — live</h2>
+            <p>{site.tech.intro}</p>
+          </Reveal>
+          <Reveal>
+            <dl className="tech-grid">
+              {site.tech.specs.map((s) => (
+                <div className="tech-row" key={s.label}>
+                  <dt>{s.label}</dt>
+                  <dd>{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="tech-note">
+              {site.tech.note}{' '}
+              <a
+                href={`mailto:${site.bookingEmail}?subject=${encodeURIComponent(
+                  'Technical rider request — Amit Jung and the Gorkhey'
+                )}`}
+              >
+                Request the full rider →
+              </a>
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* booking */}
       <section id="booking">
         <div className="wrap">

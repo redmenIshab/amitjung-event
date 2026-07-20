@@ -34,6 +34,11 @@ export interface Site {
   stats: { n: string; l: string }[]
   bookedDates: string[]
   slots: string[]
+  tech: {
+    intro: string
+    specs: { label: string; value: string }[]
+    note: string
+  }
 }
 
 export const site: Site = {
@@ -127,4 +132,43 @@ export const site: Site = {
     'Private / corporate event',
     'Festival slot',
   ],
+
+  // Preview of the band's technical rider (v2, 2026). This is a summary for
+  // organizers — the complete rider (full input/output patch lists, stage plot
+  // and backline spec) is shared on booking, not published here.
+  tech: {
+    intro:
+      'For full-production shows, Amit performs with his band — Amit Jung and the Gorkhey. Here is a summary of our stage and technical needs; the complete technical rider is shared when you book.',
+    specs: [
+      {
+        label: 'Ensemble',
+        value:
+          'Six-piece live band — drums, bass, electric guitar, keys, flute and lead vocal, with backing vocals.',
+      },
+      {
+        label: 'FOH sound',
+        value:
+          'Stereo hi-fidelity PA covering the full audience at 116 dB(C) / 100 dB(A). Preferred: RCF HDL 30 / 20 line array or EV EKX / ELX point source with matching subs.',
+      },
+      {
+        label: 'Console',
+        value: 'Midas M32 preferred (or anything better).',
+      },
+      {
+        label: 'Monitoring',
+        value: 'In-ear monitoring for the band plus a floor wedge for keys.',
+      },
+      {
+        label: 'Backline',
+        value:
+          'Full backline required — Pearl Decade drum kit, Vox or Orange guitar amp, guitar stands, DIs and mic stands.',
+      },
+      {
+        label: 'Sound check',
+        value:
+          'Minimum 90 minutes, beginning once all backline is in position and operational on stage.',
+      },
+    ],
+    note: 'This is a preview of our technical rider. For the complete document — full input and output patch lists, backline spec and stage details — reach out to book.',
+  },
 }
