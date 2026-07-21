@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { MapPin, Calendar } from 'lucide-react'
 import { SALE_BADGE_LABEL, EVENT_TYPE_LABEL, type EventSaleBadge } from '@/lib/events'
 
 interface EventCardProps {
@@ -7,6 +8,8 @@ interface EventCardProps {
   image: string
   artistImage: string
   title: string
+  venue?: string
+  date?: string
   description: string
   genres: string[]
   eventType?: string
@@ -14,68 +17,119 @@ interface EventCardProps {
   soldOut?: boolean
 }
 
+function badgeClasses(b: EventSaleBadge) {
+  if (b === 'SOLD_OUT') return 'bg-coal/80 text-ivory'
+  if (b === 'EARLY_BIRD') return 'bg-gold text-lyante-bg'
+  return 'bg-lyante-bg/80 text-gold border border-gold/50'
+}
+
 export function EventCard({
   id,
   image,
   artistImage,
   title,
+  venue,
+  date,
   description,
   genres = [],
   eventType,
   badges = [],
   soldOut = false,
 }: EventCardProps) {
+  const dateLabel = date
+    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
   return (
-    <div className="min-w-[280px] md:min-w-[320px] lg:min-w-[380px] snap-start">
-      <Link href={`/events/${id}`}>
-        <div className="aspect-video w-full bg-gray-100 mb-4 overflow-hidden relative">
-          <Image alt={title} className="object-cover" src={image} fill sizes="(max-width: 768px) 280px, 380px" unoptimized />
-          {(eventType || badges.length > 0) && (
-            <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
-              {eventType && (
-                <span className="bg-gray-900/85 text-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest">
-                  {EVENT_TYPE_LABEL[eventType] ?? eventType}
-                </span>
-              )}
-              {badges.map((b) => (
+    <div className="min-w-[280px] md:min-w-[340px] lg:min-w-[400px] snap-start group">
+      <Link href={`/events/${id}`} className="block">
+        <div className="aspect-[4/5] w-full bg-lyante-surface mb-5 overflow-hidden relative border border-coal/40 group-hover:border-gold/50 transition-colors">
+          {image ? (
+            <Image
+              alt={title}
+              className="object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[0.2] group-hover:grayscale-0"
+              src={image}
+              fill
+              sizes="(max-width: 768px) 280px, 400px"
+              unoptimized
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-coal font-bebas text-6xl tracking-widest">
+              LYANTE
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-lyante-bg/90 via-transparent to-transparent" />
+
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+            {eventType && (
+              <span className="bg-lyante-bg/85 text-ivory px-2.5 py-1 text-[10px] font-bebas tracking-[0.2em] uppercase">
+                {EVENT_TYPE_LABEL[eventType] ?? eventType}
+              </span>
+            )}
+            {badges.map((b) => (
+              <span
+                key={b}
+                className={`px-2.5 py-1 text-[10px] font-bebas tracking-[0.2em] uppercase ${badgeClasses(b)}`}
+              >
+                {SALE_BADGE_LABEL[b]}
+              </span>
+            ))}
+          </div>
+
+          {artistImage && (
+            <div className="absolute bottom-3 left-3 w-12 h-12 overflow-hidden border border-gold/40 relative">
+              <Image alt="" className="object-cover grayscale" src={artistImage} fill sizes="48px" unoptimized />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <h3 className="font-bebas text-ivory text-[34px] leading-[0.9] tracking-tight uppercase mb-3 group-hover:text-gold-light transition-colors">
+            {title}
+          </h3>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-[13px] text-ash font-dm-sans">
+            {dateLabel && (
+              <span className="flex items-center gap-1.5">
+                <Calendar size={13} className="text-gold" />
+                {dateLabel}
+              </span>
+            )}
+            {venue && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={13} className="text-gold" />
+                {venue}
+              </span>
+            )}
+          </div>
+
+          {description && (
+            <p className="text-ash/80 text-sm mb-5 leading-relaxed font-dm-sans line-clamp-2">
+              {description}
+            </p>
+          )}
+
+          {genres.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {genres.map((genre) => (
                 <span
-                  key={b}
-                  className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-white ${
-                    b === 'SOLD_OUT' ? 'bg-gray-600' : b === 'EARLY_BIRD' ? 'bg-emerald-600' : 'bg-red-600'
-                  }`}
+                  key={genre}
+                  className="border border-coal/60 px-2.5 py-1 text-[10px] font-bebas uppercase tracking-[0.2em] text-ash"
                 >
-                  {SALE_BADGE_LABEL[b]}
+                  {genre}
                 </span>
               ))}
             </div>
           )}
-        </div>
-        <div className="w-16 h-16 bg-gray-100 mb-4 overflow-hidden relative">
-          <Image alt={title} className="object-cover" src={artistImage} fill sizes="64px" unoptimized />
-        </div>
-        <div className="flex flex-col">
-          <h3 className="text-[32px] text-gray-900 font-bold leading-tight uppercase mb-4 tracking-tighter">
-            {title}
-          </h3>
-          <p className="text-gray-500 text-sm mb-4 leading-relaxed">{description}</p>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {genres.map((genre) => (
-              <span
-                key={genre}
-                className="border border-gray-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-widest text-gray-600"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
+
           <div
-            className={`w-full border px-6 py-2.5 font-bold text-sm uppercase tracking-wider transition-all text-center ${
+            className={`w-full px-6 py-3 font-bebas text-sm uppercase tracking-[0.2em] transition-all text-center ${
               soldOut
-                ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                : 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
+                ? 'border border-coal/60 text-coal cursor-not-allowed'
+                : 'bg-gold text-lyante-bg hover:bg-gold-light'
             }`}
           >
-            {soldOut ? 'SOLD OUT' : 'GET TICKETS'}
+            {soldOut ? 'Sold Out' : 'Get Tickets'}
           </div>
         </div>
       </Link>
