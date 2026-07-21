@@ -9,9 +9,18 @@ type Props = {
   finalPrice: number
   discountActive: boolean
   baseTicketPrice: number
+  disabled?: boolean
+  disabledReason?: string | null
 }
 
-export function CheckoutButton({ eventId, finalPrice, discountActive, baseTicketPrice }: Props) {
+export function CheckoutButton({
+  eventId,
+  finalPrice,
+  discountActive,
+  baseTicketPrice,
+  disabled = false,
+  disabledReason,
+}: Props) {
   const { data: session } = useSession()
   const router = useRouter()
 
@@ -21,6 +30,20 @@ export function CheckoutButton({ eventId, finalPrice, discountActive, baseTicket
       return
     }
     router.push(`/booking/${eventId}/checkout`)
+  }
+
+  if (disabled) {
+    return (
+      <button
+        disabled
+        className="w-full bg-white/10 text-white/50 font-bold py-3 md:py-4 flex items-center justify-center gap-3 cursor-not-allowed"
+      >
+        <Ticket size={18} />
+        <span className="font-bold text-[15px] md:text-[18px] uppercase">
+          {disabledReason ?? 'Unavailable'}
+        </span>
+      </button>
+    )
   }
 
   return (

@@ -12,7 +12,12 @@ export async function GET(_req: Request, { params }: Params) {
     const event = await getCachedEvent(eventId)
     if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    return NextResponse.json(event)
+    // Live non-cancelled sold count (not from the day-long cache).
+    const soldCount = await prisma.ticket.count({
+      where: { eventId, status: { not: 'CANCELLED' } },
+    })
+
+    return NextResponse.json({ ...event, soldCount })
   } catch (e) {
     console.error('GET /api/events/[eventId]:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -30,8 +35,10 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
-  const data: Record<string, unknown> = { ...parsed.data }
-  if (parsed.data.date) data.date = new Date(parsed.data.date)
+  const { date, discountUpto, ...rest } = parsed.data
+  const data: Record<string, unknown> = { ...rest }
+  if (date) data.bookingDeadline = new Date(date)
+  if (discountUpto) data.discountUpto = new Date(discountUpto)
 
   const event = await prisma.event.update({ where: { id: eventId }, data })
 

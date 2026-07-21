@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { eventDetailSchema } from '@/types/event'
 import { CheckoutButton } from '@/components/events/CheckoutButton'
+import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -18,7 +19,6 @@ export default async function EventDetailPage({ params }: Props) {
 
     if (!parsed.success) notFound()
 
-    console.log(parsed)
     const event = parsed.data
     const artist = event.artist
     const now = new Date()
@@ -26,6 +26,17 @@ export default async function EventDetailPage({ params }: Props) {
     const finalPrice = discountActive
         ? event.baseTicketPrice * (1 - event.discountPercentage / 100)
         : event.baseTicketPrice
+
+    const availability = computeEventAvailability({
+        status: event.status,
+        isOpen: event.isOpen,
+        ticketsAvailable: event.ticketsAvailable,
+        bookingDeadline: event.date,
+        hasDiscount: event.hasDiscount,
+        discountUpto: event.discountUpto,
+        soldCount: event.soldCount ?? 0,
+    })
+    const blockedReason = purchaseBlockedReason(availability)
 
     return (
         <main className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-[#0A0A0A]">
@@ -133,11 +144,18 @@ export default async function EventDetailPage({ params }: Props) {
 
                 {/* Sticky Ticket CTA */}
                 <div className="px-4 md:px-8 pb-6 pt-4 border-t border-[#1C1C1C]">
+                    {availability.remaining > 0 && !availability.ended && event.status === 'PUBLISHED' && (
+                        <p className="text-white/50 text-[11px] uppercase tracking-widest mb-2 text-center">
+                            {availability.remaining} tickets left
+                        </p>
+                    )}
                     <CheckoutButton
                         eventId={id}
                         finalPrice={finalPrice}
                         discountActive={discountActive}
                         baseTicketPrice={event.baseTicketPrice}
+                        disabled={!availability.isPurchasable}
+                        disabledReason={blockedReason}
                     />
                 </div>
             </aside>

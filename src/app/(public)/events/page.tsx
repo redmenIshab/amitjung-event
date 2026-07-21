@@ -1,31 +1,29 @@
 import { EventCard } from '@/components/events/EventCard'
 import { eventsResponseSchema } from '@/types/event'
+import { computeEventAvailability, isPubliclyVisible } from '@/lib/events'
+
+function errorScreen(message: string) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <p className="text-gray-500 text-lg">{message}</p>
+    </div>
+  )
+}
 
 export default async function PublicEventsPage() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const res = await fetch(`${baseUrl}/api/events`, { cache: 'no-store' })
-  console.log(res)
 
-  // if (!res.ok) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-  //       <p className="text-gray-500 text-lg">Failed to load events.</p>
-  //     </div>
-  //   )
-  // }
+  if (!res.ok) return errorScreen('Failed to load events.')
 
   const raw = await res.json()
   const parsed = eventsResponseSchema.safeParse(raw)
+  if (!parsed.success) return errorScreen('Failed to load events.')
 
-  // if (!parsed.success) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-  //       <p className="text-gray-500 text-lg">Failed to load events.</p>
-  //     </div>
-  //   )
-  // }
-
-  const events = (parsed.data ?? []).filter((e) => e.isOpen)
+  // Only published, not-yet-past events are shown to the public.
+  const events = parsed.data.filter((e) =>
+    isPubliclyVisible({ status: e.status, bookingDeadline: e.date }),
+  )
 
   if (events.length === 0) {
     return (
@@ -44,17 +42,31 @@ export default async function PublicEventsPage() {
       </header>
 
       <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-12 pb-8">
-        {events.map((event) => (
-          <EventCard
-            key={event.id}
-            id={event.id}
-            image={event.image ?? ''}
-            artistImage={event.artist?.artistImage ?? ''}
-            title={event.name}
-            description={event.description ?? ''}
-            genres={event.genres}
-          />
-        ))}
+        {events.map((event) => {
+          const availability = computeEventAvailability({
+            status: event.status,
+            isOpen: event.isOpen,
+            ticketsAvailable: event.ticketsAvailable,
+            bookingDeadline: event.date,
+            hasDiscount: event.hasDiscount,
+            discountUpto: event.discountUpto,
+            soldCount: event.soldCount ?? 0,
+          })
+          return (
+            <EventCard
+              key={event.id}
+              id={event.id}
+              image={event.image ?? ''}
+              artistImage={event.artist?.artistImage ?? ''}
+              title={event.name}
+              description={event.description ?? ''}
+              genres={event.genres}
+              eventType={event.eventType}
+              badges={availability.badges}
+              soldOut={availability.soldOut}
+            />
+          )
+        })}
       </div>
 
       <style>

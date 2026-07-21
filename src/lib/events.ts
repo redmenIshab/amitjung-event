@@ -6,6 +6,22 @@ export const LIMITED_THRESHOLD = 50
 export const FILLING_FAST_RATIO = 0.2
 
 export type EventSaleBadge = 'EARLY_BIRD' | 'FILLING_FAST' | 'LIMITED' | 'SOLD_OUT'
+
+export const SALE_BADGE_LABEL: Record<EventSaleBadge, string> = {
+  EARLY_BIRD: 'Early Bird',
+  FILLING_FAST: 'Filling Fast',
+  LIMITED: 'Limited',
+  SOLD_OUT: 'Sold Out',
+}
+
+export const EVENT_TYPE_LABEL: Record<string, string> = {
+  CONCERT: 'Concert',
+  FESTIVAL: 'Festival',
+  CONFERENCE: 'Conference',
+  SPORTS: 'Sports',
+  PRIVATE: 'Private',
+  OTHER: 'Other',
+}
 export type EventLifecycle = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'LIVE' | 'ENDED'
 export type EventStoredStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED'
 
