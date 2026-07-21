@@ -9,7 +9,17 @@ export async function GET() {
   try {
     const events = await getCachedEvents()
 
-    return NextResponse.json(events)
+    // Sold counts are read live (never from the day-long event cache) so
+    // availability/badges stay accurate as tickets are purchased.
+    const sold = await prisma.ticket.groupBy({
+      by: ['eventId'],
+      where: { status: { not: 'CANCELLED' } },
+      _count: true,
+    })
+    const soldByEvent = new Map(sold.map((s) => [s.eventId, s._count]))
+    const withCounts = events.map((e) => ({ ...e, soldCount: soldByEvent.get(e.id) ?? 0 }))
+
+    return NextResponse.json(withCounts)
   } catch (e) {
     console.error('GET /api/events:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -40,6 +50,9 @@ export async function POST(request: Request) {
         : new Date(parsed.data.date),
       isOpen: parsed.data.isOpen,
       genres: parsed.data.genres,
+      ticketsAvailable: parsed.data.ticketsAvailable,
+      status: parsed.data.status,
+      eventType: parsed.data.eventType,
     }
     if (parsed.data.description) data.description = parsed.data.description
     if (parsed.data.image) data.image = parsed.data.image

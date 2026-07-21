@@ -1,10 +1,26 @@
 import { z } from 'zod'
 
-export const createEventSchema = z.object({
+export const eventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED'])
+export const eventTypeSchema = z.enum([
+  'CONCERT',
+  'FESTIVAL',
+  'CONFERENCE',
+  'SPORTS',
+  'PRIVATE',
+  'OTHER',
+])
+
+const eventFieldsSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
   venue: z.string().min(1, 'Venue is required').max(200),
   date: z.string().datetime({ message: 'Invalid date format' }),
   capacity: z.number().int().positive('Capacity must be a positive integer'),
+  ticketsAvailable: z
+    .number()
+    .int()
+    .positive('Tickets available must be a positive integer'),
+  status: eventStatusSchema.optional().default('DRAFT'),
+  eventType: eventTypeSchema.optional().default('OTHER'),
   baseTicketPrice: z.number().int().min(0, 'Price must be non-negative'),
   hasDiscount: z.boolean().optional().default(false),
   discountPercentage: z.number().int().min(0).max(100).optional().default(0),
@@ -16,7 +32,12 @@ export const createEventSchema = z.object({
   artistId: z.string().optional(),
 })
 
-export const updateEventSchema = createEventSchema.partial()
+export const createEventSchema = eventFieldsSchema.refine(
+  (d) => d.ticketsAvailable <= d.capacity,
+  { message: 'Tickets available cannot exceed capacity', path: ['ticketsAvailable'] },
+)
+
+export const updateEventSchema = eventFieldsSchema.partial()
 
 export const ticketCategorySchema = z.enum(['GENERAL', 'VIP'])
 
