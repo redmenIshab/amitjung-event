@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireSession } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { buildVerifyUrl, generateQRCodeDataURL } from '@/lib/qr'
 import { ticketDetailIdSchema } from '@/lib/validations'
@@ -9,10 +8,9 @@ type Params = { params: Promise<{ eventId: string; ticketId: string }> }
 
 export async function GET(_request: Request, { params }: Params) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const gate = await requireSession()
+    if (gate instanceof NextResponse) return gate
+    const { session } = gate
 
     const { eventId, ticketId } = await params
     const parsed = ticketDetailIdSchema.safeParse({ eventId, ticketId })

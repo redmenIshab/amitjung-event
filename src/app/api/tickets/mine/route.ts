@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireSession } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const gate = await requireSession()
+    if (gate instanceof NextResponse) return gate
+    const { session } = gate
 
     const participantId = session.user.id
     const userEmail = session.user.email ?? ''
