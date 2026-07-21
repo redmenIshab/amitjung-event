@@ -59,7 +59,7 @@ export default async function DashboardPage() {
             {upcomingEvents.map((event) => (
               <Link
                 key={event.id}
-                href={`/events/${event.id}`}
+                href={`/admin/events/${event.id}`}
                 className="flex items-center justify-between gap-3 p-3 bg-white border rounded-lg hover:border-gray-400 transition-colors"
               >
                 <div className="min-w-0">
