@@ -1,14 +1,11 @@
-import { getServerSession } from 'next-auth/next'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import Link from 'next/link'
 import { LogOut, LayoutDashboard, Calendar, ScanLine, Music } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { MobileNav } from '@/components/layout/MobileNav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  const session = await requirePageCapability('DASHBOARD_VIEW')
 
   return (
     <div className="dashboard-scope flex min-h-screen bg-gray-50">
@@ -37,13 +34,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Calendar size={16} />
             Events
           </Link>
-          <Link
-            href="/admin/scanner"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <ScanLine size={16} />
-            Scanner
-          </Link>
+          {hasCapability(session.user.role, 'TICKET_SCAN') && (
+            <Link
+              href="/admin/scanner"
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <ScanLine size={16} />
+              Scanner
+            </Link>
+          )}
           <Link
             href="/admin/artists"
             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"

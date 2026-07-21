@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { distributorTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -16,10 +16,8 @@ export type DistributorTicketResult = {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('TICKET_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -33,11 +31,13 @@ export async function POST(request: Request, { params }: Params) {
 
   const { distributorName, quantity, category } = parsed.data
 
+  const bookingId = await ensureSystemBooking(eventId)
+
   // Create all tickets in one transaction
   const tickets = await prisma.$transaction(
     Array.from({ length: quantity }, () =>
       prisma.ticket.create({
-        data: { eventId, distributorName, category, source: 'ADMIN' },
+        data: { eventId, bookingId, distributorName, category, source: 'ADMIN' },
       }),
     ),
   )

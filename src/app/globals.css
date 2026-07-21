@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -49,6 +49,10 @@
 }
 
 :root {
+  --muted: #222222;
+  --muted-thumb: #464646;
+  --muted-foreground: #b4b4b4;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +88,10 @@
 }
 
 .dark {
+  --muted: #222222;
+  --muted-thumb: #464646;
+  --muted-foreground: #b4b4b4;
+  
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -135,21 +143,21 @@
 
 @theme {
   /* Lyante brand colors */
-  --color-gold-light: #F5C842;
-  --color-gold: #C8922A;
-  --color-gold-deep: #8B5E10;
+  --color-gold-light: #f5c842;
+  --color-gold: #c8922a;
+  --color-gold-deep: #8b5e10;
   --color-lyante-bg: #080808;
   --color-lyante-surface: #111111;
-  --color-lyante-surface-mid: #1C1C1C;
-  --color-ivory: #F0EDE6;
-  --color-ash: #9A9590;
-  --color-coal: #4A4744;
+  --color-lyante-surface-mid: #1c1c1c;
+  --color-ivory: #f0ede6;
+  --color-ash: #9a9590;
+  --color-coal: #4a4744;
 
   /* Lyante fonts */
-  --font-cormorant: "Cormorant Garamond", serif;
-  --font-bebas: "Bebas Neue", sans-serif;
-  --font-dm-sans: "DM Sans", sans-serif;
-  --font-dm-mono: "DM Mono", monospace;
+  --font-cormorant: 'Cormorant Garamond', serif;
+  --font-bebas: 'Bebas Neue', sans-serif;
+  --font-dm-sans: 'DM Sans', sans-serif;
+  --font-dm-mono: 'DM Mono', monospace;
 }
 
 @layer base {
@@ -164,7 +172,12 @@
     --text-primary: var(--color-ivory);
     --text-secondary: var(--color-ash);
     --text-muted: var(--color-coal);
-    --gold-gradient: linear-gradient(135deg, #F5C842 0%, #C8922A 55%, #8B5E10 100%);
+    --gold-gradient: linear-gradient(
+      135deg,
+      #f5c842 0%,
+      #c8922a 55%,
+      #8b5e10 100%
+    );
 
     /* Lyante type scale */
     --t-display: clamp(48px, 7vw, 72px);
@@ -174,6 +187,29 @@
     --t-caption: clamp(12px, 1vw, 13px);
     --t-mono: clamp(11px, 0.9vw, 12px);
   }
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-thumb) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--border);
 }
 
 @layer utilities {

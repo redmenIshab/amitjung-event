@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const gate = await requireApiCapability('ANALYTICS_READ')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
 

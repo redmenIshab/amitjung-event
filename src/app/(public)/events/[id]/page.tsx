@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { eventDetailSchema } from '@/types/event'
 import { CheckoutButton } from '@/components/events/CheckoutButton'
+import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -18,7 +19,6 @@ export default async function EventDetailPage({ params }: Props) {
 
     if (!parsed.success) notFound()
 
-    console.log(parsed)
     const event = parsed.data
     const artist = event.artist
     const now = new Date()
@@ -27,8 +27,19 @@ export default async function EventDetailPage({ params }: Props) {
         ? event.baseTicketPrice * (1 - event.discountPercentage / 100)
         : event.baseTicketPrice
 
+    const availability = computeEventAvailability({
+        status: event.status,
+        isOpen: event.isOpen,
+        ticketsAvailable: event.ticketsAvailable,
+        bookingDeadline: event.date,
+        hasDiscount: event.hasDiscount,
+        discountUpto: event.discountUpto,
+        soldCount: event.soldCount ?? 0,
+    })
+    const blockedReason = purchaseBlockedReason(availability)
+
     return (
-        <main className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-[#0A0A0A]">
+        <main className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-lyante-bg">
             {/* ══ Left Panel (60%) — Hero ══ */}
             <section className="relative w-full md:w-[50%] h-[50vh] md:h-full flex flex-col justify-end">
                 {event.image && (
@@ -42,7 +53,7 @@ export default async function EventDetailPage({ params }: Props) {
                         unoptimized
                     />
                 )}
-                <div className="relative z-10 p-6 md:p-12 bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full">
+                <div className="relative z-10 p-6 md:p-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full">
                     <h1 className="text-[40px] md:text-[52px] font-extrabold text-white uppercase leading-[0.9] max-w-[400px] mb-8">
                         {event.name}
                     </h1>
@@ -94,17 +105,16 @@ export default async function EventDetailPage({ params }: Props) {
             </section>
 
             {/* ══ Right Panel (40%) — Lineup + Ticket CTA ══ */}
-            <aside className="w-full md:w-[50%] h-[50vh] md:h-full bg-[#0A0A0A] flex flex-col pt-6 overflow-hidden">
+            <aside className="w-full md:w-[50%] h-[50vh] md:h-full bg-lyante-surface flex flex-col pt-20 md:pt-24 overflow-hidden">
                 <div className="px-4 md:px-8 mb-2 md:mb-4">
                     <h2 className="text-[22px] md:text-[28px] text-white uppercase font-bold tracking-tight">
                         LINEUP
                     </h2>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-24 md:pb-32 space-y-1">
+                <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-24 md:pb-32 space-y-1 custom-scrollbar">
                     {artist ? (
                         <>
-
                             {artist.musics.length > 0 && artist.musics.map((music) => (
                                 <div key={music.id} className="flex items-center justify-between py-4 border-b border-[#1C1C1C] hover:bg-[#141414] transition-colors group px-2 -mx-2">
                                     <div className="flex items-center gap-4">
@@ -134,11 +144,18 @@ export default async function EventDetailPage({ params }: Props) {
 
                 {/* Sticky Ticket CTA */}
                 <div className="px-4 md:px-8 pb-6 pt-4 border-t border-[#1C1C1C]">
+                    {availability.remaining > 0 && !availability.ended && event.status === 'PUBLISHED' && (
+                        <p className="text-white/50 text-[11px] uppercase tracking-widest mb-2 text-center">
+                            {availability.remaining} tickets left
+                        </p>
+                    )}
                     <CheckoutButton
                         eventId={id}
                         finalPrice={finalPrice}
                         discountActive={discountActive}
                         baseTicketPrice={event.baseTicketPrice}
+                        disabled={!availability.isPurchasable}
+                        disabledReason={blockedReason}
                     />
                 </div>
             </aside>

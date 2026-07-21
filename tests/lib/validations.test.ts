@@ -8,11 +8,24 @@ describe('createEventSchema', () => {
       venue: 'Central Park',
       date: '2026-08-15T20:00:00Z',
       capacity: 500,
+      ticketsAvailable: 500,
       baseTicketPrice: 4500,
       description: 'Annual music festival',
       isOpen: true,
     })
     expect(result.success).toBe(true)
+  })
+
+  it('rejects ticketsAvailable exceeding capacity', () => {
+    const result = createEventSchema.safeParse({
+      name: 'Summer Beats',
+      venue: 'Central Park',
+      date: '2026-08-15T20:00:00Z',
+      capacity: 100,
+      ticketsAvailable: 200,
+      baseTicketPrice: 4500,
+    })
+    expect(result.success).toBe(false)
   })
 
   it('rejects a negative capacity', () => {

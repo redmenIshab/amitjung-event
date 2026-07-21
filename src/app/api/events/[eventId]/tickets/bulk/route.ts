@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { bulkGenerateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -20,10 +20,8 @@ export type BulkTicketResult = {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('TICKET_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -36,11 +34,14 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   // Create all tickets in a single transaction
+  const bookingId = await ensureSystemBooking(eventId)
+
   const createdTickets = await prisma.$transaction(
     parsed.data.tickets.map((t) =>
       prisma.ticket.create({
         data: {
           eventId,
+          bookingId,
           attendeeName: t.attendeeName,
           attendeeEmail: t.attendeeEmail,
           source: 'ADMIN',
@@ -64,7 +65,7 @@ export async function POST(request: Request, { params }: Params) {
             to: ticket.attendeeEmail ?? '',
             attendeeName: ticket.attendeeName ?? '',
             eventName: event.name,
-            eventDate: event.date,
+            eventDate: event.bookingDeadline,
             eventVenue: event.venue,
             qrCodeDataUrl,
             verifyUrl,

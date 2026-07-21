@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { updateArtistSchema } from '@/types/artist'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ artistId: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('DASHBOARD_VIEW')
+  if (gate instanceof NextResponse) return gate
 
   const { artistId } = await params
 
@@ -25,10 +22,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ art
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ artistId: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('ARTIST_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { artistId } = await params
   const body = await request.json()
@@ -52,10 +47,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ar
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ artistId: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('ARTIST_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { artistId } = await params
 

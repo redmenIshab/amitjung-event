@@ -1,19 +1,17 @@
-import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { TicketCreationTabs } from '@/components/tickets/TicketCreationTabs'
 
 type Props = { params: Promise<{ eventId: string }> }
 
 export default async function NewTicketPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') redirect('/events')
+  await requirePageCapability('TICKET_MANAGE')
 
   const { eventId } = await params
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { name: true, venue: true, date: true },
+    select: { name: true, venue: true, bookingDeadline: true },
   })
   if (!event) redirect('/events')
 
@@ -25,7 +23,7 @@ export default async function NewTicketPage({ params }: Props) {
         eventId={eventId}
         eventName={event.name}
         eventVenue={event.venue}
-        eventDate={event.date.toISOString()}
+        eventDate={event.bookingDeadline.toISOString()}
         emailEnabled={process.env.ENABLE_EMAIL === 'true'}
       />
     </div>

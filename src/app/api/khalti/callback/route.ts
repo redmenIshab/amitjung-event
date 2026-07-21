@@ -1,18 +1,16 @@
 import { NextResponse, NextRequest } from 'next/server'
+import { getPendingBooking, enqueueBooking, processBookingQueue } from '@/lib/ticketing'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const pidx = searchParams.get('pidx')
     const status = searchParams.get('status')
-    const transaction_id = searchParams.get('transaction_id')
-    const amount = searchParams.get('amount')
-    const eventId = searchParams.get('eventId')
 
     const secretKey = process.env.KHALTI_SECRET_KEY
     if (!secretKey) {
       return NextResponse.redirect(
-        new URL(`/booking/result?status=error&message=Khalti+not+configured`, request.url),
+        new URL('/booking/result?jobId=error&error=Khalti+not+configured', request.url),
       )
     }
 
@@ -32,18 +30,40 @@ export async function GET(request: NextRequest) {
       lookupStatus = lookupData.status ?? status
     }
 
-    const params = new URLSearchParams({
-      pidx: pidx ?? '',
-      status: lookupStatus ?? '',
-      transaction_id: transaction_id ?? '',
-      amount: amount ?? '',
-      eventId: eventId ?? '',
+    if (lookupStatus !== 'Completed') {
+      return NextResponse.redirect(
+        new URL(`/booking/result?jobId=error&error=Payment+was+not+completed`, request.url),
+      )
+    }
+
+    if (!pidx) {
+      return NextResponse.redirect(
+        new URL('/booking/result?jobId=error&error=Missing+payment+ID', request.url),
+      )
+    }
+
+    const pending = await getPendingBooking(pidx)
+    if (!pending) {
+      return NextResponse.redirect(
+        new URL('/booking/result?jobId=error&error=Booking+data+expired', request.url),
+      )
+    }
+
+    const jobId = await enqueueBooking(pending.eventId, {
+      participantId: pending.participantId,
+      attendees: pending.attendees,
+      amounts: pending.amounts,
+      pidx,
     })
 
-    return NextResponse.redirect(new URL(`/booking/result?${params.toString()}`, request.url))
+    await processBookingQueue(pending.eventId)
+
+    return NextResponse.redirect(
+      new URL(`/booking/result?jobId=${jobId}`, request.url),
+    )
   } catch {
     return NextResponse.redirect(
-      new URL(`/booking/result?status=error&message=Verification+failed`, request.url),
+      new URL('/booking/result?jobId=error&error=Something+went+wrong', request.url),
     )
   }
 }

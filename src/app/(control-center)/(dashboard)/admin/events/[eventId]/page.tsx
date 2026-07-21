@@ -1,34 +1,61 @@
-import { getServerSession } from 'next-auth/next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { TicketTable } from '@/components/tickets/TicketTable'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { getCachedEvent } from '@/lib/upstash/services/event-cache'
+import { CheckInChart } from '@/components/dashboard/CheckInChart'
+import {
+  computeEventAvailability,
+  SALE_BADGE_LABEL,
+  EVENT_TYPE_LABEL,
+} from '@/lib/events'
 
 type Props = { params: Promise<{ eventId: string }> }
 
 export default async function EventDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  const session = await requirePageCapability('DASHBOARD_VIEW')
 
   const { eventId } = await params
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      tickets: { include: { checkIn: true }, orderBy: { createdAt: 'desc' } },
-      artist: { select: { id: true, artistName: true, artistImage: true } },
-    },
-  })
-
+  const event = await getCachedEvent(eventId)
   if (!event) notFound()
 
-  const used = event.tickets.filter((t) => t.status === 'USED').length
-  const unused = event.tickets.filter((t) => t.status === 'UNUSED').length
+  const rawTickets = await prisma.ticket.findMany({
+    where: { eventId },
+    include: { checkIn: true },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  const tickets = event.tickets.map((t) => ({
+  const used = rawTickets.filter((t) => t.status === 'USED').length
+  const unused = rawTickets.filter((t) => t.status === 'UNUSED').length
+  const cancelled = rawTickets.filter((t) => t.status === 'CANCELLED').length
+  const sold = rawTickets.length - cancelled
+
+  const availability = computeEventAvailability({
+    status: event.status,
+    isOpen: event.isOpen,
+    ticketsAvailable: event.ticketsAvailable,
+    bookingDeadline: event.date,
+    hasDiscount: event.hasDiscount,
+    discountUpto: event.discountUpto,
+    soldCount: sold,
+  })
+
+  const timelineBuckets: Record<string, number> = {}
+  for (const t of rawTickets) {
+    if (t.checkIn) {
+      const hour = t.checkIn.scannedAt.toISOString().slice(0, 13) + ':00'
+      timelineBuckets[hour] = (timelineBuckets[hour] ?? 0) + 1
+    }
+  }
+  const timeline = Object.entries(timelineBuckets)
+    .map(([hour, count]) => ({ hour, count }))
+    .sort((a, b) => a.hour.localeCompare(b.hour))
+
+  const tickets = rawTickets.map((t) => ({
     id: t.id,
     attendeeName: t.attendeeName,
     attendeeEmail: t.attendeeEmail,
@@ -84,25 +111,60 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 text-sm mb-6">
-        <span className="text-gray-700">
-          <strong>{event.tickets.length}</strong> total
-        </span>
-        <span className="text-green-600">
-          <strong>{used}</strong> checked in
-        </span>
-        <span className="text-gray-500">
-          <strong>{unused}</strong> remaining
-        </span>
+      {/* Status / type / sale-state */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Badge
+          variant={
+            event.status === 'PUBLISHED'
+              ? 'default'
+              : event.status === 'CANCELLED'
+                ? 'destructive'
+                : 'secondary'
+          }
+        >
+          {event.status}
+        </Badge>
+        <Badge variant="outline">{EVENT_TYPE_LABEL[event.eventType] ?? event.eventType}</Badge>
+        {availability.badges.map((b) => (
+          <Badge key={b} variant="outline">
+            {SALE_BADGE_LABEL[b]}
+          </Badge>
+        ))}
       </div>
+
+      {/* Event-specific analytics */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {[
+          { label: 'Sold', value: sold, cls: 'text-gray-900' },
+          { label: 'Remaining', value: availability.remaining, cls: 'text-gray-900' },
+          { label: 'For sale', value: event.ticketsAvailable, cls: 'text-gray-500' },
+          { label: 'Capacity', value: event.capacity, cls: 'text-gray-500' },
+          { label: 'Checked in', value: used, cls: 'text-green-600' },
+          { label: 'Cancelled', value: cancelled, cls: 'text-red-600' },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg border bg-white p-3">
+            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.cls}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-sm font-medium text-gray-500 mb-2">Check-ins over time</h2>
+        <CheckInChart data={timeline} />
+      </div>
+
+      <p className="text-xs text-gray-400 mb-6">
+        {unused} issued tickets not yet checked in.
+      </p>
 
       <Separator className="mb-6" />
 
       <div className="flex items-center justify-between mb-4 gap-2">
         <h2 className="text-lg font-semibold">Tickets</h2>
-        {session.user.role === 'ADMIN' && (
+        {hasCapability(session.user.role, 'TICKET_MANAGE') && (
           <Link
-            href={`/events/${eventId}/tickets/new`}
+            href={`/admin/events/${eventId}/tickets/new`}
             className={buttonVariants({ size: 'sm' })}
           >
             + Generate

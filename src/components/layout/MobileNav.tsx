@@ -4,17 +4,20 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, LayoutDashboard, Calendar, ScanLine, LogOut } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { hasCapability, type AppRole } from '@/lib/rbac'
 
-type Props = { userName: string; userRole: string }
+type Props = { userName: string; userRole: AppRole }
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/events', label: 'Events', icon: Calendar },
-  { href: '/scanner', label: 'Scanner', icon: ScanLine },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/events', label: 'Events', icon: Calendar },
 ]
 
 export function MobileNav({ userName, userRole }: Props) {
   const [open, setOpen] = useState(false)
+  const navLinks = hasCapability(userRole, 'TICKET_SCAN')
+    ? [...links, { href: '/admin/scanner', label: 'Scanner', icon: ScanLine }]
+    : links
 
   return (
     <>
@@ -63,7 +66,7 @@ export function MobileNav({ userName, userRole }: Props) {
 
             {/* Nav links */}
             <nav className="flex-1 p-3 space-y-1">
-              {links.map(({ href, label, icon: Icon }) => (
+              {navLinks.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}

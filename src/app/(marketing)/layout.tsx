@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { requirePageCapability } from '@/lib/rbac'
 import {
   Cormorant_Garamond,
   Bebas_Neue,
@@ -40,11 +41,13 @@ export const metadata: Metadata = {
     "Nepal's premier creative event production company. Pre-production, live coverage, post-production, smart ticketing, and lifetime event documentation.",
 }
 
-export default function MarketingLayout({
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  await requirePageCapability('MARKETING_MANAGE')
+
   return (
     <div
       className={`${cormorant.variable} ${bebas.variable} ${dmSans.variable} ${dmMono.variable}`}

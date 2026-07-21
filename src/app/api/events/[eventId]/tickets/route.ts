@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { generateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
+import { ensureSystemBooking } from '@/lib/ticketing'
 
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const gate = await requireApiCapability('DASHBOARD_VIEW')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   const tickets = await prisma.ticket.findMany({
@@ -23,10 +23,8 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('TICKET_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -38,9 +36,12 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
+  const bookingId = await ensureSystemBooking(eventId)
+
   const ticket = await prisma.ticket.create({
     data: {
       eventId,
+      bookingId,
       attendeeName: parsed.data.attendeeName,
       attendeeEmail: parsed.data.attendeeEmail,
       category: parsed.data.category,
@@ -56,7 +57,7 @@ export async function POST(request: Request, { params }: Params) {
       to: parsed.data.attendeeEmail,
       attendeeName: parsed.data.attendeeName,
       eventName: event.name,
-      eventDate: event.date,
+      eventDate: event.bookingDeadline,
       eventVenue: event.venue,
       qrCodeDataUrl,
       verifyUrl,

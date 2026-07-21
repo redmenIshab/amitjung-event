@@ -1,11 +1,8 @@
-import { getServerSession } from 'next-auth/next'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability } from '@/lib/rbac'
 import { ScannerLoader } from '@/components/scanner/ScannerLoader'
 
 export default async function ScannerPage() {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  await requirePageCapability('TICKET_SCAN')
 
   return (
     <div className="max-w-lg mx-auto">
