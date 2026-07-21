@@ -53,6 +53,11 @@ model Event {
   discountPercentage Int
   discountUpto       DateTime
 
+  // Number of tickets offered for sale (<= capacity; allows hold-backs).
+  ticketsAvailable Int
+  status           EventStatus @default(DRAFT)
+  eventType        EventType   @default(OTHER)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -62,6 +67,21 @@ model Event {
   tickets  Ticket[]
   bookings Booking[]
   payments Payment[]
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum EventType {
+  CONCERT
+  FESTIVAL
+  CONFERENCE
+  SPORTS
+  PRIVATE
+  OTHER
 }
 
 model Artist {
