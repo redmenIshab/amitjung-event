@@ -6,8 +6,8 @@ const prisma = new PrismaClient()
 async function main() {
   const hash = await bcrypt.hash('LyanteProd@123', 12)
   await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
-    update: {},
+    where: { email: 'admin@lyanteprod.com' },
+    update: { password: hash, name: 'Admin User', role: 'ADMIN' },
     create: {
       email: 'admin@lyanteprod.com',
       password: hash,
@@ -19,5 +19,8 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
   .finally(() => prisma.$disconnect())

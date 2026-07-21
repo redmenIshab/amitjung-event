@@ -24,21 +24,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Separator />
         <nav className="flex-1 p-3 space-y-1">
           <Link
-            href="/dashboard"
+            href="/admin/dashboard"
             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <LayoutDashboard size={16} />
             Dashboard
           </Link>
           <Link
-            href="/events"
+            href="/admin/events"
             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Calendar size={16} />
             Events
           </Link>
           <Link
-            href="/scanner"
+            href="/admin/scanner"
             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <ScanLine size={16} />
