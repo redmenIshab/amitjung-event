@@ -13,6 +13,7 @@ admin capability.
 | EVENT_WRITE | Create / update / delete events | ✓ | — | — |
 | TICKET_MANAGE | Issue / bulk / distributor / send-PDF tickets | ✓ | — | — |
 | ARTIST_MANAGE | Artist + music CRUD | ✓ | — | — |
+| MARKETING_MANAGE | Control-center marketing / CMS section | ✓ | — | ✓ |
 | USER_MANAGE | User / role administration (reserved) | ✓ | — | — |
 
 Enforcement:

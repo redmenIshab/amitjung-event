@@ -13,6 +13,7 @@ export const CAPABILITY = {
   EVENT_WRITE: ['ADMIN'],
   TICKET_MANAGE: ['ADMIN'],
   ARTIST_MANAGE: ['ADMIN'],
+  MARKETING_MANAGE: ['ADMIN', 'MANAGER'],
   USER_MANAGE: ['ADMIN'],
 } as const satisfies Record<string, readonly AppRole[]>
 

@@ -20,6 +20,10 @@ describe('hasCapability', () => {
     ['MANAGER', 'DASHBOARD_VIEW', true],
     ['PARTICIPANT', 'DASHBOARD_VIEW', false],
     ['USER', 'DASHBOARD_VIEW', false],
+    ['ADMIN', 'MARKETING_MANAGE', true],
+    ['MANAGER', 'MARKETING_MANAGE', true],
+    ['STAFF', 'MARKETING_MANAGE', false],
+    ['PARTICIPANT', 'MARKETING_MANAGE', false],
   ]
   it.each(cases)('%s + %s => %s', (role, cap, expected) => {
     expect(hasCapability(role, cap)).toBe(expected)
