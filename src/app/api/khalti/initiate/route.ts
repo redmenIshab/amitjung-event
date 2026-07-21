@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { storePendingBooking } from '@/lib/ticketing'
+import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
 
 export async function POST(request: Request) {
   try {
@@ -20,11 +21,29 @@ export async function POST(request: Request) {
     const event = await prisma.event.findUnique({ where: { id: eventId } })
     if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-    const existingBookings = await prisma.ticket.count({ where: { eventId } })
-    const available = event.capacity - existingBookings
-    if (attendees.length > available) {
+    // Server-side availability using P1 inventory rules (non-cancelled sold
+    // vs ticketsAvailable) — the client cannot bypass status/inventory checks.
+    const soldCount = await prisma.ticket.count({
+      where: { eventId, status: { not: 'CANCELLED' } },
+    })
+    const availability = computeEventAvailability({
+      status: event.status,
+      isOpen: event.isOpen,
+      ticketsAvailable: event.ticketsAvailable,
+      bookingDeadline: event.bookingDeadline,
+      hasDiscount: event.hasDiscount,
+      discountUpto: event.discountUpto,
+      soldCount,
+    })
+    if (!availability.isPurchasable) {
       return NextResponse.json(
-        { error: `Only ${available} ticket(s) available` },
+        { error: purchaseBlockedReason(availability) ?? 'Tickets are not available' },
+        { status: 409 },
+      )
+    }
+    if (attendees.length > availability.remaining) {
+      return NextResponse.json(
+        { error: `Only ${availability.remaining} ticket(s) available` },
         { status: 409 },
       )
     }
