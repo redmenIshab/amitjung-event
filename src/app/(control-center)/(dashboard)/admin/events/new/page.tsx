@@ -1,11 +1,8 @@
-import { getServerSession } from 'next-auth/next'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability } from '@/lib/rbac'
 import { EventForm } from '@/components/events/EventForm'
 
 export default async function NewEventPage() {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') redirect('/events')
+  await requirePageCapability('EVENT_WRITE')
 
   return (
     <div>

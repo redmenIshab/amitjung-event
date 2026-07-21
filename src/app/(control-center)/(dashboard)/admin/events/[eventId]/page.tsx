@@ -1,7 +1,6 @@
-import { getServerSession } from 'next-auth/next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { TicketTable } from '@/components/tickets/TicketTable'
 import { buttonVariants } from '@/components/ui/button'
@@ -12,8 +11,7 @@ import { getCachedEvent } from '@/lib/upstash/services/event-cache'
 type Props = { params: Promise<{ eventId: string }> }
 
 export default async function EventDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  const session = await requirePageCapability('DASHBOARD_VIEW')
 
   const { eventId } = await params
   const event = await getCachedEvent(eventId)
@@ -100,9 +98,9 @@ export default async function EventDetailPage({ params }: Props) {
 
       <div className="flex items-center justify-between mb-4 gap-2">
         <h2 className="text-lg font-semibold">Tickets</h2>
-        {session.user.role === 'ADMIN' && (
+        {hasCapability(session.user.role, 'TICKET_MANAGE') && (
           <Link
-            href={`/events/${eventId}/tickets/new`}
+            href={`/admin/events/${eventId}/tickets/new`}
             className={buttonVariants({ size: 'sm' })}
           >
             + Generate

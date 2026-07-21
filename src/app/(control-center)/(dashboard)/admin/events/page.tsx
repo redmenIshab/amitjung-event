@@ -1,14 +1,11 @@
-import { getServerSession } from 'next-auth/next'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { authOptions } from '@/lib/auth'
+import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import { EventList } from '@/components/events/EventList'
 import { buttonVariants } from '@/components/ui/button'
 import { getCachedEvents } from '@/lib/upstash/services/event-cache'
 
 export default async function EventsPage() {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  const session = await requirePageCapability('DASHBOARD_VIEW')
 
   const events = await getCachedEvents()
 
@@ -19,8 +16,8 @@ export default async function EventsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Events</h1>
           <p className="text-gray-500 text-sm">{events.length} event(s) total</p>
         </div>
-        {session.user.role === 'ADMIN' && (
-          <Link href="/events/new" className={buttonVariants()}>
+        {hasCapability(session.user.role, 'EVENT_WRITE') && (
+          <Link href="/admin/events/new" className={buttonVariants()}>
             + New Event
           </Link>
         )}
