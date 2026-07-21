@@ -1,5 +1,5 @@
 // redis.crud.ts
-import { redisConfig } from '../upstash';
+import { redisConfig, isRedisConfigured } from '../upstash';
 
 interface CreateConfig {
   key: string;
@@ -26,6 +26,7 @@ export async function create({ key, data, ttl }: CreateConfig) {
     if (!key || data == null) {
       throw new Error('Key and data are required');
     }
+    if (!isRedisConfigured) return { key, data };
 
     const exists = await redisConfig.exists(key);
     if (exists) {
@@ -50,6 +51,7 @@ export async function get<T = unknown>({ key }: GetConfig): Promise<T | null> {
     if (!key) {
       throw new Error('Key is required');
     }
+    if (!isRedisConfigured) return null;
 
     const data = await redisConfig.get<T>(key);
 
@@ -69,6 +71,7 @@ export async function update({ key, data, ttl }: UpdateConfig) {
     if (!key || data == null) {
       throw new Error('Key and data are required');
     }
+    if (!isRedisConfigured) return { key, data };
 
     const exists = await redisConfig.exists(key);
     if (!exists) {
@@ -93,6 +96,7 @@ export async function remove({ key }: DeleteConfig) {
     if (!key) {
       throw new Error('Key is required');
     }
+    if (!isRedisConfigured) return { key, deleted: false };
 
     const exists = await redisConfig.exists(key);
     if (!exists) {
@@ -113,6 +117,7 @@ export async function upsert({ key, data, ttl }: UpdateConfig) {
     if (!key || data == null) {
       throw new Error('Key and data are required');
     }
+    if (!isRedisConfigured) return { key, data };
 
     if (ttl) {
       await redisConfig.set(key, data, { ex: ttl });

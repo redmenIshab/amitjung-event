@@ -1,5 +1,5 @@
 import { get, upsert } from '../orm/crud'
-import { redisConfig } from '../upstash'
+import { redisConfig, isRedisConfigured } from '../upstash'
 import { prisma } from '@/lib/prisma'
 
 const TTL = 86_400
@@ -88,6 +88,7 @@ export async function getCachedUpcomingEvents(): Promise<CachedEvent[]> {
 }
 
 export async function invalidateEventCache(eventId?: string) {
+  if (!isRedisConfigured) return
   const keys = [cacheKey('events:list'), cacheKey('events:upcoming')]
   if (eventId) keys.push(cacheKey(`events:${eventId}`))
   await Promise.all(keys.map((key) => redisConfig.del(key)))
