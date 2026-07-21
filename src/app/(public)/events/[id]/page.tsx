@@ -39,7 +39,7 @@ export default async function EventDetailPage({ params }: Props) {
     const blockedReason = purchaseBlockedReason(availability)
 
     return (
-        <main className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-[#0A0A0A]">
+        <main className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-lyante-bg">
             {/* ══ Left Panel (60%) — Hero ══ */}
             <section className="relative w-full md:w-[50%] h-[50vh] md:h-full flex flex-col justify-end">
                 {event.image && (
@@ -105,7 +105,7 @@ export default async function EventDetailPage({ params }: Props) {
             </section>
 
             {/* ══ Right Panel (40%) — Lineup + Ticket CTA ══ */}
-            <aside className="w-full md:w-[50%] h-[50vh] md:h-full bg-[#0A0A0A] flex flex-col pt-6 overflow-hidden">
+            <aside className="w-full md:w-[50%] h-[50vh] md:h-full bg-lyante-surface flex flex-col pt-20 md:pt-24 overflow-hidden">
                 <div className="px-4 md:px-8 mb-2 md:mb-4">
                     <h2 className="text-[22px] md:text-[28px] text-white uppercase font-bold tracking-tight">
                         LINEUP
