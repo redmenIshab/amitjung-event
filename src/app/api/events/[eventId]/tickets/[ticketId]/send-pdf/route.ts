@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { sendTicketPDF, isEmailEnabled } from '@/lib/email'
 import { z } from 'zod'
@@ -12,10 +11,8 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('TICKET_MANAGE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId, ticketId } = await params
 

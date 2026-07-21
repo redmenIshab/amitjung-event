@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { updateEventSchema } from '@/lib/validations'
 import { getCachedEvent, invalidateEventCache } from '@/lib/upstash/services/event-cache'
@@ -21,10 +20,8 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('EVENT_WRITE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   const body = await request.json()
@@ -44,10 +41,8 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('EVENT_WRITE')
+  if (gate instanceof NextResponse) return gate
 
   const { eventId } = await params
   await prisma.event.delete({ where: { id: eventId } })

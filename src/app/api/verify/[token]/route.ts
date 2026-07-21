@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { verifyTicket } from '@/lib/verify'
 
 type Params = { params: Promise<{ token: string }> }
 
-const SCANNER_ROLES = ['ADMIN', 'STAFF'] as const
-
 export async function POST(_req: Request, { params }: Params) {
-  const session = await getServerSession(authOptions)
-  if (!session || !SCANNER_ROLES.includes(session.user.role as typeof SCANNER_ROLES[number])) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const gate = await requireApiCapability('TICKET_SCAN')
+  if (gate instanceof NextResponse) return gate
 
   const { token } = await params
   const result = await verifyTicket(token)

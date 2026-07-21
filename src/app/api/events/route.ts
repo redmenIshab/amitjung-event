@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { createEventSchema } from '@/lib/validations'
@@ -19,10 +18,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const gate = await requireApiCapability('EVENT_WRITE')
+    if (gate instanceof NextResponse) return gate
 
     const body = await request.json()
     const parsed = createEventSchema.safeParse(body)
