@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, MapPin, Loader2 } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Loader2, Download, Share2, Check } from 'lucide-react'
 import { z } from 'zod'
 import { ticketDetailResponseSchema } from '@/lib/validations'
 
@@ -26,6 +26,7 @@ export default function TicketDetailPage() {
   const [ticket, setTicket] = useState<z.infer<typeof ticketDetailResponseSchema> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -77,6 +78,47 @@ export default function TicketDetailPage() {
   const eventTime = new Date(ticket.event.bookingDeadline).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit',
   })
+
+  const publicUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/ticket/${ticket.token}` : ''
+
+  async function handleDownload() {
+    if (!ticket) return
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ unit: 'pt', format: 'a5' })
+    doc.setFontSize(18)
+    doc.text(ticket.event.name, 40, 60)
+    doc.setFontSize(11)
+    doc.text(ticket.event.venue, 40, 88)
+    doc.text(`${eventDate} · ${eventTime}`, 40, 106)
+    if (ticket.attendeeName) doc.text(`Attendee: ${ticket.attendeeName}`, 40, 138)
+    doc.text(`Category: ${ticket.category}`, 40, 156)
+    doc.text(`Ticket ID: ${ticket.id.toUpperCase()}`, 40, 174)
+    doc.addImage(ticket.qrDataUrl, 'PNG', 40, 200, 170, 170)
+    doc.setFontSize(9)
+    doc.text('Scan this QR code for entry', 40, 388)
+    doc.save(`ticket-${ticket.id}.pdf`)
+  }
+
+  async function handleShare() {
+    if (!ticket) return
+    const shareData = {
+      title: ticket.event.name,
+      text: `My ticket for ${ticket.event.name}`,
+      url: publicUrl,
+    }
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        /* user dismissed */
+      }
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(publicUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div className="min-h-screen" style={{ background: BG }}>
@@ -242,11 +284,30 @@ export default function TicketDetailPage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-3 mt-6">
+          <button
+            onClick={handleDownload}
+            className="flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
+            style={{ background: GOLD, color: BG }}
+          >
+            <Download size={15} />
+            Download
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl border transition-opacity hover:opacity-90"
+            style={{ borderColor: SURFACE_MID, color: CREAM }}
+          >
+            {copied ? <Check size={15} /> : <Share2 size={15} />}
+            {copied ? 'Link copied' : 'Share'}
+          </button>
+        </div>
+
         <a
           href={`/ticket/${ticket.token}`}
           target="_blank"
-          className="block w-full mt-6 text-center text-sm font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
-          style={{ background: GOLD, color: BG }}
+          className="block w-full mt-3 text-center text-sm font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
+          style={{ background: SURFACE, color: MUTED, border: `1px solid ${SURFACE_MID}` }}
         >
           View Public Ticket ↗
         </a>
