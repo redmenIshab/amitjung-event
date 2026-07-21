@@ -33,6 +33,9 @@ export function EventForm() {
       venue: form.get('venue') as string,
       date: new Date(form.get('date') as string).toISOString(),
       capacity: parseInt(form.get('capacity') as string, 10),
+      ticketsAvailable: parseInt(form.get('ticketsAvailable') as string, 10),
+      status: (form.get('status') as string) || 'DRAFT',
+      eventType: (form.get('eventType') as string) || 'OTHER',
       baseTicketPrice: parseInt(form.get('baseTicketPrice') as string, 10),
       hasDiscount: form.get('hasDiscount') === 'on',
       discountPercentage: form.get('hasDiscount') === 'on'
@@ -58,15 +61,7 @@ export function EventForm() {
     })
 
     if (res.ok) {
-      let event: { id: string }
-      try {
-        event = await res.json()
-      } catch {
-        setError('Failed to create event')
-        setLoading(false)
-        return
-      }
-      router.push(`/events/${event.id}`)
+      router.push('/admin/events')
       router.refresh()
     } else {
       let message = 'Failed to create event'
@@ -96,6 +91,47 @@ export function EventForm() {
       <div className="space-y-1">
         <Label htmlFor="capacity">Capacity</Label>
         <Input id="capacity" name="capacity" type="number" min="1" placeholder="500" required />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="ticketsAvailable">Tickets Available for Sale</Label>
+        <Input
+          id="ticketsAvailable"
+          name="ticketsAvailable"
+          type="number"
+          min="1"
+          placeholder="500"
+          required
+        />
+        <p className="text-xs text-gray-500">Must not exceed capacity (allows holding tickets back).</p>
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="status">Status</Label>
+        <select
+          id="status"
+          name="status"
+          defaultValue="DRAFT"
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+        >
+          <option value="DRAFT">Draft (hidden from public)</option>
+          <option value="PUBLISHED">Published (on sale)</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="eventType">Event Type</Label>
+        <select
+          id="eventType"
+          name="eventType"
+          defaultValue="CONCERT"
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+        >
+          <option value="CONCERT">Concert</option>
+          <option value="FESTIVAL">Festival</option>
+          <option value="CONFERENCE">Conference</option>
+          <option value="SPORTS">Sports</option>
+          <option value="PRIVATE">Private</option>
+          <option value="OTHER">Other</option>
+        </select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="baseTicketPrice">Ticket Price (cents)</Label>
