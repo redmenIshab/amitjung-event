@@ -73,6 +73,7 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   CANCELLED
+  COMPLETED
 }
 
 enum EventType {

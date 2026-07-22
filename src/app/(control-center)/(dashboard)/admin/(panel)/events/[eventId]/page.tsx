@@ -152,7 +152,12 @@ export default async function EventDetailPage({ params }: Props) {
       {/* Management actions (PUT updates) */}
       {hasCapability(session.user.role, 'EVENT_WRITE') && (
         <div className="mb-6">
-          <EventManageActions eventId={event.id} status={event.status} isOpen={event.isOpen} />
+          <EventManageActions
+            eventId={event.id}
+            status={event.status}
+            isOpen={event.isOpen}
+            date={new Date(event.date).toISOString()}
+          />
         </div>
       )}
 

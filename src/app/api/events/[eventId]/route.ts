@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireApiCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { updateEventSchema } from '@/lib/validations'
+import { isCompletableDate } from '@/lib/events'
 import { getCachedEvent, invalidateEventCache } from '@/lib/upstash/services/event-cache'
 
 type Params = { params: Promise<{ eventId: string }> }
@@ -39,6 +40,26 @@ export async function PATCH(request: Request, { params }: Params) {
   const data: Record<string, unknown> = { ...rest }
   if (date) data.bookingDeadline = new Date(date)
   if (discountUpto) data.discountUpto = new Date(discountUpto)
+
+  // Guard the COMPLETED transition: an event can only be marked completed once
+  // its date is today or in the past. Use the incoming date if present, else the
+  // event's stored booking deadline.
+  if (parsed.data.status === 'COMPLETED') {
+    const existing = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { bookingDeadline: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    const effectiveDate = date ? new Date(date) : existing.bookingDeadline
+    if (!isCompletableDate(effectiveDate)) {
+      return NextResponse.json(
+        { error: 'An event can only be marked completed once its date is today or in the past' },
+        { status: 422 },
+      )
+    }
+  }
 
   const event = await prisma.event.update({ where: { id: eventId }, data })
 

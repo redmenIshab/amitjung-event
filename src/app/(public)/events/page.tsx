@@ -83,8 +83,13 @@ export default async function PublicEventsPage() {
   const past = published
     .filter((e) => new Date(e.date).getTime() < now)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  // Events an admin has explicitly marked completed.
+  const completed = parsed.data
+    .filter((e) => e.status === 'COMPLETED')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  if (upcoming.length === 0 && past.length === 0) return stateScreen('No events yet.')
+  if (upcoming.length === 0 && past.length === 0 && completed.length === 0)
+    return stateScreen('No events yet.')
 
   return (
     <main className="max-w-[1280px] mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-32">
@@ -116,6 +121,23 @@ export default async function PublicEventsPage() {
           </header>
           <div className={GRID}>
             {past.map((event) => (
+              <PastCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {completed.length > 0 && (
+        <section className="mt-20 md:mt-28">
+          <header className="mb-10 md:mb-14">
+            <p className="section-label tracking-widest mb-3">Encore</p>
+            <h2 className="font-bebas text-ash text-[44px] md:text-[72px] leading-[0.85] tracking-tight">
+              COMPLETED EVENTS
+            </h2>
+            <div className="mt-6 h-px w-full bg-gradient-to-r from-coal/50 to-transparent" />
+          </header>
+          <div className={GRID}>
+            {completed.map((event) => (
               <PastCard key={event.id} event={event} />
             ))}
           </div>

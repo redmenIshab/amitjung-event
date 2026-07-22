@@ -22,8 +22,20 @@ export const EVENT_TYPE_LABEL: Record<string, string> = {
   PRIVATE: 'Private',
   OTHER: 'Other',
 }
-export type EventLifecycle = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'LIVE' | 'ENDED'
-export type EventStoredStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED'
+export type EventLifecycle = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'LIVE' | 'ENDED' | 'COMPLETED'
+export type EventStoredStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
+
+/**
+ * An event may only be marked COMPLETED once its date is today or in the past —
+ * never a future date. Shared by the FE (form/manage-action guards) and the BE
+ * (API validation) so the rule can't drift.
+ */
+export function isCompletableDate(date: Date | string, now: Date = new Date()): boolean {
+  const startOfTomorrow = new Date(now)
+  startOfTomorrow.setHours(0, 0, 0, 0)
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1)
+  return new Date(date).getTime() < startOfTomorrow.getTime()
+}
 
 export interface EventAvailabilityInput {
   status: EventStoredStatus
@@ -58,6 +70,7 @@ export function computeEventAvailability(
 
   let lifecycle: EventLifecycle
   if (e.status === 'CANCELLED') lifecycle = 'CANCELLED'
+  else if (e.status === 'COMPLETED') lifecycle = 'COMPLETED'
   else if (e.status === 'DRAFT') lifecycle = 'DRAFT'
   else if (ended) lifecycle = 'ENDED'
   else lifecycle = 'LIVE'
@@ -94,6 +107,7 @@ export function isPubliclyVisible(
 export function purchaseBlockedReason(a: EventAvailability): string | null {
   if (a.isPurchasable) return null
   if (a.lifecycle === 'CANCELLED') return 'This event has been cancelled'
+  if (a.lifecycle === 'COMPLETED') return 'This event has concluded'
   if (a.lifecycle === 'DRAFT') return 'This event is not on sale yet'
   if (a.ended) return 'Ticket sales have closed'
   if (a.soldOut) return 'Sold out'

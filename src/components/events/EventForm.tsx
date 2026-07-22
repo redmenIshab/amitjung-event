@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { isCompletableDate } from '@/lib/events'
 
 type Artist = { id: string; artistName: string }
 
@@ -52,6 +53,12 @@ export function EventForm() {
         .map((g) => g.trim())
         .filter(Boolean),
       artistId: (form.get('artistId') as string) || undefined,
+    }
+
+    if (payload.status === 'COMPLETED' && !isCompletableDate(payload.date)) {
+      setError('An event can only be marked completed once its date is today or in the past')
+      setLoading(false)
+      return
     }
 
     const res = await fetch('/api/events', {
@@ -114,6 +121,7 @@ export function EventForm() {
         >
           <option value="DRAFT">Draft (hidden from public)</option>
           <option value="PUBLISHED">Published (on sale)</option>
+          <option value="COMPLETED">Completed (event concluded)</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
       </div>

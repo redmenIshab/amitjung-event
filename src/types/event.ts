@@ -31,7 +31,7 @@ export const eventDTOSchema = z.object({
   image: z.string().nullable(),
   genres: z.array(z.string()),
   ticketsAvailable: z.number().int(),
-  status: z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED']),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED']),
   eventType: z.enum(['CONCERT', 'FESTIVAL', 'CONFERENCE', 'SPORTS', 'PRIVATE', 'OTHER']),
   soldCount: z.number().int().nonnegative().optional().default(0),
   _count: z.object({ tickets: z.number().int() }).optional(),

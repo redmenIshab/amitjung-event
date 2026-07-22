@@ -1,6 +1,7 @@
 import { z } from 'zod'
+import { isCompletableDate } from '@/lib/events'
 
-export const eventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED'])
+export const eventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED'])
 export const eventTypeSchema = z.enum([
   'CONCERT',
   'FESTIVAL',
@@ -32,10 +33,15 @@ const eventFieldsSchema = z.object({
   artistId: z.string().optional(),
 })
 
-export const createEventSchema = eventFieldsSchema.refine(
-  (d) => d.ticketsAvailable <= d.capacity,
-  { message: 'Tickets available cannot exceed capacity', path: ['ticketsAvailable'] },
-)
+export const createEventSchema = eventFieldsSchema
+  .refine((d) => d.ticketsAvailable <= d.capacity, {
+    message: 'Tickets available cannot exceed capacity',
+    path: ['ticketsAvailable'],
+  })
+  .refine((d) => d.status !== 'COMPLETED' || isCompletableDate(d.date), {
+    message: 'An event can only be marked completed once its date is today or in the past',
+    path: ['status'],
+  })
 
 export const updateEventSchema = eventFieldsSchema.partial()
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { isCompletableDate } from '@/lib/events'
 
 export type EventForEdit = {
   id: string
@@ -13,7 +14,7 @@ export type EventForEdit = {
   bookingDeadline: string
   capacity: number
   ticketsAvailable: number
-  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED'
+  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
   eventType: string
   baseTicketPrice: number
   hasDiscount: boolean
@@ -66,6 +67,12 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
         .filter(Boolean),
     }
 
+    if (payload.status === 'COMPLETED' && !isCompletableDate(payload.date)) {
+      setError('An event can only be marked completed once its date is today or in the past')
+      setLoading(false)
+      return
+    }
+
     const res = await fetch(`/api/events/${event.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -116,6 +123,7 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
         <select id="status" name="status" defaultValue={event.status} className={selectCls}>
           <option value="DRAFT">Draft (hidden from public)</option>
           <option value="PUBLISHED">Published (on sale)</option>
+          <option value="COMPLETED">Completed (event concluded)</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
       </div>

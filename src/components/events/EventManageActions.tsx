@@ -4,14 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { isCompletableDate } from '@/lib/events'
 
 type Props = {
   eventId: string
-  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED'
+  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
   isOpen: boolean
+  /** Event date (booking deadline) — gates the "Mark as completed" action. */
+  date: string
 }
 
-export function EventManageActions({ eventId, status, isOpen }: Props) {
+export function EventManageActions({ eventId, status, isOpen, date }: Props) {
+  const completable = isCompletableDate(date)
   const router = useRouter()
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -53,20 +57,39 @@ export function EventManageActions({ eventId, status, isOpen }: Props) {
           Move to Draft
         </Button>
       )}
+      {status === 'PUBLISHED' && (
+        <Button
+          size="sm"
+          disabled={disabled || !completable}
+          title={completable ? undefined : 'Only available once the event date is today or past'}
+          onClick={() =>
+            patch('complete', { status: 'COMPLETED' }, 'Mark this event as completed? It will move to the completed list.')
+          }
+        >
+          {busy === 'complete' ? 'Completing…' : 'Mark as completed'}
+        </Button>
+      )}
+      {status === 'COMPLETED' && (
+        <Button size="sm" variant="outline" disabled={disabled} onClick={() => patch('reopen', { status: 'PUBLISHED' })}>
+          Reopen (Published)
+        </Button>
+      )}
       {status === 'CANCELLED' && (
         <Button size="sm" disabled={disabled} onClick={() => patch('reactivate', { status: 'DRAFT' })}>
           Reactivate (Draft)
         </Button>
       )}
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={disabled}
-        onClick={() => patch('reg', { isOpen: !isOpen })}
-      >
-        {isOpen ? 'Close registration' : 'Open registration'}
-      </Button>
-      {status !== 'CANCELLED' && (
+      {status !== 'COMPLETED' && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={disabled}
+          onClick={() => patch('reg', { isOpen: !isOpen })}
+        >
+          {isOpen ? 'Close registration' : 'Open registration'}
+        </Button>
+      )}
+      {status !== 'CANCELLED' && status !== 'COMPLETED' && (
         <Button
           size="sm"
           variant="destructive"
@@ -79,6 +102,11 @@ export function EventManageActions({ eventId, status, isOpen }: Props) {
       <Link href={`/admin/events/${eventId}/edit`} className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
         Edit details
       </Link>
+      {status === 'PUBLISHED' && !completable && (
+        <p className="text-xs text-gray-500 w-full">
+          This event can be marked completed on or after its scheduled date.
+        </p>
+      )}
       {error && <p className="text-sm text-red-600 w-full">{error}</p>}
     </div>
   )
