@@ -3,12 +3,10 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2, ShieldCheck } from 'lucide-react'
+import { AuthShell, authInput, authLabel, authButton } from '@/components/auth/AuthShell'
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,42 +33,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="dashboard-scope min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <Card className="max-w-sm w-full">
-        <CardHeader>
-          <CardTitle>Sign In</CardTitle>
-          <CardDescription>Sign in to manage events and tickets</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign In'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      eyebrow="Control Center"
+      title="Admin Sign In"
+      subtitle="Authorized personnel only."
+      panelHeadline={
+        <>
+          Behind
+          <br />
+          the scenes.
+        </>
+      }
+      panelSubcopy="Manage events, tickets, and analytics from the Lyante Control Center."
+      footer={
+        <span className="inline-flex items-center gap-1.5 text-ash text-xs">
+          <ShieldCheck size={13} className="text-gold" />
+          Secured access · Lyante staff
+        </span>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className={authLabel}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@lyante.art"
+            className={authInput}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className={authLabel}>
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className={authInput}
+            required
+          />
+        </div>
+        {error && (
+          <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md py-2 px-3">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={loading} className={authButton}>
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="animate-spin" size={16} /> Signing in…
+            </span>
+          ) : (
+            'Sign In'
+          )}
+        </button>
+      </form>
+    </AuthShell>
   )
 }
