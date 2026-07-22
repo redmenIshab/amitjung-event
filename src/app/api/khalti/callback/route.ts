@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       new URL(`/booking/result?jobId=${jobId}`, request.url),
     )
-  } catch {
+  } catch (e) {
+    console.error('GET /api/khalti/callback:', e)
     return NextResponse.redirect(
       new URL('/booking/result?jobId=error&error=Something+went+wrong', request.url),
     )

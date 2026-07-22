@@ -5,12 +5,22 @@ import { prisma } from '@/lib/prisma'
 import { storePendingBooking } from '@/lib/ticketing'
 import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
 import { KHALTI_BASE_URL } from '@/lib/khalti'
+import { isRedisConfigured } from '@/lib/upstash/upstash'
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session || session.user.role !== 'PARTICIPANT') {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 })
+    }
+
+    // The payment flow persists the pending booking (pidx → booking) in Redis
+    // between initiate and the Khalti callback. Fail clearly if it's missing.
+    if (!isRedisConfigured) {
+      return NextResponse.json(
+        { error: 'Payment service is not configured (Upstash Redis missing)' },
+        { status: 503 },
+      )
     }
 
     const { eventId, attendees } = await request.json()
@@ -114,7 +124,8 @@ export async function POST(request: Request) {
       payment_url: data.payment_url,
       pidx: data.pidx,
     })
-  } catch {
+  } catch (e) {
+    console.error('POST /api/khalti/initiate:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
