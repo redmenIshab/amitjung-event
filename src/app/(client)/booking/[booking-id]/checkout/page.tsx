@@ -62,8 +62,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!session) return
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    fetch(`${baseUrl}/api/events/${eventId}`)
+    fetch(`/api/events/${eventId}`)
       .then((r) => r.json())
       .then((data) => {
         setEvent(data)

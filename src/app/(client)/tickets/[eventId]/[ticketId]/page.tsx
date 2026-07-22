@@ -35,8 +35,7 @@ export default function TicketDetailPage() {
     }
     if (status !== 'authenticated' || !session || !eventId || !ticketId) return
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    fetch(`${baseUrl}/api/tickets/mine/${eventId}/${ticketId}`)
+    fetch(`/api/tickets/mine/${eventId}/${ticketId}`)
       .then((r) => {
         if (!r.ok) throw new Error('Ticket not found')
         return r.json()

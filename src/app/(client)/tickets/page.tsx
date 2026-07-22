@@ -22,8 +22,7 @@ export default function MyTicketsPage() {
     }
     if (status !== 'authenticated' || !session) return
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    fetch(`${baseUrl}/api/tickets/mine`)
+    fetch(`/api/tickets/mine`)
       .then((r) => {
         if (!r.ok) throw new Error('Failed to load tickets')
         return r.json()
