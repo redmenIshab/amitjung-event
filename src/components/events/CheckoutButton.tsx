@@ -52,13 +52,13 @@ export function CheckoutButton({
   return (
     <button
       onClick={handleClick}
-      className="w-full bg-[#ffb0cc] text-[#640038] font-bold py-3 md:py-4 flex items-center justify-center gap-3 hover:opacity-90 transition-all group cursor-pointer"
+      className="w-full bg-gold text-lyante-bg font-bold py-3 md:py-4 flex items-center justify-center gap-3 hover:bg-gold-light transition-colors group cursor-pointer rounded-md"
     >
       <Ticket size={18} />
       <span className="font-bold text-[16px] md:text-[20px] uppercase flex items-center gap-2">
         {discountActive ? (
           <>
-            <span className="line-through text-white/40 text-[14px] md:text-[16px]">Rs. {baseTicketPrice.toLocaleString()}</span>
+            <span className="line-through text-lyante-bg/50 text-[14px] md:text-[16px]">Rs. {baseTicketPrice.toLocaleString()}</span>
             <span>Rs. {finalPrice.toLocaleString()}</span>
           </>
         ) : (

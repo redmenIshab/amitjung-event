@@ -60,12 +60,12 @@ export default async function EventDetailPage({ params }: Props) {
                     />
                 )}
                 <div className="relative z-10 p-6 md:p-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full">
-                    <h1 className="text-[40px] md:text-[52px] font-extrabold text-white uppercase leading-[0.9] max-w-[400px] mb-8">
+                    <h1 className="font-bebas text-[52px] md:text-[72px] text-ivory uppercase leading-[0.85] tracking-tight max-w-[420px] mb-8">
                         {event.name}
                     </h1>
                     {artist && (
-                        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-3 md:p-4 flex items-start gap-4 w-full max-w-full">
-                            <div className="w-14 h-14 md:w-20 md:h-20 bg-[#36252b] shrink-0 border border-white/10 overflow-hidden">
+                        <div className="bg-white/10 backdrop-blur-xl border border-gold/20 rounded-lg p-3 md:p-4 flex items-start gap-4 w-full max-w-full">
+                            <div className="w-14 h-14 md:w-20 md:h-20 bg-lyante-surface-mid shrink-0 border border-white/10 overflow-hidden rounded-md">
                                 <Image
                                     alt={artist.artistName}
                                     className="w-full h-full object-cover grayscale"
@@ -78,7 +78,7 @@ export default async function EventDetailPage({ params }: Props) {
                             <div className="flex-1 flex flex-col gap-1">
                                 <div className="relative pt-4">
                                     <div className="relative h-1 bg-white/20 w-full">
-                                        <div className="absolute top-0 left-0 h-full bg-[#ffb0cc] w-[45%]" />
+                                        <div className="absolute top-0 left-0 h-full bg-gold w-[45%]" />
                                     </div>
                                     <div className="flex justify-between text-[10px] text-white/40 mt-1">
                                         <span>1:45</span>
@@ -96,7 +96,7 @@ export default async function EventDetailPage({ params }: Props) {
                                         </span>
                                     </div>
                                     <div className="flex justify-center mt-1">
-                                        <button className="text-white hover:text-[#ffb0cc] transition-colors cursor-pointer">
+                                        <button className="text-white hover:text-gold transition-colors cursor-pointer">
                                             <span className="text-[28px] md:text-[32px] leading-none">▶</span>
                                         </button>
                                     </div>
@@ -113,7 +113,8 @@ export default async function EventDetailPage({ params }: Props) {
             {/* ══ Right Panel (40%) — Lineup + Ticket CTA ══ */}
             <aside className="w-full md:w-[50%] h-[50vh] md:h-full bg-lyante-surface flex flex-col pt-20 md:pt-24 overflow-hidden">
                 <div className="px-4 md:px-8 mb-2 md:mb-4">
-                    <h2 className="text-[22px] md:text-[28px] text-white uppercase font-bold tracking-tight">
+                    <p className="section-label tracking-widest mb-1 text-gold">Set List</p>
+                    <h2 className="font-bebas text-[28px] md:text-[36px] text-ivory uppercase tracking-tight leading-none">
                         LINEUP
                     </h2>
                 </div>

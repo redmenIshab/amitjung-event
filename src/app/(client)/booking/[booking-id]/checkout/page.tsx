@@ -3,12 +3,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Loader2, Plus, Minus, X } from 'lucide-react'
+import { Loader2, Plus, Minus, X, Lock, ShieldCheck, BadgeCheck } from 'lucide-react'
 
 type AttendeeRow = {
   name: string
   email: string
   category: 'GENERAL' | 'VIP'
+}
+
+/** Khalti wordmark badge — signals the verified payment partner. */
+function KhaltiMark({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-[4px] bg-[#5C2D91] px-1.5 py-0.5 text-[11px] font-bold lowercase tracking-tight text-white ${className}`}
+    >
+      khalti
+    </span>
+  )
 }
 
 export default function CheckoutPage() {
@@ -155,189 +166,268 @@ export default function CheckoutPage() {
     }
   }
 
-  if (status === 'loading') {
+  if (status === 'loading' || (loading && !error)) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <Loader2 className="animate-spin text-white/40" size={32} />
+      <main className="min-h-screen bg-lyante-bg flex items-center justify-center">
+        <Loader2 className="animate-spin text-gold" size={32} />
       </main>
     )
   }
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-white/40" size={32} />
-        <p className="text-white/50 text-sm">Redirecting to sign in…</p>
-      </main>
-    )
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <Loader2 className="animate-spin text-white/40" size={32} />
+      <main className="min-h-screen bg-lyante-bg flex flex-col items-center justify-center gap-3">
+        <Loader2 className="animate-spin text-gold" size={32} />
+        <p className="text-ash text-sm">Redirecting to sign in…</p>
       </main>
     )
   }
 
   if (error && !event) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <main className="min-h-screen bg-lyante-bg flex items-center justify-center">
         <p className="text-red-400">{error}</p>
       </main>
     )
   }
 
+  const inputClass =
+    'w-full bg-lyante-bg border border-coal/40 rounded-md px-3 py-2.5 text-ivory text-sm placeholder:text-ash focus:outline-none focus:border-gold transition-colors'
+
   return (
-    <main className="min-h-screen bg-[#0A0A0A] flex items-start justify-center px-4 py-12">
-      <div className="w-full max-w-2xl">
-        <h1 className="text-2xl md:text-3xl text-white font-bold uppercase tracking-tight mb-1">
-          {event!.name}
-        </h1>
-        <p className="text-white/40 text-sm mb-8 uppercase tracking-wider">Complete your booking</p>
+    <main className="min-h-screen bg-lyante-bg text-ivory">
+      {/* Ambient gold wash */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(200,146,42,0.10),_transparent_55%)]" />
 
-        {/* Quantity */}
-        <div className="flex items-center gap-4 mb-8">
-          <span className="text-white/80 text-sm uppercase tracking-wider">Tickets</span>
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              disabled={quantity <= 1}
-              className="text-white/60 hover:text-white disabled:opacity-30 cursor-pointer"
-            >
-              <Minus size={18} />
-            </button>
-            <span className="text-white text-lg font-bold w-8 text-center">{attendees.length}</span>
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="text-white/60 hover:text-white cursor-pointer"
-            >
-              <Plus size={18} />
-            </button>
+      <div className="relative max-w-5xl mx-auto px-4 md:px-8 pt-14 md:pt-20 pb-24">
+        {/* Header */}
+        <div className="mb-8 md:mb-10">
+          <div className="flex items-center gap-2 text-gold mb-2">
+            <Lock size={13} />
+            <span className="section-label tracking-widest">Secure Checkout</span>
           </div>
+          <h1 className="font-bebas text-ivory text-[44px] md:text-[64px] leading-[0.85] tracking-tight uppercase">
+            {event!.name}
+          </h1>
+          <div className="mt-4 h-px w-full bg-gradient-to-r from-gold/60 via-coal/40 to-transparent" />
         </div>
 
-        {/* Registration details */}
-        <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={useSameDetails}
-            onChange={(e) => setUseSameDetails(e.target.checked)}
-            className="h-4 w-4 accent-[#ffb0cc]"
-          />
-          <span className="text-white/80 text-sm">Use my details for all tickets</span>
-        </label>
-        {useSameDetails ? (
-          <p className="text-white/40 text-xs mb-6">
-            All {attendees.length} ticket{attendees.length > 1 ? 's' : ''} will be registered to{' '}
-            <span className="text-white/70">{session.user.name}</span> · {session.user.email}
-          </p>
-        ) : (
-          <p className="text-white/40 text-xs mb-6">Enter attendee details for each ticket.</p>
-        )}
-
-        {/* Attendee rows */}
-        <div className="space-y-4 mb-8">
-          {attendees.map((a, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-white/40 text-xs uppercase tracking-wider">
-                  Ticket #{i + 1}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
+          {/* ══ Left: booking details ══ */}
+          <div>
+            {/* Quantity */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="font-bebas text-xl text-ivory tracking-wide uppercase leading-none">
+                  Tickets
+                </p>
+                <p className="text-ash text-xs mt-1">How many are you booking?</p>
+              </div>
+              <div className="flex items-center gap-4 bg-lyante-surface border border-coal/40 rounded-md px-4 py-2">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  className="text-ash hover:text-gold disabled:opacity-30 disabled:hover:text-ash cursor-pointer transition-colors"
+                  aria-label="Decrease"
+                >
+                  <Minus size={18} />
+                </button>
+                <span className="text-ivory text-lg font-bold w-8 text-center tabular-nums">
+                  {attendees.length}
                 </span>
-                {attendees.length > 1 && (
-                  <button
-                    onClick={() => {
-                      setAttendees((prev) => prev.filter((_, idx) => idx !== i))
-                      setQuantity((q) => q - 1)
-                    }}
-                    className="text-red-400 hover:text-red-300 cursor-pointer"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="text-ash hover:text-gold cursor-pointer transition-colors"
+                  aria-label="Increase"
+                >
+                  <Plus size={18} />
+                </button>
               </div>
-              {useSameDetails ? (
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:items-center">
-                  <p className="text-white/60 text-sm truncate">
-                    {session.user.name} · {session.user.email}
-                  </p>
-                  <select
-                    value={a.category}
-                    onChange={(e) => updateAttendee(i, 'category', e.target.value)}
-                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
-                  >
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="VIP">VIP</option>
-                  </select>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={a.name}
-                    onChange={(e) => updateAttendee(i, 'name', e.target.value)}
-                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={a.email}
-                    onChange={(e) => updateAttendee(i, 'email', e.target.value)}
-                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
-                    required
-                  />
-                  <select
-                    value={a.category}
-                    onChange={(e) => updateAttendee(i, 'category', e.target.value)}
-                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
-                  >
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="VIP">VIP</option>
-                  </select>
-                </div>
-              )}
             </div>
-          ))}
-        </div>
 
-        {/* Price breakdown */}
-        <div className="bg-white/5 border border-white/10 p-4 mb-8">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-white/80">
-              <span>Ticket Price (×{attendees.length})</span>
-              <span>Rs. {subtotal.toLocaleString()}</span>
-            </div>
-            {discountActive && (
-              <div className="flex justify-between text-[#ffb0cc]">
-                <span>Early-Bird Discount ({event!.discountPercentage}%)</span>
-                <span>-Rs. {discountAmount.toLocaleString()}</span>
-              </div>
+            {/* Registration details */}
+            <p className="font-bebas text-xl text-ivory tracking-wide uppercase leading-none mb-3">
+              Attendee Details
+            </p>
+            <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={useSameDetails}
+                onChange={(e) => setUseSameDetails(e.target.checked)}
+                className="h-4 w-4 accent-gold"
+              />
+              <span className="text-ivory/85 text-sm">Use my details for all tickets</span>
+            </label>
+            {useSameDetails ? (
+              <p className="text-ash text-xs mb-6">
+                All {attendees.length} ticket{attendees.length > 1 ? 's' : ''} will be registered to{' '}
+                <span className="text-ivory/80">{session.user.name}</span> · {session.user.email}
+              </p>
+            ) : (
+              <p className="text-ash text-xs mb-6">Enter attendee details for each ticket.</p>
             )}
-            <div className="border-t border-white/10 pt-2 flex justify-between text-white font-bold text-lg">
-              <span>Total</span>
-              <span>Rs. {total.toLocaleString()}</span>
+
+            {/* Attendee rows */}
+            <div className="space-y-3">
+              {attendees.map((a, i) => (
+                <div
+                  key={i}
+                  className="bg-lyante-surface border border-coal/40 rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gold text-[11px] uppercase tracking-widest font-medium">
+                      Ticket #{i + 1}
+                    </span>
+                    {attendees.length > 1 && (
+                      <button
+                        onClick={() => {
+                          setAttendees((prev) => prev.filter((_, idx) => idx !== i))
+                          setQuantity((q) => q - 1)
+                        }}
+                        className="text-ash hover:text-red-400 cursor-pointer transition-colors"
+                        aria-label="Remove ticket"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {useSameDetails ? (
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:items-center">
+                      <p className="text-ash text-sm truncate">
+                        {session.user.name} · {session.user.email}
+                      </p>
+                      <select
+                        value={a.category}
+                        onChange={(e) => updateAttendee(i, 'category', e.target.value)}
+                        className="bg-lyante-bg border border-coal/40 rounded-md px-3 py-2 text-ivory text-sm focus:outline-none focus:border-gold transition-colors"
+                      >
+                        <option value="GENERAL">GENERAL</option>
+                        <option value="VIP">VIP</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        value={a.name}
+                        onChange={(e) => updateAttendee(i, 'name', e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        value={a.email}
+                        onChange={(e) => updateAttendee(i, 'email', e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                      <select
+                        value={a.category}
+                        onChange={(e) => updateAttendee(i, 'category', e.target.value)}
+                        className="bg-lyante-bg border border-coal/40 rounded-md px-3 py-2 text-ivory text-sm focus:outline-none focus:border-gold transition-colors"
+                      >
+                        <option value="GENERAL">GENERAL</option>
+                        <option value="VIP">VIP</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* ══ Right: order summary + trust + pay ══ */}
+          <div className="lg:sticky lg:top-8 space-y-4">
+            {/* Order summary */}
+            <div className="bg-lyante-surface border border-coal/40 rounded-lg p-5">
+              <p className="font-bebas text-lg text-ivory tracking-wide uppercase mb-4">
+                Order Summary
+              </p>
+              <div className="space-y-2.5 text-sm">
+                <div className="flex justify-between text-ivory/80">
+                  <span>Ticket price (×{attendees.length})</span>
+                  <span className="tabular-nums">Rs. {subtotal.toLocaleString()}</span>
+                </div>
+                {discountActive && (
+                  <div className="flex justify-between text-gold-light">
+                    <span>Early-bird ({event!.discountPercentage}%)</span>
+                    <span className="tabular-nums">-Rs. {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="border-t border-coal/40 pt-3 mt-1 flex justify-between items-baseline">
+                  <span className="text-ivory font-bebas text-lg tracking-wide uppercase">Total</span>
+                  <span className="text-gold font-bold text-2xl tabular-nums">
+                    Rs. {total.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-md py-2 px-3">
+                {error}
+              </p>
+            )}
+
+            {/* Pay button */}
+            <button
+              onClick={handlePay}
+              disabled={paying}
+              className="w-full bg-gold text-lyante-bg font-bold py-3.5 rounded-md hover:bg-gold-light transition-colors disabled:opacity-50 disabled:hover:bg-gold cursor-pointer flex items-center justify-center gap-2.5 uppercase tracking-wide"
+            >
+              {paying ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  Processing…
+                </>
+              ) : (
+                <>
+                  <Lock size={16} />
+                  Securely Pay
+                  <KhaltiMark />
+                </>
+              )}
+            </button>
+
+            {/* Trust panel */}
+            <div className="bg-lyante-surface/60 border border-coal/30 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck size={16} className="text-gold shrink-0" />
+                <p className="text-ivory/75 text-xs leading-snug">
+                  256-bit SSL encrypted — your connection is private and secure.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <BadgeCheck size={16} className="text-gold shrink-0" />
+                <p className="text-ivory/75 text-xs leading-snug">
+                  Payments processed by <KhaltiMark />, Nepal's trusted gateway. We never see or
+                  store your card or wallet details.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Lock size={16} className="text-gold shrink-0" />
+                <p className="text-ivory/75 text-xs leading-snug">
+                  Tickets are issued instantly to your account after payment.
+                </p>
+              </div>
+              <div className="border-t border-coal/30 pt-3 flex items-center justify-center gap-2 text-ash text-[10px] uppercase tracking-widest">
+                <span>Khalti</span>
+                <span className="text-coal">·</span>
+                <span>Cards</span>
+                <span className="text-coal">·</span>
+                <span>Mobile Banking</span>
+                <span className="text-coal">·</span>
+                <span>Wallets</span>
+              </div>
+            </div>
+
+            <p className="text-center text-ash text-[11px]">
+              By continuing you agree to Lyante's terms &amp; refund policy.
+            </p>
+          </div>
         </div>
-
-        {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
-
-        <button
-          onClick={handlePay}
-          disabled={paying}
-          className="w-full bg-[#ffb0cc] text-[#640038] font-bold py-3 hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-        >
-          {paying ? (
-            <>
-              <Loader2 className="animate-spin" size={18} />
-              Processing…
-            </>
-          ) : (
-            'Pay with Khalti'
-          )}
-        </button>
       </div>
     </main>
   )

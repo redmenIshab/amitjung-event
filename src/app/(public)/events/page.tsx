@@ -58,7 +58,7 @@ function PastCard({ event }: { event: EventDTO }) {
   )
 }
 
-const SCROLLER = 'flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-8 md:gap-12 pb-8'
+const GRID = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6'
 
 export default async function PublicEventsPage() {
   // Read directly from the data layer (no self-fetch over HTTP), so it works in
@@ -97,7 +97,7 @@ export default async function PublicEventsPage() {
             </h1>
             <div className="mt-6 h-px w-full bg-gradient-to-r from-gold/60 via-coal/40 to-transparent" />
           </header>
-          <div className={SCROLLER}>
+          <div className={GRID}>
             {upcoming.map((event) => (
               <UpcomingCard key={event.id} event={event} />
             ))}
@@ -114,18 +114,13 @@ export default async function PublicEventsPage() {
             </h2>
             <div className="mt-6 h-px w-full bg-gradient-to-r from-coal/50 to-transparent" />
           </header>
-          <div className={SCROLLER}>
+          <div className={GRID}>
             {past.map((event) => (
               <PastCard key={event.id} event={event} />
             ))}
           </div>
         </section>
       )}
-
-      <style>
-        {`.no-scrollbar::-webkit-scrollbar { display: none; }
-          .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}
-      </style>
     </main>
   )
 }
