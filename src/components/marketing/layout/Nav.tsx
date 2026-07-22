@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 const NAV_LINKS = [
   { label: 'HOME', href: '/' },
@@ -15,8 +16,16 @@ const NAV_LINKS = [
 
 export default function Nav() {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // Public CTA only: participants get their tickets portal; everyone else logs in.
+  // Admins use their own /admin/login and are unaffected.
+  const cta =
+    session?.user?.role === 'PARTICIPANT'
+      ? { href: '/tickets', label: 'MY TICKETS' }
+      : { href: '/auth/login', label: 'LOGIN' }
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
@@ -61,10 +70,10 @@ export default function Nav() {
             </Link>
           ))}
           <Link
-            href="/auth/login"
+            href={cta.href}
             className="inline-flex items-center gap-2 px-5 py-2 font-bebas text-sm tracking-widest uppercase border border-gold text-gold hover:bg-gold hover:text-bg transition-all duration-250 min-h-[40px] ml-4"
           >
-            LOGIN
+            {cta.label}
           </Link>
         </div>
 
@@ -97,11 +106,11 @@ export default function Nav() {
             </Link>
           ))}
           <Link
-            href="/auth/login"
+            href={cta.href}
             className="inline-flex items-center gap-2 px-6 py-3 font-bebas text-sm tracking-widest uppercase bg-gold text-bg hover:opacity-90 transition-all duration-250 min-h-[48px] mt-4"
             onClick={() => setMenuOpen(false)}
           >
-            LOGIN
+            {cta.label}
           </Link>
         </div>
       )}

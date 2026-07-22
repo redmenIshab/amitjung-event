@@ -31,6 +31,25 @@ export default function CheckoutPage() {
   const [attendees, setAttendees] = useState<AttendeeRow[]>([
     { name: '', email: '', category: 'GENERAL' },
   ])
+  // When on, every ticket is registered to the signed-in user (default).
+  const [useSameDetails, setUseSameDetails] = useState(true)
+
+  // Pre-fill the first ticket with the signed-in user's details.
+  useEffect(() => {
+    if (!session?.user) return
+    setAttendees((prev) => {
+      if (prev.length && !prev[0].name && !prev[0].email) {
+        const next = [...prev]
+        next[0] = {
+          ...next[0],
+          name: session.user.name ?? '',
+          email: session.user.email ?? '',
+        }
+        return next
+      }
+      return prev
+    })
+  }, [session])
 
   // Not signed in → go straight to the auth flow, returning here afterwards.
   useEffect(() => {
@@ -99,7 +118,16 @@ export default function CheckoutPage() {
   async function handlePay() {
     if (!event || !session) return
 
-    const emptyField = attendees.find((a) => !a.name || !a.email)
+    // When "use my details" is on, register every ticket to the signed-in user.
+    const effectiveAttendees = useSameDetails
+      ? attendees.map((a) => ({
+          name: session.user.name ?? '',
+          email: session.user.email ?? '',
+          category: a.category,
+        }))
+      : attendees
+
+    const emptyField = effectiveAttendees.find((a) => !a.name || !a.email)
     if (emptyField) {
       setError('Please fill in name and email for all tickets')
       return
@@ -112,7 +140,7 @@ export default function CheckoutPage() {
       const res = await fetch('/api/khalti/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, attendees }),
+        body: JSON.stringify({ eventId, attendees: effectiveAttendees }),
       })
 
       if (!res.ok) {
@@ -190,13 +218,29 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* Registration details */}
+        <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={useSameDetails}
+            onChange={(e) => setUseSameDetails(e.target.checked)}
+            className="h-4 w-4 accent-[#ffb0cc]"
+          />
+          <span className="text-white/80 text-sm">Use my details for all tickets</span>
+        </label>
+        {useSameDetails ? (
+          <p className="text-white/40 text-xs mb-6">
+            All {attendees.length} ticket{attendees.length > 1 ? 's' : ''} will be registered to{' '}
+            <span className="text-white/70">{session.user.name}</span> · {session.user.email}
+          </p>
+        ) : (
+          <p className="text-white/40 text-xs mb-6">Enter attendee details for each ticket.</p>
+        )}
+
         {/* Attendee rows */}
         <div className="space-y-4 mb-8">
           {attendees.map((a, i) => (
-            <div
-              key={i}
-              className="bg-white/5 border border-white/10 p-4"
-            >
+            <div key={i} className="bg-white/5 border border-white/10 p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-white/40 text-xs uppercase tracking-wider">
                   Ticket #{i + 1}
@@ -213,32 +257,48 @@ export default function CheckoutPage() {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={a.name}
-                  onChange={(e) => updateAttendee(i, 'name', e.target.value)}
-                  className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={a.email}
-                  onChange={(e) => updateAttendee(i, 'email', e.target.value)}
-                  className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
-                  required
-                />
-                <select
-                  value={a.category}
-                  onChange={(e) => updateAttendee(i, 'category', e.target.value)}
-                  className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
-                >
-                  <option value="GENERAL">GENERAL</option>
-                  <option value="VIP">VIP</option>
-                </select>
-              </div>
+              {useSameDetails ? (
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:items-center">
+                  <p className="text-white/60 text-sm truncate">
+                    {session.user.name} · {session.user.email}
+                  </p>
+                  <select
+                    value={a.category}
+                    onChange={(e) => updateAttendee(i, 'category', e.target.value)}
+                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
+                  >
+                    <option value="GENERAL">GENERAL</option>
+                    <option value="VIP">VIP</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={a.name}
+                    onChange={(e) => updateAttendee(i, 'name', e.target.value)}
+                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={a.email}
+                    onChange={(e) => updateAttendee(i, 'email', e.target.value)}
+                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30"
+                    required
+                  />
+                  <select
+                    value={a.category}
+                    onChange={(e) => updateAttendee(i, 'category', e.target.value)}
+                    className="bg-white/5 border border-white/10 px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
+                  >
+                    <option value="GENERAL">GENERAL</option>
+                    <option value="VIP">VIP</option>
+                  </select>
+                </div>
+              )}
             </div>
           ))}
         </div>
