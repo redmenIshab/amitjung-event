@@ -130,6 +130,17 @@
   .dashboard-scope * {
     @apply border-border outline-ring/50;
   }
+  /* Admin CRM accent: retint shadcn primary/ring/accent to Lyante gold so every
+     button, badge, focus ring and hover in the dashboard inherits the brand. */
+  .dashboard-scope {
+    --primary: #c8922a;
+    --primary-foreground: #ffffff;
+    --ring: #c8922a;
+    --accent: #f6efe1;
+    --accent-foreground: #6b4a0f;
+    --secondary: #f3f1ec;
+    --secondary-foreground: #3a3630;
+  }
   body {
     @apply bg-background text-foreground;
   }

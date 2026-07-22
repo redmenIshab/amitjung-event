@@ -2,89 +2,86 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, X, LayoutDashboard, Calendar, ScanLine, LogOut } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
-import { hasCapability, type AppRole } from '@/lib/rbac'
+import { usePathname } from 'next/navigation'
+import { Menu, X, LayoutDashboard, Calendar, ScanLine, Music, LogOut } from 'lucide-react'
+import { hasCapability, type AppRole, type Capability } from '@/lib/rbac'
 
 type Props = { userName: string; userRole: AppRole }
 
-const links = [
+const LINKS: { href: string; label: string; icon: typeof LayoutDashboard; cap?: Capability }[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/events', label: 'Events', icon: Calendar },
+  { href: '/admin/scanner', label: 'Scanner', icon: ScanLine, cap: 'TICKET_SCAN' },
+  { href: '/admin/artists', label: 'Artists', icon: Music },
 ]
 
 export function MobileNav({ userName, userRole }: Props) {
   const [open, setOpen] = useState(false)
-  const navLinks = hasCapability(userRole, 'TICKET_SCAN')
-    ? [...links, { href: '/admin/scanner', label: 'Scanner', icon: ScanLine }]
-    : links
+  const pathname = usePathname()
+  const navLinks = LINKS.filter((l) => !l.cap || hasCapability(userRole, l.cap))
 
   return (
     <>
       {/* Fixed top bar — mobile only */}
-      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-white border-b flex items-center justify-between px-4">
-        <span className="font-bold text-gray-900">Event Tickets</span>
+      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-[#131110] flex items-center justify-between px-4">
+        <span className="font-bold tracking-[0.2em] text-gold">LYANTE</span>
         <button
           onClick={() => setOpen(true)}
-          className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-md hover:bg-white/10 transition-colors"
           aria-label="Open menu"
         >
-          <Menu size={22} className="text-gray-700" />
+          <Menu size={22} className="text-ivory" />
         </button>
       </header>
 
       {/* Drawer */}
       {open && (
         <div className="md:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
-          {/* Slide-in panel */}
-          <div className="relative z-10 w-64 bg-white flex flex-col h-full shadow-2xl">
-            {/* Header */}
-            <div className="flex items-start justify-between p-4">
-              <div>
-                <p className="font-bold text-gray-900">Event Tickets</p>
-                <p className="text-xs text-gray-500 mt-0.5">{userName}</p>
-                <span className="inline-block text-[10px] font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mt-1">
+          <div className="relative z-10 w-64 bg-[#131110] text-ivory flex flex-col h-full shadow-2xl">
+            <div className="flex items-start justify-between p-5">
+              <div className="min-w-0">
+                <p className="text-lg font-bold tracking-[0.2em] text-gold">LYANTE</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-coal">Control Center</p>
+                <p className="text-sm text-ivory mt-3 truncate">{userName}</p>
+                <span className="inline-block text-[10px] font-semibold uppercase tracking-wider bg-gold/15 text-gold px-1.5 py-0.5 rounded mt-1">
                   {userRole}
                 </span>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                className="p-1 rounded-md hover:bg-white/10 transition-colors"
                 aria-label="Close menu"
               >
-                <X size={20} className="text-gray-500" />
+                <X size={20} className="text-ash" />
               </button>
             </div>
 
-            <Separator />
-
-            {/* Nav links */}
             <nav className="flex-1 p-3 space-y-1">
-              {navLinks.map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  <Icon size={17} />
-                  {label}
-                </Link>
-              ))}
+              {navLinks.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || pathname.startsWith(`${href}/`)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      active ? 'bg-gold/15 text-gold-light font-medium' : 'text-ash hover:text-ivory hover:bg-white/5'
+                    }`}
+                  >
+                    {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-gold" />}
+                    <Icon size={17} className={active ? 'text-gold' : ''} />
+                    {label}
+                  </Link>
+                )
+              })}
             </nav>
 
-            <Separator />
-
-            <div className="p-3">
+            <div className="p-3 border-t border-white/5">
               <Link
                 href="/api/auth/signout"
-                className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-gray-500 hover:bg-gray-100 transition-colors w-full"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ash hover:text-ivory hover:bg-white/5 transition-colors w-full"
               >
                 <LogOut size={17} />
                 Sign Out

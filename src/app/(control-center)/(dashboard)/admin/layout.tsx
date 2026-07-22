@@ -1,63 +1,36 @@
-import { requirePageCapability, hasCapability } from '@/lib/rbac'
+import { requirePageCapability } from '@/lib/rbac'
 import Link from 'next/link'
-import { LogOut, LayoutDashboard, Calendar, ScanLine, Music } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
+import { LogOut } from 'lucide-react'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { AdminSidebarNav } from '@/components/layout/AdminSidebarNav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await requirePageCapability('DASHBOARD_VIEW')
 
   return (
-    <div className="dashboard-scope flex min-h-screen bg-gray-50">
+    <div className="dashboard-scope flex min-h-screen bg-[#f7f6f3]">
       {/* ── Desktop sidebar (md+) ── */}
-      <aside className="hidden md:flex w-56 bg-white border-r flex-col shrink-0">
-        <div className="p-4">
-          <h1 className="text-lg font-bold text-gray-900">Event Tickets</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{session.user.name}</p>
-          <span className="inline-block text-[10px] font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mt-1">
+      <aside className="hidden md:flex w-60 bg-[#131110] text-ivory flex-col shrink-0 border-r border-black/40">
+        <div className="p-5">
+          <h1 className="text-lg font-bold tracking-[0.2em] text-gold">LYANTE</h1>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-coal mt-0.5">Control Center</p>
+        </div>
+
+        <div className="mx-5 mb-2 rounded-lg bg-white/[0.04] border border-white/5 px-3 py-2.5">
+          <p className="text-sm text-ivory truncate">{session.user.name}</p>
+          <span className="inline-block text-[10px] font-semibold uppercase tracking-wider bg-gold/15 text-gold px-1.5 py-0.5 rounded mt-1">
             {session.user.role}
           </span>
         </div>
-        <Separator />
-        <nav className="flex-1 p-3 space-y-1">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <LayoutDashboard size={16} />
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/events"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <Calendar size={16} />
-            Events
-          </Link>
-          {hasCapability(session.user.role, 'TICKET_SCAN') && (
-            <Link
-              href="/admin/scanner"
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <ScanLine size={16} />
-              Scanner
-            </Link>
-          )}
-          <Link
-            href="/admin/artists"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <Music size={16} />
-            Artists
-          </Link>
-        </nav>
-        <Separator />
-        <div className="p-3">
+
+        <AdminSidebarNav role={session.user.role} />
+
+        <div className="p-3 border-t border-white/5">
           <Link
             href="/api/auth/signout"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100 transition-colors w-full"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ash hover:text-ivory hover:bg-white/5 transition-colors w-full"
           >
-            <LogOut size={16} />
+            <LogOut size={17} />
             Sign Out
           </Link>
         </div>
