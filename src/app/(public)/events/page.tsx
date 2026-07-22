@@ -1,6 +1,10 @@
 import { EventCard } from '@/components/events/EventCard'
 import { eventsResponseSchema, type EventDTO } from '@/types/event'
 import { computeEventAvailability } from '@/lib/events'
+import { getCachedEvents } from '@/lib/upstash/services/event-cache'
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
 
 function stateScreen(message: string) {
   return (
@@ -57,13 +61,18 @@ function PastCard({ event }: { event: EventDTO }) {
 const SCROLLER = 'flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-8 md:gap-12 pb-8'
 
 export default async function PublicEventsPage() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/events`, { cache: 'no-store' })
-
-  if (!res.ok) return stateScreen('Failed to load events.')
-
-  const raw = await res.json()
-  const parsed = eventsResponseSchema.safeParse(raw)
+  // Read directly from the data layer (no self-fetch over HTTP), so it works in
+  // any environment regardless of NEXT_PUBLIC_APP_URL / cold starts.
+  const events = await getCachedEvents()
+  const sold = await prisma.ticket.groupBy({
+    by: ['eventId'],
+    where: { status: { not: 'CANCELLED' } },
+    _count: true,
+  })
+  const soldByEvent = new Map(sold.map((s) => [s.eventId, s._count]))
+  const withCounts = events.map((e) => ({ ...e, soldCount: soldByEvent.get(e.id) ?? 0 }))
+  // Normalize Date → ISO strings (mirrors the API's JSON) before schema parse.
+  const parsed = eventsResponseSchema.safeParse(JSON.parse(JSON.stringify(withCounts)))
   if (!parsed.success) return stateScreen('Failed to load events.')
 
   // Public sees only PUBLISHED events, split into upcoming (on/before the

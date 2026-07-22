@@ -3,19 +3,25 @@ import Image from 'next/image'
 import { eventDetailSchema } from '@/types/event'
 import { CheckoutButton } from '@/components/events/CheckoutButton'
 import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
+import { getCachedEvent } from '@/lib/upstash/services/event-cache'
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
 
 type Props = { params: Promise<{ id: string }> }
 
 export default async function EventDetailPage({ params }: Props) {
     const { id } = await params
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/events/${id}`)
-
-    if (!res.ok) notFound()
-
-    const raw = await res.json()
-    const parsed = eventDetailSchema.safeParse(raw)
+    // Read directly from the data layer (no self-fetch over HTTP).
+    const eventRow = await getCachedEvent(id)
+    if (!eventRow) notFound()
+    const soldCount = await prisma.ticket.count({
+        where: { eventId: id, status: { not: 'CANCELLED' } },
+    })
+    const parsed = eventDetailSchema.safeParse(
+        JSON.parse(JSON.stringify({ ...eventRow, soldCount })),
+    )
 
     if (!parsed.success) notFound()
 
