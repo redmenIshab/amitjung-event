@@ -4,18 +4,22 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  const hash = await bcrypt.hash('LyanteProd@123', 12)
+  // Fetch admin credentials from .env, falling back to the defaults if unset.
+  const email = process.env.ADMIN_EMAIL || 'admin@lyanteprod.com'
+  const password = process.env.ADMIN_PASSWORD || 'LyanteProd@123'
+
+  const hash = await bcrypt.hash(password, 12)
   await prisma.user.upsert({
-    where: { email: 'admin@lyanteprod.com' },
+    where: { email },
     update: { password: hash, name: 'Admin User', role: 'ADMIN' },
     create: {
-      email: 'admin@lyanteprod.com',
+      email,
       password: hash,
       name: 'Admin User',
       role: 'ADMIN',
     },
   })
-  console.log('Seeded admin user: admin@lyanteprod.com / LyanteProd@123')
+  console.log(`Seeded admin user: ${email}`)
 }
 
 main()
