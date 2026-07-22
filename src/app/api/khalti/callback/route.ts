@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { getPendingBooking, enqueueBooking, processBookingQueue } from '@/lib/ticketing'
+import { KHALTI_BASE_URL } from '@/lib/khalti'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     let lookupStatus = status
 
     if (pidx) {
-      const lookupRes = await fetch('https://dev.khalti.com/api/v2/epayment/lookup/', {
+      const lookupRes = await fetch(`${KHALTI_BASE_URL}/api/v2/epayment/lookup/`, {
         method: 'POST',
         headers: {
           Authorization: `Key ${secretKey}`,

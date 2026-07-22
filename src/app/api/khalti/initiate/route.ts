@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { storePendingBooking } from '@/lib/ticketing'
 import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
+import { KHALTI_BASE_URL } from '@/lib/khalti'
 
 export async function POST(request: Request) {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL as string
 
-    const khaltiRes = await fetch('https://dev.khalti.com/api/v2/epayment/initiate/', {
+    const khaltiRes = await fetch(`${KHALTI_BASE_URL}/api/v2/epayment/initiate/`, {
       method: 'POST',
       headers: {
         Authorization: `Key ${secretKey}`,
