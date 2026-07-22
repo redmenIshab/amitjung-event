@@ -72,7 +72,7 @@ export function EventList({ events }: { events: Event[] }) {
                 {new Date(event.date).toLocaleDateString()} · {event._count.tickets} tickets
               </span>
               <Link
-                href={`/events/${event.id}`}
+                href={`/admin/events/${event.id}`}
                 className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
               >
                 Manage
@@ -135,7 +135,7 @@ export function EventList({ events }: { events: Event[] }) {
                 </TableCell>
                 <TableCell>
                   <Link
-                    href={`/events/${event.id}`}
+                    href={`/admin/events/${event.id}`}
                     className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
                   >
                     Manage

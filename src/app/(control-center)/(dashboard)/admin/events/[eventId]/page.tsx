@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { getCachedEvent } from '@/lib/upstash/services/event-cache'
 import { CheckInChart } from '@/components/dashboard/CheckInChart'
+import { EventManageActions } from '@/components/events/EventManageActions'
 import {
   computeEventAvailability,
   SALE_BADGE_LABEL,
@@ -131,6 +132,13 @@ export default async function EventDetailPage({ params }: Props) {
           </Badge>
         ))}
       </div>
+
+      {/* Management actions (PUT updates) */}
+      {hasCapability(session.user.role, 'EVENT_WRITE') && (
+        <div className="mb-6">
+          <EventManageActions eventId={event.id} status={event.status} isOpen={event.isOpen} />
+        </div>
+      )}
 
       {/* Event-specific analytics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
