@@ -21,15 +21,18 @@ export function CheckoutButton({
   disabled = false,
   disabledReason,
 }: Props) {
-  const { data: session } = useSession()
+  const { status } = useSession()
   const router = useRouter()
 
   function handleClick() {
-    if (!session) {
-      router.push(`/auth/login?callbackUrl=/booking/${eventId}/checkout`)
-      return
+    const checkout = `/booking/${eventId}/checkout`
+    // Unauthenticated → straight to the auth flow, returning to checkout after.
+    // Authenticated (or still resolving) → go to checkout, which gates itself.
+    if (status === 'unauthenticated') {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(checkout)}`)
+    } else {
+      router.push(checkout)
     }
-    router.push(`/booking/${eventId}/checkout`)
   }
 
   if (disabled) {

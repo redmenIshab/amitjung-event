@@ -32,6 +32,15 @@ export default function CheckoutPage() {
     { name: '', email: '', category: 'GENERAL' },
   ])
 
+  // Not signed in → go straight to the auth flow, returning here afterwards.
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace(
+        `/auth/login?callbackUrl=${encodeURIComponent(`/booking/${eventId}/checkout`)}`,
+      )
+    }
+  }, [status, eventId, router])
+
   useEffect(() => {
     if (!session) return
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -129,18 +138,9 @@ export default function CheckoutPage() {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-white/60 mb-4">Please sign in to continue with your booking.</p>
-          <button
-            onClick={() =>
-              router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/booking/${eventId}/checkout`)}`)
-            }
-            className="bg-white/10 text-white px-6 py-3 hover:bg-white/20 transition-colors cursor-pointer"
-          >
-            Sign In
-          </button>
-        </div>
+      <main className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="animate-spin text-white/40" size={32} />
+        <p className="text-white/50 text-sm">Redirecting to sign in…</p>
       </main>
     )
   }
