@@ -45,16 +45,16 @@ export default function EventTicketsPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
-        <Loader2 className="animate-spin" size={32} style={{ color: '#9a9590' }} />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="animate-spin text-gold" size={32} />
       </div>
     )
   }
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
-        <p style={{ color: '#ef4444' }}>{error || 'Event not found'}</p>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-red-400">{error || 'Event not found'}</p>
       </div>
     )
   }
@@ -67,109 +67,103 @@ export default function EventTicketsPage() {
   })
 
   return (
-    <div className="min-h-screen" style={{ background: '#080808' }}>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link
-          href="/tickets"
-          className="inline-flex items-center gap-1.5 text-sm mb-6 hover:opacity-80 transition-opacity"
-          style={{ color: '#9a9590' }}
-        >
-          <ArrowLeft size={14} />
-          Back to My Tickets
-        </Link>
+    <main className="max-w-2xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-24">
+      <Link
+        href="/tickets"
+        className="inline-flex items-center gap-1.5 text-sm mb-6 text-ash hover:text-gold transition-colors"
+      >
+        <ArrowLeft size={14} />
+        Back to My Tickets
+      </Link>
 
-        {event.image && (
-          <div className="w-full h-48 overflow-hidden mb-6">
-            <img
-              src={event.image}
-              alt={event.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        <h1 className="text-2xl font-bold" style={{ color: '#f0ede6' }}>{event.name}</h1>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm" style={{ color: '#9a9590' }}>
-          <span className="flex items-center gap-1.5">
-            <MapPin size={13} />
-            {event.venue}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Calendar size={13} />
-            {eventDate} at {eventTime}
-          </span>
+      {event.image && (
+        <div className="w-full h-52 md:h-60 overflow-hidden rounded-lg border border-coal/40 mb-6 relative">
+          <img
+            src={event.image}
+            alt={event.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-lyante-bg/80 via-transparent to-transparent" />
         </div>
+      )}
 
-        {event.description && (
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: '#9a9590' }}>
-            {event.description}
-          </p>
-        )}
+      <p className="section-label tracking-widest text-gold mb-2">Your Tickets</p>
+      <h1 className="font-bebas text-ivory text-[40px] md:text-[52px] leading-[0.85] tracking-tight uppercase">
+        {event.name}
+      </h1>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-ash">
+        <span className="flex items-center gap-1.5">
+          <MapPin size={13} className="text-gold" />
+          {event.venue}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Calendar size={13} className="text-gold" />
+          {eventDate} at {eventTime}
+        </span>
+      </div>
 
-        <div className="mt-6 space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#c8922a' }}>
-            Tickets ({tickets.length})
-          </h2>
+      {event.description && (
+        <p className="mt-4 text-sm leading-relaxed text-ash">
+          {event.description}
+        </p>
+      )}
 
-          {tickets.map((t) => (
-            <Link
-              key={t.id}
-              href={`/tickets/${eventId}/${t.id}`}
-              className="block overflow-hidden border transition-colors hover:border-[#c8922a]/40"
-              style={{ background: '#111111', borderColor: '#1c1c1c' }}
-            >
-              <div className="flex items-center p-4 gap-4">
-                <div className="shrink-0">
-                  <img
-                    src={t.qrDataUrl}
-                    alt="QR Code"
-                    className="w-20 h-20"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate" style={{ color: '#f0ede6' }}>
-                    {t.attendeeName || 'Unnamed'}
+      <div className="mt-8 space-y-3">
+        <h2 className="section-label tracking-widest text-gold">
+          Tickets ({tickets.length})
+        </h2>
+
+        {tickets.map((t) => (
+          <Link
+            key={t.id}
+            href={`/tickets/${eventId}/${t.id}`}
+            className="group block overflow-hidden rounded-lg border border-coal/40 bg-lyante-surface hover:border-gold/50 transition-colors"
+          >
+            <div className="flex items-center p-4 gap-4">
+              <div className="shrink-0 rounded-md bg-white p-1.5">
+                <img
+                  src={t.qrDataUrl}
+                  alt="QR Code"
+                  className="w-16 h-16 block"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-ivory truncate group-hover:text-gold-light transition-colors">
+                  {t.attendeeName || 'Unnamed'}
+                </p>
+                {t.attendeeEmail && (
+                  <p className="text-xs mt-0.5 truncate text-ash">
+                    {t.attendeeEmail}
                   </p>
-                  {t.attendeeEmail && (
-                    <p className="text-xs mt-0.5 truncate" style={{ color: '#9a9590' }}>
-                      {t.attendeeEmail}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5"
-                      style={{
-                        background: t.category === 'VIP' ? 'rgba(245,200,66,0.2)' : 'rgba(200,146,42,0.1)',
-                        color: t.category === 'VIP' ? '#f5c842' : '#c8922a',
-                      }}
-                    >
-                      {t.category}
-                    </span>
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5"
-                      style={{
-                        background:
-                          t.status === 'UNUSED' ? 'rgba(34,197,94,0.15)' :
-                          t.status === 'USED' ? 'rgba(234,179,8,0.15)' :
-                          'rgba(239,68,68,0.15)',
-                        color:
-                          t.status === 'UNUSED' ? '#22c55e' :
-                          t.status === 'USED' ? '#eab308' :
-                          '#ef4444',
-                      }}
-                    >
-                      {t.status}
-                    </span>
-                    <span className="text-[10px] font-mono" style={{ color: '#4a4744' }}>
-                      #{t.id.slice(0, 8).toUpperCase()}
-                    </span>
-                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                      t.category === 'VIP' ? 'bg-gold-light/20 text-gold-light' : 'bg-gold/10 text-gold'
+                    }`}
+                  >
+                    {t.category}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                      t.status === 'UNUSED'
+                        ? 'bg-green-500/15 text-green-400'
+                        : t.status === 'USED'
+                          ? 'bg-yellow-500/15 text-yellow-400'
+                          : 'bg-red-500/15 text-red-400'
+                    }`}
+                  >
+                    {t.status}
+                  </span>
+                  <span className="text-[10px] font-mono text-coal">
+                    #{t.id.slice(0, 8).toUpperCase()}
+                  </span>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          </Link>
+        ))}
       </div>
-    </div>
+    </main>
   )
 }

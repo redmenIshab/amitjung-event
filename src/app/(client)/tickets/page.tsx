@@ -40,85 +40,84 @@ export default function MyTicketsPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
-        <Loader2 className="animate-spin" size={32} style={{ color: '#9a9590' }} />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="animate-spin text-gold" size={32} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#080808' }}>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: '#f0ede6' }}>My Tickets</h1>
+    <main className="max-w-3xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-24">
+      <header className="mb-8 md:mb-10">
+        <p className="section-label tracking-widest text-gold mb-2">Your Wallet</p>
+        <h1 className="font-bebas text-ivory text-[48px] md:text-[64px] leading-[0.85] tracking-tight uppercase">
+          My Tickets
+        </h1>
+        <div className="mt-4 h-px w-full bg-gradient-to-r from-gold/60 via-coal/40 to-transparent" />
+      </header>
 
-        {error ? (
-          <div className="text-center py-16">
-            <p style={{ color: '#ef4444' }}>{error}</p>
-          </div>
-        ) : groups.length === 0 ? (
-          <div className="text-center py-16">
-            <Ticket className="mx-auto mb-4" size={48} style={{ color: '#4a4744' }} />
-            <p className="mb-4" style={{ color: '#9a9590' }}>No tickets yet</p>
-            <Link
-              href="/events"
-              className="inline-block font-semibold px-6 py-2.5 hover:opacity-90 transition-opacity"
-              style={{ background: '#c8922a', color: '#080808' }}
-            >
-              Browse Events
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {groups.map((group) => {
-              const eventDate = new Date(group.event.bookingDeadline).toLocaleDateString('en-US', {
-                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-              })
+      {error ? (
+        <div className="text-center py-20">
+          <p className="text-red-400">{error}</p>
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="text-center py-20">
+          <Ticket className="mx-auto mb-4 text-coal" size={48} />
+          <p className="text-ash mb-6">You don&apos;t have any tickets yet.</p>
+          <Link
+            href="/events"
+            className="inline-block bg-gold text-lyante-bg font-bold uppercase tracking-wide px-6 py-2.5 rounded-md hover:bg-gold-light transition-colors"
+          >
+            Browse Events
+          </Link>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {groups.map((group) => {
+            const eventDate = new Date(group.event.bookingDeadline).toLocaleDateString('en-US', {
+              weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+            })
 
-              return (
-                <Link
-                  key={group.event.id}
-                  href={`/tickets/${group.event.id}`}
-                  className="block overflow-hidden border transition-colors"
-                  style={{ background: '#111111', borderColor: '#1c1c1c' }}
-                >
-                  <div className="flex items-center">
-                    {group.event.image && (
-                      <div className="w-20 h-20 shrink-0">
-                        <img
-                          src={group.event.image}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <h2 className="text-lg font-bold" style={{ color: '#f0ede6' }}>
-                          {group.event.name}
-                        </h2>
-                        <span
-                          className="shrink-0 text-xs font-semibold uppercase tracking-wider px-2 py-1"
-                          style={{ background: 'rgba(200,146,42,0.15)', color: '#c8922a' }}
-                        >
-                          ×{group.count}
-                        </span>
-                      </div>
-                      <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: '#9a9590' }}>
-                        <MapPin size={12} />
-                        {group.event.venue}
-                      </p>
-                      <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: '#9a9590' }}>
-                        <Calendar size={12} />
-                        {eventDate}
-                      </p>
+            return (
+              <Link
+                key={group.event.id}
+                href={`/tickets/${group.event.id}`}
+                className="group block overflow-hidden rounded-lg border border-coal/40 bg-lyante-surface hover:border-gold/50 transition-colors"
+              >
+                <div className="flex items-stretch">
+                  {group.event.image && (
+                    <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 overflow-hidden">
+                      <img
+                        src={group.event.image}
+                        alt=""
+                        className="w-full h-full object-cover grayscale-[0.25] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                      />
                     </div>
+                  )}
+                  <div className="flex-1 p-4 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="font-bebas text-xl md:text-2xl text-ivory uppercase tracking-tight leading-none truncate group-hover:text-gold-light transition-colors">
+                        {group.event.name}
+                      </h2>
+                      <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-gold/15 text-gold">
+                        ×{group.count}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-2 flex items-center gap-1.5 text-ash">
+                      <MapPin size={12} className="text-gold" />
+                      {group.event.venue}
+                    </p>
+                    <p className="text-sm flex items-center gap-1.5 mt-1 text-ash">
+                      <Calendar size={12} className="text-gold" />
+                      {eventDate}
+                    </p>
                   </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </main>
   )
 }
