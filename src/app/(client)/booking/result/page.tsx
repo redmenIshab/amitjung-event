@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, Ticket, ArrowRight, Mail } from 'lucide-react'
 import { checkBookingStatus } from './actions'
 
 type Result = {
@@ -14,7 +13,6 @@ type Result = {
 }
 
 export default function BookingResultPage() {
-  const router = useRouter()
   const [result, setResult] = useState<Result | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -38,7 +36,7 @@ export default function BookingResultPage() {
       const error = params.get('error')
       setResult({
         status: 'error',
-        error: error ? decodeURIComponent(error) : 'Booking failed',
+        error: error ? decodeURIComponent(error) : 'Your booking could not be completed.',
       })
       setLoading(false)
       return
@@ -47,55 +45,94 @@ export default function BookingResultPage() {
     poll(jobId)
   }, [poll])
 
+  // ── Processing ──────────────────────────────────────────────
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-lyante-bg flex items-center justify-center px-4">
         <div className="text-center">
-          <Loader2 className="animate-spin text-white/40 mx-auto mb-4" size={32} />
-          <p className="text-white/60">Processing your booking...</p>
+          <div className="relative inline-flex mb-5">
+            <div className="absolute inset-0 rounded-full bg-gold/15 blur-2xl" />
+            <Loader2 className="relative animate-spin text-gold" size={40} />
+          </div>
+          <h1 className="text-xl font-semibold text-ivory mb-1">Confirming your payment</h1>
+          <p className="text-ash text-sm">Hang tight — this only takes a moment.</p>
         </div>
       </main>
     )
   }
 
+  // ── Failure ─────────────────────────────────────────────────
   if (result?.status === 'error') {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-6 md:p-8 text-center">
-          <div className="text-red-400 text-5xl mb-4">✕</div>
-          <h1 className="text-2xl text-white font-bold mb-2">Booking Failed</h1>
-          <p className="text-white/60 mb-6">{result.error}</p>
+      <main className="min-h-screen bg-lyante-bg flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md text-center">
+          <div className="relative inline-flex mb-6">
+            <div className="absolute inset-0 rounded-full bg-red-500/15 blur-2xl" />
+            <div className="relative w-20 h-20 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center">
+              <XCircle className="text-red-400" size={40} />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-ivory mb-2">Payment Not Completed</h1>
+          <p className="text-ash mb-6 leading-relaxed">{result.error}</p>
+          <p className="text-coal text-xs mb-8">
+            If money was deducted, it will be refunded automatically — you are not charged for a
+            failed booking.
+          </p>
           <Link
             href="/events"
-            className="inline-block bg-white/10 text-white px-6 py-3 hover:bg-white/20 transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-gold text-lyante-bg font-bold py-3.5 rounded-xl hover:bg-gold-light transition-colors"
           >
-            Browse Events
+            Back to Events
+            <ArrowRight size={16} />
           </Link>
         </div>
       </main>
     )
   }
 
-  const refShort = result?.reference ?? ''
+  // ── Success ─────────────────────────────────────────────────
+  const reference = result?.reference ?? result?.bookingId ?? ''
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-6 md:p-8 text-center">
-        <div className="text-green-400 text-5xl mb-4">✓</div>
-        <h1 className="text-2xl text-white font-bold mb-2">Booking Confirmed!</h1>
-        <p className="text-white/60 mb-6">
-          Your booking has been confirmed. Tickets have been sent to your email.
-        </p>
-        <div className="bg-white/10 rounded px-4 py-3 mb-6">
-          <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Booking Reference</p>
-          <p className="text-white font-mono text-lg">{refShort}...</p>
+    <main className="min-h-screen bg-lyante-bg flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md text-center">
+        <div className="relative inline-flex mb-6">
+          <div className="absolute inset-0 rounded-full bg-gold/25 blur-2xl animate-pulse" />
+          <div className="relative w-20 h-20 rounded-full bg-gold/10 border border-gold/40 flex items-center justify-center">
+            <CheckCircle2 className="text-gold" size={42} />
+          </div>
         </div>
-        <Link
-          href="/events"
-          className="inline-block bg-[#ffb0cc] text-[#640038] font-bold px-6 py-3 hover:opacity-90 transition-colors"
-        >
-          Browse More Events
-        </Link>
+
+        <p className="section-label tracking-widest mb-2">Payment Successful</p>
+        <h1 className="text-3xl md:text-4xl font-bold text-ivory mb-3">You&apos;re going!</h1>
+        <p className="text-ash mb-6 flex items-center justify-center gap-2">
+          <Mail size={15} className="text-gold" />
+          Your tickets have been emailed to you.
+        </p>
+
+        {reference && (
+          <div className="bg-lyante-surface border border-coal/60 rounded-xl px-4 py-3 mb-8">
+            <p className="text-[11px] uppercase tracking-widest text-gold mb-1">Booking Reference</p>
+            <p className="text-ivory font-mono text-base break-all">{reference}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <Link
+            href="/tickets"
+            className="w-full flex items-center justify-center gap-2 bg-gold text-lyante-bg font-bold py-3.5 rounded-xl hover:bg-gold-light transition-colors"
+          >
+            <Ticket size={18} />
+            View My Tickets
+            <ArrowRight size={16} />
+          </Link>
+          <Link
+            href="/events"
+            className="w-full block border border-coal/60 text-ash py-3 rounded-xl hover:text-ivory hover:border-gold/50 transition-colors"
+          >
+            Browse More Events
+          </Link>
+        </div>
       </div>
     </main>
   )
