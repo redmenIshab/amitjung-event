@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +34,7 @@ export default function RegisterPage() {
     }
 
     await signIn('credentials', { email, password, redirect: false })
-    router.push('/dashboard')
+    router.push(callbackUrl)
   }
 
   return (
@@ -94,11 +96,22 @@ export default function RegisterPage() {
 
         <p className="text-sm text-gray-500 text-center mt-6">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-gray-900 underline underline-offset-2">
+          <Link
+            href={`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="text-gray-900 underline underline-offset-2"
+          >
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <RegisterForm />
+    </Suspense>
   )
 }

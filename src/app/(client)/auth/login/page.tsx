@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,7 +29,7 @@ export default function LoginPage() {
       setError('Invalid email or password')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      router.push(callbackUrl)
     }
   }
 
@@ -85,7 +87,7 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: '/' })}
+          onClick={() => signIn('google', { callbackUrl })}
           className="w-full flex items-center justify-center gap-2 rounded-md border border-gray-300 text-sm font-medium py-2 hover:bg-gray-50"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
@@ -111,11 +113,22 @@ export default function LoginPage() {
 
         <p className="text-sm text-gray-500 text-center mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="text-gray-900 underline underline-offset-2">
+          <Link
+            href={`/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="text-gray-900 underline underline-offset-2"
+          >
             Register
           </Link>
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <LoginForm />
+    </Suspense>
   )
 }

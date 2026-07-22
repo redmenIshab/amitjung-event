@@ -133,7 +133,9 @@ export default function CheckoutPage() {
         <div className="text-center">
           <p className="text-white/60 mb-4">Please sign in to continue with your booking.</p>
           <button
-            onClick={() => router.push('/auth/login')}
+            onClick={() =>
+              router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/booking/${eventId}/checkout`)}`)
+            }
             className="bg-white/10 text-white px-6 py-3 hover:bg-white/20 transition-colors cursor-pointer"
           >
             Sign In
