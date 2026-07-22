@@ -71,7 +71,7 @@ export default function Nav() {
           ))}
           <Link
             href={cta.href}
-            className="inline-flex items-center gap-2 px-5 py-2 font-bebas text-sm tracking-widest uppercase border border-gold text-gold hover:bg-gold hover:text-bg transition-all duration-250 min-h-[40px] ml-4"
+            className="inline-flex items-center gap-2 px-5 py-2 font-bebas text-sm tracking-widest uppercase border border-gold text-gold hover:bg-gold hover:text-white hover:text-bg transition-all duration-250 min-h-[40px] ml-4"
           >
             {cta.label}
           </Link>
