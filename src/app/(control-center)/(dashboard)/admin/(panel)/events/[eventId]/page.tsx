@@ -6,7 +6,6 @@ import { TicketTable } from '@/components/tickets/TicketTable'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { getCachedEvent } from '@/lib/upstash/services/event-cache'
 import { CheckInChart } from '@/components/dashboard/CheckInChart'
 import { EventManageActions } from '@/components/events/EventManageActions'
 import {
@@ -17,12 +16,29 @@ import {
 
 type Props = { params: Promise<{ eventId: string }> }
 
+export const dynamic = 'force-dynamic'
+
 export default async function EventDetailPage({ params }: Props) {
   const session = await requirePageCapability('DASHBOARD_VIEW')
 
   const { eventId } = await params
-  const event = await getCachedEvent(eventId)
-  if (!event) notFound()
+  // Read directly from the DB (not the cache) so admin sees the true state.
+  const eventRow = await prisma.event.findUnique({
+    where: { id: eventId },
+    include: {
+      artist: {
+        include: {
+          musics: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, musicTitle: true },
+          },
+        },
+      },
+    },
+  })
+  if (!eventRow) notFound()
+  const event = { ...eventRow, date: eventRow.bookingDeadline }
 
   const rawTickets = await prisma.ticket.findMany({
     where: { eventId },

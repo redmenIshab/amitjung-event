@@ -2,12 +2,23 @@ import Link from 'next/link'
 import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import { EventList } from '@/components/events/EventList'
 import { buttonVariants } from '@/components/ui/button'
-import { getCachedEvents } from '@/lib/upstash/services/event-cache'
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EventsPage() {
   const session = await requirePageCapability('DASHBOARD_VIEW')
 
-  const events = await getCachedEvents()
+  // Read directly from the DB (not the cache) so admin always sees the true,
+  // current state — including drafts and changes made just now.
+  const rows = await prisma.event.findMany({
+    orderBy: { bookingDeadline: 'asc' },
+    include: {
+      _count: { select: { tickets: true } },
+      artist: { select: { id: true, artistName: true, artistImage: true } },
+    },
+  })
+  const events = rows.map((e) => ({ ...e, date: e.bookingDeadline }))
 
   return (
     <div>

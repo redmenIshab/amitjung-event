@@ -2,8 +2,11 @@ import { get, upsert } from '../orm/crud'
 import { redisConfig, isRedisConfigured } from '../upstash'
 import { prisma } from '@/lib/prisma'
 
-const TTL = 86_400
-const KEY_VERSION = 'v2'
+// Short TTL: event data (availability, status) changes often, so cache only
+// briefly. Bump KEY_VERSION to instantly invalidate all cached data (e.g. after
+// a DB reset/switch) — old keys are simply orphaned and expire on their own.
+const TTL = 60
+const KEY_VERSION = 'v3'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CachedEvent = Record<string, any> & {
