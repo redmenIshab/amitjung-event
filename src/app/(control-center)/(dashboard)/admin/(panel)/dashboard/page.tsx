@@ -10,7 +10,7 @@ import { getCachedUpcomingEvents } from '@/lib/upstash/services/event-cache'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  if (!session) redirect('/admin/login')
 
   const [ticketCounts, checkIns, upcomingEvents] = await Promise.all([
     prisma.ticket.groupBy({ by: ['status'], _count: true }),

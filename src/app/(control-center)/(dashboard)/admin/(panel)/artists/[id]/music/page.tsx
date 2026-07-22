@@ -32,14 +32,14 @@ export default function MusicListPage() {
   useEffect(() => {
     fetch(`/api/artist/${artistId}`)
       .then((r) => {
-        if (r.status === 403) router.push('/login')
+        if (r.status === 403) router.push('/admin/login')
         return r.json()
       })
       .then((data) => setArtistName(data.artistName))
 
     fetch(`/api/artist/${artistId}/music`)
       .then((r) => {
-        if (r.status === 403) router.push('/login')
+        if (r.status === 403) router.push('/admin/login')
         return r.json()
       })
       .then(setMusics)

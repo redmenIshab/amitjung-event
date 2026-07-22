@@ -35,7 +35,7 @@ export async function requireApiCapability(
 
 export async function requirePageCapability(cap: Capability): Promise<Session> {
   const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  if (!session) redirect('/admin/login')
   if (!hasCapability(session.user.role, cap)) redirect('/')
   return session
 }

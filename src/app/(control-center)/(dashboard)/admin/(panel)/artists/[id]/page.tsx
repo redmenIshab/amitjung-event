@@ -26,7 +26,7 @@ export default function EditArtistPage() {
   useEffect(() => {
     fetch(`/api/artist/${params.id}`)
       .then((r) => {
-        if (r.status === 403) router.push('/login')
+        if (r.status === 403) router.push('/admin/login')
         if (r.status === 404) router.push('/admin/artists')
         return r.json()
       })

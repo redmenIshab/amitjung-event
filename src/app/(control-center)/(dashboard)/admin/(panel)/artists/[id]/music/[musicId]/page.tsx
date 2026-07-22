@@ -22,7 +22,7 @@ export default function EditMusicPage() {
   useEffect(() => {
     fetch(`/api/artist/${artistId}/music/${musicId}`)
       .then((r) => {
-        if (r.status === 403) router.push('/login')
+        if (r.status === 403) router.push('/admin/login')
         if (r.status === 404) router.push(`/admin/artists/${artistId}/music`)
         return r.json()
       })

@@ -33,7 +33,7 @@ export default function ArtistsPage() {
   useEffect(() => {
     fetch('/api/artist')
       .then((r) => {
-        if (r.status === 403) router.push('/login')
+        if (r.status === 403) router.push('/admin/login')
         return r.json()
       })
       .then(setArtists)
