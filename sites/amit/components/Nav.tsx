@@ -24,6 +24,7 @@ export default function Nav() {
             Lyante
           </a>
           <a href="#music">Music</a>
+          <a href="#band">Band</a>
           <a href="#works">Works</a>
           <a href="#booking" className="nav-cta">
             Book a date

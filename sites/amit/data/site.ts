@@ -10,6 +10,16 @@ export interface SiteWork {
   cta: string
 }
 
+export interface BandMember {
+  /** Instrument / role — shown as the kicker. */
+  role: string
+  /** Person's name — shown as the heading. Omit until confirmed. */
+  name?: string
+  bio: string
+  /** Photo URL. Leave empty to render the placeholder until the photo is ready. */
+  photo?: string
+}
+
 export interface Site {
   artist: string
   artistDevanagari: string
@@ -31,6 +41,7 @@ export interface Site {
   videos: { id: string; title: string }[]
   tracks: { id: string; title: string }[]
   works: SiteWork[]
+  band: BandMember[]
   stats: { n: string; l: string }[]
   bookedDates: string[]
   slots: string[]
@@ -104,6 +115,38 @@ export const site: Site = {
       text: 'The diaspora anthem — written for every Nepali who has watched Dashain pass from far away.',
       href: 'https://www.youtube.com/watch?v=j3i9QU8bYqQ',
       cta: 'Listen on YouTube',
+    },
+  ],
+
+  // The live band — Amit Jung and the Gorkhey. Add a `photo` URL to each member
+  // when the images are ready; until then a placeholder card is shown.
+  band: [
+    {
+      role: 'Vocals · Songwriter',
+      name: 'Amit Jung',
+      photo: '',
+      bio: "Hi, I'm Amit Jung, a singer-songwriter from Nepal and the voice behind Amit Jung & Gorkhey. My music blends modern Western sound with the soul of Nepali folk storytelling. Through my upcoming album, मेरो देश को कथा, I share stories of ordinary people — their struggles, dreams, and the spirit of our land. I believe music is more than entertainment; it is a way to preserve memories, ask questions, and connect people through honest stories.",
+    },
+    {
+      role: 'Drums',
+      photo: '',
+      bio: "I've been playing drums since 2016 and currently hold the kit for Amit Jung & Gorkhey. With years of stage and studio experience, I work as both a session and touring drummer, collaborating with diverse artists across genres. Groove, precision, and energy define every performance I deliver.",
+    },
+    {
+      role: 'Bass',
+      photo: '',
+      bio: "I've been playing bass since 2016 and currently hold the low end for Amit Jung & Gorkhey. With years of stage and studio experience, I work as both a session and touring bassist, collaborating with diverse artists across genres. Groove, precision, and energy define every performance I deliver.",
+    },
+    {
+      role: 'Lead Guitar',
+      photo: '',
+      bio: 'Guitarist since 2016, collaborating with artists and bands across live shows, studio sessions, and creative projects. Passionate about crafting parts, exploring new sounds, and bringing every song to life with feel and energy.',
+    },
+    {
+      role: 'Keys · Vocals',
+      name: 'Prasong',
+      photo: '',
+      bio: 'Since 2017 Prasong has been actively participating in the music scene of Nepal and has been a part of many notable acts, focusing his craft in keyboards and vocals.',
     },
   ],
 

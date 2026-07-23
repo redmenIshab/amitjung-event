@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
 import Reveal from '@/components/Reveal'
+import Band from '@/components/Band'
 import Booking from '@/components/Booking'
 import { site } from '@/data/site'
 
@@ -93,6 +94,9 @@ export default function Page() {
           </div>
         </div>
       </section>
+
+      {/* band — pinned scroll through members */}
+      <Band />
 
       {/* works */}
       <section id="works" style={{ paddingTop: 0 }}>
