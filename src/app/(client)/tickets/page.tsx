@@ -77,12 +77,15 @@ export default function MyTicketsPage() {
             const eventDate = new Date(group.event.bookingDeadline).toLocaleDateString('en-US', {
               weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
             })
+            const isCompleted = group.event.status === 'COMPLETED'
 
             return (
               <Link
                 key={group.event.id}
                 href={`/tickets/${group.event.id}`}
-                className="group block overflow-hidden rounded-lg border border-coal/40 bg-lyante-surface hover:border-gold/50 transition-colors"
+                className={`group block overflow-hidden rounded-lg border bg-lyante-surface transition-colors ${
+                  isCompleted ? 'border-coal/40 opacity-60' : 'border-coal/40 hover:border-gold/50'
+                }`}
               >
                 <div className="flex items-stretch">
                   {group.event.image && (
@@ -90,25 +93,38 @@ export default function MyTicketsPage() {
                       <img
                         src={group.event.image}
                         alt=""
-                        className="w-full h-full object-cover grayscale-[0.25] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                        className={`w-full h-full object-cover transition-all duration-500 ${
+                          isCompleted
+                            ? 'grayscale'
+                            : 'grayscale-[0.25] group-hover:grayscale-0 group-hover:scale-105'
+                        }`}
                       />
                     </div>
                   )}
                   <div className="flex-1 p-4 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <h2 className="font-bebas text-xl md:text-2xl text-ivory uppercase tracking-tight leading-none truncate group-hover:text-gold-light transition-colors">
+                      <h2
+                        className={`font-bebas text-xl md:text-2xl uppercase tracking-tight leading-none truncate transition-colors ${
+                          isCompleted ? 'text-ash' : 'text-ivory group-hover:text-gold-light'
+                        }`}
+                      >
                         {group.event.name}
                       </h2>
                       <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-gold/15 text-gold">
                         ×{group.count}
                       </span>
                     </div>
+                    {isCompleted && (
+                      <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-coal/40 text-ash">
+                        Event completed!
+                      </span>
+                    )}
                     <p className="text-sm mt-2 flex items-center gap-1.5 text-ash">
-                      <MapPin size={12} className="text-gold" />
+                      <MapPin size={12} className={isCompleted ? 'text-ash' : 'text-gold'} />
                       {group.event.venue}
                     </p>
                     <p className="text-sm flex items-center gap-1.5 mt-1 text-ash">
-                      <Calendar size={12} className="text-gold" />
+                      <Calendar size={12} className={isCompleted ? 'text-ash' : 'text-gold'} />
                       {eventDate}
                     </p>
                   </div>

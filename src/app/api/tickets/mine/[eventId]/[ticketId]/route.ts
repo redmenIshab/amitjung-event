@@ -34,7 +34,7 @@ export async function GET(_request: Request, { params }: Params) {
         event: {
           select: {
             id: true, name: true, venue: true, bookingDeadline: true,
-            image: true, description: true,
+            image: true, description: true, status: true,
           },
         },
         checkIn: { select: { scannedAt: true } },

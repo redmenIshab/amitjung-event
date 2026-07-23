@@ -20,14 +20,14 @@ export async function GET() {
       },
       include: {
         event: {
-          select: { id: true, name: true, venue: true, bookingDeadline: true, image: true },
+          select: { id: true, name: true, venue: true, bookingDeadline: true, image: true, status: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     })
 
     const groups = new Map<string, {
-      event: { id: string; name: string; venue: string; bookingDeadline: Date; image: string | null }
+      event: (typeof tickets)[number]['event']
       count: number
     }>()
 

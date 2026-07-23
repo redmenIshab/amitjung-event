@@ -95,6 +95,7 @@ export const ticketsMineResponseSchema = z.object({
       venue: z.string(),
       bookingDeadline: z.string(),
       image: z.string().nullable(),
+      status: eventStatusSchema,
     }),
     count: z.number(),
   })),
@@ -108,6 +109,7 @@ export const eventTicketsResponseSchema = z.object({
     bookingDeadline: z.string(),
     image: z.string().nullable(),
     description: z.string().nullable(),
+    status: eventStatusSchema,
   }),
   tickets: z.array(z.object({
     id: z.string(),
@@ -138,6 +140,7 @@ export const ticketDetailResponseSchema = z.object({
     bookingDeadline: z.string(),
     image: z.string().nullable(),
     description: z.string().nullable(),
+    status: eventStatusSchema,
   }),
   checkIn: z.object({ scannedAt: z.string() }).nullable(),
 })

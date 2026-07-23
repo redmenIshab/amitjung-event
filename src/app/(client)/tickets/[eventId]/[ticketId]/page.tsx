@@ -62,6 +62,9 @@ export default function TicketDetailPage() {
   const isVip = ticket.category === 'VIP'
   const isUsed = ticket.status === 'USED'
   const isCancelled = ticket.status === 'CANCELLED'
+  // Once the event is completed the ticket is retired: no more downloads,
+  // sharing, or public-view actions.
+  const isCompleted = ticket.event.status === 'COMPLETED'
 
   const eventDate = new Date(ticket.event.bookingDeadline).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -74,7 +77,7 @@ export default function TicketDetailPage() {
     typeof window !== 'undefined' ? `${window.location.origin}/ticket/${ticket.token}` : ''
 
   async function handleDownload() {
-    if (!ticket) return
+    if (!ticket || ticket.event.status === 'COMPLETED') return
     const { jsPDF } = await import('jspdf')
     const doc = new jsPDF({ unit: 'pt', format: 'a5' })
     doc.setFontSize(18)
@@ -92,7 +95,7 @@ export default function TicketDetailPage() {
   }
 
   async function handleShare() {
-    if (!ticket) return
+    if (!ticket || ticket.event.status === 'COMPLETED') return
     const shareData = {
       title: ticket.event.name,
       text: `My ticket for ${ticket.event.name}`,
@@ -123,13 +126,24 @@ export default function TicketDetailPage() {
 
       <div
         className={`relative rounded-2xl overflow-hidden border bg-lyante-surface ${
-          isVip ? 'border-gold-light/30' : 'border-coal/40'
+          isCompleted ? 'border-coal/40' : isVip ? 'border-gold-light/30' : 'border-coal/40'
         }`}
       >
         {ticket.event.image && (
           <div className="relative h-48 overflow-hidden">
-            <img src={ticket.event.image} alt="" className="w-full h-full object-cover" />
+            <img
+              src={ticket.event.image}
+              alt=""
+              className={`w-full h-full object-cover ${isCompleted ? 'grayscale' : ''}`}
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-lyante-bg/90 via-transparent to-transparent" />
+            {isCompleted && (
+              <div className="absolute top-3 left-3">
+                <span className="text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border bg-coal/60 text-ash border-coal/50">
+                  Event completed!
+                </span>
+              </div>
+            )}
             <div className="absolute top-3 right-3">
               <span
                 className={`text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
@@ -174,6 +188,11 @@ export default function TicketDetailPage() {
               })}
             </div>
           )}
+          {isCompleted && (
+            <div className="text-sm font-semibold text-center py-2 px-4 rounded-lg bg-coal/30 text-ash">
+              Event completed — this ticket is no longer active
+            </div>
+          )}
 
           <div className="border-t border-dashed border-coal/40" />
 
@@ -206,13 +225,21 @@ export default function TicketDetailPage() {
             <div className="shrink-0">
               <div
                 className={`rounded-xl p-2 bg-white border-2 ${
-                  isVip ? 'border-gold-light' : 'border-gold'
+                  isCompleted ? 'border-coal' : isVip ? 'border-gold-light' : 'border-gold'
                 }`}
               >
-                <img src={ticket.qrDataUrl} alt="Entry QR Code" className="w-32 h-32 block" />
+                <img
+                  src={ticket.qrDataUrl}
+                  alt="Entry QR Code"
+                  className={`w-32 h-32 block ${isCompleted ? 'grayscale opacity-60' : ''}`}
+                />
               </div>
-              <p className="text-[9px] text-center mt-1.5 uppercase tracking-widest text-gold">
-                Scan for entry
+              <p
+                className={`text-[9px] text-center mt-1.5 uppercase tracking-widest ${
+                  isCompleted ? 'text-ash' : 'text-gold'
+                }`}
+              >
+                {isCompleted ? 'No longer valid' : 'Scan for entry'}
               </p>
             </div>
           </div>
@@ -229,27 +256,38 @@ export default function TicketDetailPage() {
       <div className="grid grid-cols-2 gap-3 mt-6">
         <button
           onClick={handleDownload}
-          className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md bg-gold text-lyante-bg hover:bg-gold-light transition-colors cursor-pointer"
+          disabled={isCompleted}
+          className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md bg-gold text-lyante-bg hover:bg-gold-light transition-colors cursor-pointer disabled:bg-coal/40 disabled:text-ash disabled:cursor-not-allowed disabled:hover:bg-coal/40"
         >
           <Download size={15} />
           Download
         </button>
         <button
           onClick={handleShare}
-          className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md border border-coal/40 text-ivory hover:border-gold/50 transition-colors cursor-pointer"
+          disabled={isCompleted}
+          className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md border border-coal/40 text-ivory hover:border-gold/50 transition-colors cursor-pointer disabled:text-ash disabled:cursor-not-allowed disabled:hover:border-coal/40"
         >
           {copied ? <Check size={15} /> : <Share2 size={15} />}
           {copied ? 'Link copied' : 'Share'}
         </button>
       </div>
 
-      <a
-        href={`/ticket/${ticket.token}`}
-        target="_blank"
-        className="block w-full mt-3 text-center text-sm font-medium py-3 rounded-md bg-lyante-surface text-ash border border-coal/40 hover:border-gold/40 hover:text-ivory transition-colors"
-      >
-        View Public Ticket ↗
-      </a>
+      {isCompleted ? (
+        <div
+          aria-disabled="true"
+          className="block w-full mt-3 text-center text-sm font-medium py-3 rounded-md bg-lyante-surface/60 text-coal border border-coal/30 cursor-not-allowed select-none"
+        >
+          View Public Ticket ↗
+        </div>
+      ) : (
+        <a
+          href={`/ticket/${ticket.token}`}
+          target="_blank"
+          className="block w-full mt-3 text-center text-sm font-medium py-3 rounded-md bg-lyante-surface text-ash border border-coal/40 hover:border-gold/40 hover:text-ivory transition-colors"
+        >
+          View Public Ticket ↗
+        </a>
+      )}
     </main>
   )
 }

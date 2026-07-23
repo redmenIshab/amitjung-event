@@ -65,6 +65,7 @@ export default function EventTicketsPage() {
   const eventTime = new Date(event.bookingDeadline).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit',
   })
+  const isCompleted = event.status === 'COMPLETED'
 
   return (
     <main className="max-w-2xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-24">
@@ -108,6 +109,15 @@ export default function EventTicketsPage() {
         </p>
       )}
 
+      {isCompleted && (
+        <div className="mt-6 flex items-center gap-2 rounded-md border border-coal/40 bg-coal/20 px-4 py-3">
+          <span className="text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-coal/50 text-ash">
+            Event completed!
+          </span>
+          <p className="text-sm text-ash">These tickets are no longer active — downloads are disabled.</p>
+        </div>
+      )}
+
       <div className="mt-8 space-y-3">
         <h2 className="section-label tracking-widest text-gold">
           Tickets ({tickets.length})
@@ -117,14 +127,16 @@ export default function EventTicketsPage() {
           <Link
             key={t.id}
             href={`/tickets/${eventId}/${t.id}`}
-            className="group block overflow-hidden rounded-lg border border-coal/40 bg-lyante-surface hover:border-gold/50 transition-colors"
+            className={`group block overflow-hidden rounded-lg border bg-lyante-surface transition-colors ${
+              isCompleted ? 'border-coal/40 opacity-60' : 'border-coal/40 hover:border-gold/50'
+            }`}
           >
             <div className="flex items-center p-4 gap-4">
               <div className="shrink-0 rounded-md bg-white p-1.5">
                 <img
                   src={t.qrDataUrl}
                   alt="QR Code"
-                  className="w-16 h-16 block"
+                  className={`w-16 h-16 block ${isCompleted ? 'grayscale opacity-70' : ''}`}
                 />
               </div>
               <div className="flex-1 min-w-0">
