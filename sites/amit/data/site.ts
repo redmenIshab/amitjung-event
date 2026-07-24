@@ -65,8 +65,8 @@ export const site: Site = {
   lyanteEventsUrl: 'https://lyante.art/ticketing',
 
   // Booking inquiries are routed here (mailto + WhatsApp deep link)
-  bookingEmail: 'bookings@lyanteproduction.com',
-  whatsapp: '9779800000000', // country code + number, digits only
+  bookingEmail: 'lyanteprod@gmail.com',
+  whatsapp: '9779740833796', // country code + number, digits only
 
   socials: {
     instagram: 'https://www.instagram.com/iamamitjung/',
@@ -125,28 +125,31 @@ export const site: Site = {
       role: 'Vocals · Songwriter',
       name: 'Amit Jung',
       photo: '',
-      bio: "Hi, I'm Amit Jung, a singer-songwriter from Nepal and the voice behind Amit Jung & Gorkhey. My music blends modern Western sound with the soul of Nepali folk storytelling. Through my upcoming album, मेरो देश को कथा, I share stories of ordinary people — their struggles, dreams, and the spirit of our land. I believe music is more than entertainment; it is a way to preserve memories, ask questions, and connect people through honest stories.",
+      bio: "Hi, this is Amit Jung, a singer-songwriter from Nepal and the voice behind Amit Jung & Gorkhey. His music blends modern Western sound with the soul of Nepali folk storytelling. Through his upcoming album, मेरो देश को कथा, he shares stories of ordinary people — their struggles, dreams, and the spirit of their land. He believes music is more than entertainment; it is a way to preserve memories, ask questions, and connect people through honest stories.",
     },
     {
       role: 'Drums',
+      name:"Prabin",
       photo: '',
-      bio: "I've been playing drums since 2016 and currently hold the kit for Amit Jung & Gorkhey. With years of stage and studio experience, I work as both a session and touring drummer, collaborating with diverse artists across genres. Groove, precision, and energy define every performance I deliver.",
+      bio: "He has been playing drums since 2016 and currently holds the kit for Amit Jung & Gorkhey. With years of stage and studio experience, he works as both a session and touring drummer, collaborating with diverse artists across genres. Groove, precision, and energy define every performance he delivers.",
     },
     {
       role: 'Bass',
+      name:"Rajat",
       photo: '',
-      bio: "I've been playing bass since 2016 and currently hold the low end for Amit Jung & Gorkhey. With years of stage and studio experience, I work as both a session and touring bassist, collaborating with diverse artists across genres. Groove, precision, and energy define every performance I deliver.",
+      bio: "He has been playing bass since 2016 and currently holds the low end for Amit Jung & Gorkhey. With years of stage and studio experience, he works as both a session and touring bassist, collaborating with diverse artists across genres. Groove, precision, and energy define every performance he delivers.",
     },
     {
       role: 'Lead Guitar',
+      name:"Santosh",
       photo: '',
-      bio: 'Guitarist since 2016, collaborating with artists and bands across live shows, studio sessions, and creative projects. Passionate about crafting parts, exploring new sounds, and bringing every song to life with feel and energy.',
+      bio: 'He has been playing guitar since 2016, collaborating with artists and bands across live shows, studio sessions, and creative projects. Passionate about crafting parts, exploring new sounds, and bringing every song to life with feel and energy.',
     },
     {
       role: 'Keys · Vocals',
       name: 'Prasong',
       photo: '',
-      bio: 'Since 2017 Prasong has been actively participating in the music scene of Nepal and has been a part of many notable acts, focusing his craft in keyboards and vocals.',
+      bio: 'Since 2017, Prasong has been actively participating in the music scene of Nepal and has been a part of many notable acts, focusing his craft in keyboards and vocals.',
     },
   ],
 
@@ -159,14 +162,6 @@ export const site: Site = {
 
   // Dates already booked / blocked (YYYY-MM-DD). Everything else is open.
   bookedDates: [
-    '2026-07-24',
-    '2026-07-25',
-    '2026-08-01',
-    '2026-08-08',
-    '2026-08-15',
-    '2026-08-29',
-    '2026-09-05',
-    '2026-09-19',
   ],
 
   slots: [
