@@ -53,8 +53,12 @@ export default function Band() {
         </div>
       </div>
 
+      <p className="band-hint">
+        Swipe to meet the band <span>→</span>
+      </p>
+
       <div className="band-inner">
-        {/* Pinned stage */}
+        {/* Pinned stage (desktop) / horizontal card carousel (mobile) */}
         <div className="band-stage">
           <div className="band-slides">
             {members.map((m, i) => (
