@@ -162,6 +162,8 @@ export const site: Site = {
 
   // Dates already booked / blocked (YYYY-MM-DD). Everything else is open.
   bookedDates: [
+    '2026-08-16',
+    '2026-08-22'
   ],
 
   slots: [
