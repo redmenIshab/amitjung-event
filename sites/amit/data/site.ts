@@ -27,6 +27,8 @@ export interface Site {
   album: string
   albumYear: string
   management: string
+  /** Hero background slideshow — cross-fades through these in order. */
+  heroImages: string[]
   lyanteUrl: string
   lyanteEventsUrl: string
   bookingEmail: string
@@ -59,6 +61,15 @@ export const site: Site = {
   album: 'मेरो देश को कथा',
   albumYear: '2026',
   management: 'Lyante Production',
+
+  // Hero background slideshow. Landscape shots read best — the scrim darkens
+  // the left side so the headline stays legible over any frame.
+  heroImages: [
+    'https://i.imgur.com/fpubKPL.jpeg',
+    'https://i.imgur.com/QkpiFbw.jpeg',
+    'https://i.imgur.com/PPqFNlc.jpeg',
+    'https://i.imgur.com/da2ZtBO.jpeg',
+  ],
 
   // Cross-links back to the management site
   lyanteUrl: 'https://lyante.art',
@@ -118,37 +129,37 @@ export const site: Site = {
     },
   ],
 
-  // The live band — Amit Jung and the Gorkhey. Add a `photo` URL to each member
-  // when the images are ready; until then a placeholder card is shown.
+  // The live band — Amit Jung and the Gorkhey. Photos are portrait shots cropped
+  // to 4:5 by the card; clear a `photo` to fall back to the placeholder card.
   band: [
     {
       role: 'Vocals · Songwriter',
       name: 'Amit Jung',
-      photo: '',
+      photo: 'https://i.imgur.com/vUzZ1sl.jpeg',
       bio: "Hi, this is Amit Jung, a singer-songwriter from Nepal and the voice behind Amit Jung & Gorkhey. His music blends modern Western sound with the soul of Nepali folk storytelling. Through his upcoming album, मेरो देश को कथा, he shares stories of ordinary people — their struggles, dreams, and the spirit of their land. He believes music is more than entertainment; it is a way to preserve memories, ask questions, and connect people through honest stories.",
     },
     {
       role: 'Drums',
       name:"Prabin",
-      photo: '',
+      photo: 'https://i.imgur.com/j5o5Hyt.jpeg',
       bio: "He has been playing drums since 2016 and currently holds the kit for Amit Jung & Gorkhey. With years of stage and studio experience, he works as both a session and touring drummer, collaborating with diverse artists across genres. Groove, precision, and energy define every performance he delivers.",
     },
     {
       role: 'Bass',
       name:"Rajat",
-      photo: '',
+      photo: 'https://i.imgur.com/VToqRKn.jpeg',
       bio: "He has been playing bass since 2016 and currently holds the low end for Amit Jung & Gorkhey. With years of stage and studio experience, he works as both a session and touring bassist, collaborating with diverse artists across genres. Groove, precision, and energy define every performance he delivers.",
     },
     {
       role: 'Lead Guitar',
       name:"Santosh",
-      photo: '',
+      photo: 'https://i.imgur.com/Q8CTTRX.jpeg',
       bio: 'He has been playing guitar since 2016, collaborating with artists and bands across live shows, studio sessions, and creative projects. Passionate about crafting parts, exploring new sounds, and bringing every song to life with feel and energy.',
     },
     {
       role: 'Keys · Vocals',
       name: 'Prasong',
-      photo: '',
+      photo: 'https://i.imgur.com/TyXkVlz.jpeg',
       bio: 'Since 2017, Prasong has been actively participating in the music scene of Nepal and has been a part of many notable acts, focusing his craft in keyboards and vocals.',
     },
   ],

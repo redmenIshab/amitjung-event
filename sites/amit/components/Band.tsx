@@ -67,7 +67,15 @@ export default function Band() {
                   <figure className="band-photo">
                     {m.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.photo} alt={m.name ?? m.role} />
+                      <img
+                        src={m.photo}
+                        alt={m.name ?? m.role}
+                        // Every slide is mounted at once, so only the first
+                        // one competes for bandwidth on load.
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={i === 0 ? 'auto' : 'low'}
+                        decoding="async"
+                      />
                     ) : (
                       <span className="band-photo-ph">
                         <b>{(m.name ?? m.role).charAt(0)}</b>

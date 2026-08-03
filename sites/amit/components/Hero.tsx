@@ -1,7 +1,63 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { site } from '@/data/site'
+
+/** How long each hero photo holds before cross-fading to the next. */
+const SLIDE_MS = 5500
+
+/**
+ * Auto-advancing hero backdrop. Every image stays mounted and stacked; only
+ * opacity changes, so the cross-fade never flashes an empty frame. Pauses
+ * while the tab is hidden and respects prefers-reduced-motion.
+ */
+function Slideshow() {
+  const images = site.heroImages
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    if (images.length < 2) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let id = 0
+    const stop = () => window.clearInterval(id)
+    const start = () => {
+      stop() // idempotent: never leave a second interval running
+      id = window.setInterval(
+        () => setActive((i) => (i + 1) % images.length),
+        SLIDE_MS,
+      )
+    }
+
+    const onVisibility = () => (document.hidden ? stop() : start())
+    document.addEventListener('visibilitychange', onVisibility)
+    if (!document.hidden) start()
+
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [images.length])
+
+  if (images.length === 0) return null
+
+  return (
+    <div className="hero-bg" aria-hidden="true">
+      {images.map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={src}
+          src={src}
+          alt=""
+          className={i === active ? 'is-active' : undefined}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          fetchPriority={i === 0 ? 'high' : 'low'}
+        />
+      ))}
+      <div className="hero-scrim" />
+    </div>
+  )
+}
 
 /** Animated waveform canvas — layered sine waves drifting like a live signal. */
 function Waves() {
@@ -71,6 +127,7 @@ function Waves() {
 export default function Hero() {
   return (
     <header className="hero" id="top">
+      <Slideshow />
       <div className="hero-glow" />
       <Waves />
       <div className="wrap hero-inner">

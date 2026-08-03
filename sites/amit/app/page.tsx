@@ -121,7 +121,7 @@ export default function Page() {
       </section>
 
       {/* technical rider preview */}
-      <section id="technical" style={{ paddingTop: 0 }}>
+      <section id="technical">
         <div className="wrap">
           <Reveal className="sec-head">
             <p className="sec-kicker">Stage &amp; technical</p>

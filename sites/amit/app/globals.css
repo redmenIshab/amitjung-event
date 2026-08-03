@@ -152,6 +152,42 @@ iframe {
   align-items: center;
   overflow: hidden;
 }
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+.hero-bg img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.6s ease-in-out, transform 7s ease-out;
+  will-change: opacity, transform;
+}
+.hero-bg img.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Darkens the frame so the headline stays legible over any photo — heavier
+   on the left, where the copy sits. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(10, 9, 8, 0.94) 0%,
+      rgba(10, 9, 8, 0.78) 42%,
+      rgba(10, 9, 8, 0.42) 100%
+    ),
+    linear-gradient(to top, var(--bg) 2%, transparent 38%);
+}
 .hero-canvas {
   position: absolute;
   inset: 0;
@@ -460,6 +496,30 @@ section {
 }
 
 /* ── technical rider preview ───────────────────────────────── */
+/* Full-bleed mixing-desk backdrop. Lives on a pseudo-element so the section
+   markup stays clean; the scrim keeps the copy at full contrast and fades the
+   photo into --bg at both edges so it blends with the sections either side. */
+#technical {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+#technical::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--bg) 0%,
+      rgba(10, 9, 8, 0.82) 22%,
+      rgba(10, 9, 8, 0.82) 78%,
+      var(--bg) 100%
+    ),
+    url("https://images.unsplash.com/photo-1520804454307-f3755438375a?auto=format&fit=crop&w=2000&q=70")
+      center / cover no-repeat;
+}
 .tech-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -469,7 +529,10 @@ section {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 22px 24px;
-  background: var(--bg-2);
+  /* Translucent over the backdrop so the desk reads through the cards
+     instead of being boxed out by six opaque panels. */
+  background: rgba(18, 17, 16, 0.72);
+  backdrop-filter: blur(6px);
 }
 .tech-row dt {
   font-size: 0.72rem;
@@ -491,6 +554,8 @@ section {
   color: var(--ink-dim);
   font-size: 0.9rem;
   line-height: 1.7;
+  background: rgba(10, 9, 8, 0.55);
+  backdrop-filter: blur(6px);
 }
 .tech-note a {
   color: var(--crimson);
@@ -1108,6 +1173,17 @@ footer {
   .hero-sub {
     font-size: 0.98rem;
   }
+  /* Narrow screens have no empty right side to reveal — darken evenly instead. */
+  .hero-scrim {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(10, 9, 8, 0.9) 0%,
+        rgba(10, 9, 8, 0.72) 45%,
+        rgba(10, 9, 8, 0.88) 100%
+      ),
+      linear-gradient(to top, var(--bg) 2%, transparent 30%);
+  }
   .cal {
     padding: 18px;
   }
@@ -1154,6 +1230,10 @@ footer {
   .hero-scroll,
   .band-hint span {
     animation: none;
+  }
+  .hero-bg img {
+    transform: none;
+    transition: none;
   }
   .reveal {
     opacity: 1;
