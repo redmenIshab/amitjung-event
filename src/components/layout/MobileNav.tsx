@@ -3,22 +3,16 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LayoutDashboard, Calendar, ScanLine, Music, LogOut } from 'lucide-react'
-import { hasCapability, type AppRole, type Capability } from '@/lib/rbac'
+import { Menu, X, LogOut } from 'lucide-react'
+import { type AppRole } from '@/lib/rbac'
+import { navLinksFor } from './adminNavLinks'
 
 type Props = { userName: string; userRole: AppRole }
-
-const LINKS: { href: string; label: string; icon: typeof LayoutDashboard; cap?: Capability }[] = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/events', label: 'Events', icon: Calendar },
-  { href: '/admin/scanner', label: 'Scanner', icon: ScanLine, cap: 'TICKET_SCAN' },
-  { href: '/admin/artists', label: 'Artists', icon: Music },
-]
 
 export function MobileNav({ userName, userRole }: Props) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const navLinks = LINKS.filter((l) => !l.cap || hasCapability(userRole, l.cap))
+  const navLinks = navLinksFor(userRole)
 
   return (
     <>

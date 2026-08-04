@@ -19,6 +19,8 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         })
         if (!user) return null
+        // Deactivated accounts cannot obtain a fresh token.
+        if (user.deletedAt) return null
 
         const isValid = await bcrypt.compare(credentials.password, user.password)
         if (!isValid) return null
@@ -60,7 +62,24 @@ export const authOptions: NextAuthOptions = {
           token.id = user.id
           token.role = (user as { role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' }).role
         }
+        return token
       }
+
+      // Refresh path (no `user`): re-read the staff row so a role change or a
+      // deactivation takes effect without waiting for the token to expire.
+      // Buyers are skipped — PARTICIPANT lives in the Participant table and
+      // never has a staff row to look up.
+      if (token.role === 'PARTICIPANT' || !token.id) return token
+
+      const current = await prisma.user.findUnique({
+        where: { id: token.id },
+        select: { role: true, deletedAt: true },
+      })
+
+      // Deleted or deactivated collapses to USER, which holds no capability
+      // (see CAPABILITY in src/lib/rbac.ts), so every existing gate rejects it.
+      token.role = !current || current.deletedAt ? 'USER' : current.role
+
       return token
     },
     async session({ session, token }) {

@@ -2,19 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Calendar, ScanLine, Music } from 'lucide-react'
-import { hasCapability, type AppRole, type Capability } from '@/lib/rbac'
-
-const LINKS: { href: string; label: string; icon: typeof LayoutDashboard; cap?: Capability }[] = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/events', label: 'Events', icon: Calendar },
-  { href: '/admin/scanner', label: 'Scanner', icon: ScanLine, cap: 'TICKET_SCAN' },
-  { href: '/admin/artists', label: 'Artists', icon: Music },
-]
+import { type AppRole } from '@/lib/rbac'
+import { navLinksFor } from './adminNavLinks'
 
 export function AdminSidebarNav({ role }: { role: AppRole }) {
   const pathname = usePathname()
-  const links = LINKS.filter((l) => !l.cap || hasCapability(role, l.cap))
+  const links = navLinksFor(role)
 
   return (
     <nav className="flex-1 p-3 space-y-1">
