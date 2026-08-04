@@ -17,6 +17,8 @@ export type EventForEdit = {
   status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
   eventType: string
   baseTicketPrice: number
+  /** Null for events predating the field — the form requires a value on save. */
+  commissionPercentage: number | null
   hasDiscount: boolean
   discountPercentage: number
   discountUpto: string | null
@@ -55,6 +57,7 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
       status: form.get('status') as string,
       eventType: form.get('eventType') as string,
       baseTicketPrice: parseInt(form.get('baseTicketPrice') as string, 10),
+      commissionPercentage: parseInt(form.get('commissionPercentage') as string, 10),
       hasDiscount,
       discountPercentage: hasDiscount ? parseInt(form.get('discountPercentage') as string, 10) : 0,
       discountUpto: hasDiscount ? new Date(form.get('discountUpto') as string).toISOString() : undefined,
@@ -141,6 +144,25 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
       <div className="space-y-1">
         <Label htmlFor="baseTicketPrice">Ticket Price (cents)</Label>
         <Input id="baseTicketPrice" name="baseTicketPrice" type="number" min="0" defaultValue={event.baseTicketPrice} required />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="commissionPercentage">Lyante commission (%)</Label>
+        <Input
+          id="commissionPercentage"
+          name="commissionPercentage"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          defaultValue={event.commissionPercentage ?? ''}
+          placeholder="10"
+          required
+        />
+        <p className="text-xs text-gray-500">
+          {event.commissionPercentage === null
+            ? 'No rate on record for this event — analytics shows its commission as “—”. Enter the agreed rate to start reporting it.'
+            : 'Agreed cut of this event’s net ticket sales, used for commission income in analytics.'}
+        </p>
       </div>
       <div className="flex items-center gap-2">
         <input id="hasDiscount" name="hasDiscount" type="checkbox" defaultChecked={event.hasDiscount} className="h-4 w-4" />

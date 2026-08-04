@@ -35,6 +35,7 @@ export default async function EditEventPage({ params }: Props) {
           status: event.status,
           eventType: event.eventType,
           baseTicketPrice: event.baseTicketPrice,
+          commissionPercentage: event.commissionPercentage,
           hasDiscount: event.hasDiscount,
           discountPercentage: event.discountPercentage,
           discountUpto: event.discountUpto ? event.discountUpto.toISOString() : null,

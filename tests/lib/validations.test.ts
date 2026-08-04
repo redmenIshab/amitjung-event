@@ -10,10 +10,50 @@ describe('createEventSchema', () => {
       capacity: 500,
       ticketsAvailable: 500,
       baseTicketPrice: 4500,
+      commissionPercentage: 12,
       description: 'Annual music festival',
       isOpen: true,
     })
     expect(result.success).toBe(true)
+  })
+
+  // Commission drives reported income, so it must never be defaulted silently.
+  it('rejects a payload with no commission rate', () => {
+    const result = createEventSchema.safeParse({
+      name: 'Summer Beats',
+      venue: 'Central Park',
+      date: '2026-08-15T20:00:00Z',
+      capacity: 500,
+      ticketsAvailable: 500,
+      baseTicketPrice: 4500,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts a 0% commission rate', () => {
+    const result = createEventSchema.safeParse({
+      name: 'Summer Beats',
+      venue: 'Central Park',
+      date: '2026-08-15T20:00:00Z',
+      capacity: 500,
+      ticketsAvailable: 500,
+      baseTicketPrice: 4500,
+      commissionPercentage: 0,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it.each([-5, 101, 12.5])('rejects an out-of-range commission rate: %s', (rate) => {
+    const result = createEventSchema.safeParse({
+      name: 'Summer Beats',
+      venue: 'Central Park',
+      date: '2026-08-15T20:00:00Z',
+      capacity: 500,
+      ticketsAvailable: 500,
+      baseTicketPrice: 4500,
+      commissionPercentage: rate,
+    })
+    expect(result.success).toBe(false)
   })
 
   it('rejects ticketsAvailable exceeding capacity', () => {

@@ -15,6 +15,10 @@ export const CAPABILITY = {
   ARTIST_MANAGE: ['ADMIN'],
   MARKETING_MANAGE: ['ADMIN', 'MANAGER'],
   USER_MANAGE: ['ADMIN'],
+  // Money: revenue, refunds, commission rates and margin. Deliberately
+  // narrower than ANALYTICS_READ — door staff need check-in numbers, not
+  // organizer commercial terms.
+  FINANCE_READ: ['ADMIN'],
 } as const satisfies Record<string, readonly AppRole[]>
 
 export type Capability = keyof typeof CAPABILITY

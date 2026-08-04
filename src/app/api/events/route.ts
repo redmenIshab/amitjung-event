@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       bookingDeadline: new Date(parsed.data.date),
       capacity: parsed.data.capacity,
       baseTicketPrice: parsed.data.baseTicketPrice,
+      commissionPercentage: parsed.data.commissionPercentage,
       hasDiscount: parsed.data.hasDiscount,
       discountPercentage: parsed.data.discountPercentage,
       discountUpto: parsed.data.discountUpto

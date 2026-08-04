@@ -38,6 +38,7 @@ export function EventForm() {
       status: (form.get('status') as string) || 'DRAFT',
       eventType: (form.get('eventType') as string) || 'OTHER',
       baseTicketPrice: parseInt(form.get('baseTicketPrice') as string, 10),
+      commissionPercentage: parseInt(form.get('commissionPercentage') as string, 10),
       hasDiscount: form.get('hasDiscount') === 'on',
       discountPercentage: form.get('hasDiscount') === 'on'
         ? parseInt(form.get('discountPercentage') as string, 10)
@@ -144,6 +145,23 @@ export function EventForm() {
       <div className="space-y-1">
         <Label htmlFor="baseTicketPrice">Ticket Price (cents)</Label>
         <Input id="baseTicketPrice" name="baseTicketPrice" type="number" min="0" placeholder="4500" required />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="commissionPercentage">Lyante commission (%)</Label>
+        <Input
+          id="commissionPercentage"
+          name="commissionPercentage"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          placeholder="10"
+          required
+        />
+        <p className="text-xs text-gray-500">
+          Agreed cut of this event&apos;s net ticket sales. Drives commission income in
+          analytics, so it has no default — enter the rate from the organizer agreement.
+        </p>
       </div>
       <div className="flex items-center gap-2">
         <input id="hasDiscount" name="hasDiscount" type="checkbox" className="h-4 w-4" />

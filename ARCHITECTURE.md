@@ -66,12 +66,14 @@ src/app/
   (marketing)/               Agency pages: work, branding, contact, careers, ticketing
     layout.tsx               Nav + Footer
 
-  (client)/                  Logged-in BUYER pages (Participant)
+  (client)/                  Logged-in NON-STAFF pages (Participant + USER)
     auth/login, auth/register, auth/api/register
     booking/[booking-id]/checkout   Payment screen (Khalti)
     booking/result
     tickets, tickets/[eventId], tickets/[eventId]/[ticketId]  "My Tickets"
-    auth/layout.tsx, tickets/layout.tsx
+    profile                  Own account details + the only sign-out for buyers
+    ↑ profile & tickets are two TABS of one account area (AccountHeader), §7
+    auth/layout.tsx, tickets/layout.tsx, profile/layout.tsx
 
   (control-center)/(dashboard)/admin/   STAFF/ADMIN CRM
     login/                   Public admin login (OUTSIDE the guard — see §6)
@@ -93,12 +95,14 @@ There are **two distinct user tables and two distinct auth roles**. Confusing th
 | | **User** (staff) | **Participant** (buyer) |
 |--|--|--|
 | Table | `User` | `Participant` |
-| Created by | Seed / admin | Google sign-in upsert (`auth.ts` `signIn` callback) |
+| Created by | Seed / admin (`/admin/users`) / public sign-up | Google sign-in upsert (`auth.ts` `signIn` callback) |
 | Login | Credentials (email+password, bcrypt) at `/admin/login` | Google OAuth at `/auth/login` |
-| `session.user.role` | `ADMIN` \| `STAFF` \| `MANAGER` | `PARTICIPANT` (synthesized in the `jwt` callback) |
+| `session.user.role` | `ADMIN` \| `STAFF` \| `MANAGER` \| `USER` | `PARTICIPANT` (synthesized in the `jwt` callback) |
 | Purpose | Run the Control Center | Buy & hold tickets |
 
 - `PARTICIPANT` is **not** in the DB `Role` enum — it only exists on the JWT/session for Google users. Credentials users carry their real DB `Role`.
+- **`USER` is the no-capability role** and the `User.role` **default**. Public self-registration (`/auth/register` → `/auth/api/register`) creates rows without an explicit role, so anyone signing up themselves lands on `USER` and cannot reach the Control Center. Staff roles are only ever granted by an admin. ⚠️ Do not restore the old `@default(STAFF)` — that made public sign-up an escalation path into the CRM.
+- **Staff accounts are soft-deleted** via `User.deletedAt` (set = deactivated, cleared = reactivated), matching `Participant` and `Artist`.
 - Purchase endpoints require `session.user.role === 'PARTICIPANT'` (see `/api/khalti/initiate`).
 - Admin endpoints/pages require a staff capability (see §6).
 
@@ -129,6 +133,10 @@ Helpers:
 
 **The `/admin` guard** is `src/proxy.ts` (matcher `['/admin/:path*']`): it lets `/admin/login` through, else requires `DASHBOARD_VIEW` or redirects to `/admin/login`. This is why admin login sits at `admin/login` **outside** `admin/(panel)/` — putting it inside the panel would infinite-loop the guard. **Do not move it in.**
 
+**Live role re-check.** The `jwt` callback in `auth.ts` re-reads the staff row on every token refresh and collapses `role` to `USER` when the account is missing or `deletedAt` is set, so a demotion or deactivation applies within seconds instead of waiting out the JWT. Buyers (`PARTICIPANT`) skip the lookup. Note the asymmetry: `proxy.ts` uses `getToken`, which only **decodes** the cookie and does *not* run callbacks — so a revoked user still clears the proxy and is stopped one layer later by `requirePageCapability` in `admin/(panel)/layout.tsx`. Enforcement is at the page/route gate, not the edge.
+
+**`USER_MANAGE`** is consumed by `/api/users`, `/api/users/[userId]` and the `/admin/users` pages. The `(panel)` layout only guarantees `DASHBOARD_VIEW`, so those pages call `requirePageCapability('USER_MANAGE')` themselves — hiding the nav link is cosmetic. Staff-account rules (no self-demotion, no removing the last active admin) live in `src/lib/users.ts` as pure functions; the API route calls them rather than inlining the logic.
+
 ---
 
 ## 7. Auth flows
@@ -136,7 +144,9 @@ Helpers:
 - `src/lib/auth.ts` — `authOptions`: Credentials + Google providers, JWT strategy, `pages.signIn = '/admin/login'`. The `signIn` callback **upserts a Participant** for Google users; `jwt` sets `token.role`; `session` copies `id`/`role` onto `session.user`.
 - Client: `useSession()` (wrapped by `Providers` in root layout). Server: `getServerSession(authOptions)`.
 - Buyer gating pattern: unauthenticated → `/auth/login?callbackUrl=<encoded>`; after login, redirect back. Checkout self-gates.
-- The Nav CTA switches on role: `PARTICIPANT` → "My Tickets" (`/tickets`), else "Login" (`/auth/login`).
+- The Nav CTA is a single entry: signed out → "Login" (`/auth/login`), signed in → "Account" (`/profile`). It keys off *whether* a session exists, not on `PARTICIPANT` alone — the older check showed "Login" to people who were already signed in.
+- **The account area is `/profile` + `/tickets` presented as two tabs**, via `AccountHeader` (`src/components/tickets/AccountHeader.tsx`) rendered at the top of both. The routes stay separate — including the drill-downs at `/tickets/[eventId]/…`, which keep the "My Tickets" tab lit through a `startsWith` check — so existing links and bookmarks are unaffected. Add a tab by editing `TABS` in that one component.
+- **`/profile`** (`GET /api/profile`) is the only sign-out route for non-staff; staff sign out from the Control Center sidebar. The endpoint resolves the caller against whichever identity table their role implies (§5) and is scoped to their own id.
 
 **Required env for auth in prod:** `NEXTAUTH_SECRET`, `NEXTAUTH_URL=https://lyante.art`, `GOOGLE_CLIENT_ID/SECRET`, Google redirect URI `https://lyante.art/api/auth/callback/google`.
 
@@ -147,6 +157,7 @@ Helpers:
 Models: `User`, `Participant`, `Event`, `Artist`, `Music`, `Payment`, `Booking`, `Ticket`, `CheckIn`.
 
 Key relationships & fields:
+- **User** — staff/CRM identity. `role` defaults to `USER`; `deletedAt` marks a deactivated account. No relations to any other model, so deactivating has no FK fallout.
 - **Event** — `bookingDeadline` (⚠️ this is *the event date* everywhere in the UI; code often maps `date: event.bookingDeadline`), `capacity`, `ticketsAvailable` (offered ≤ capacity), `isOpen`, `status`, `eventType`, pricing (`baseTicketPrice`, `hasDiscount`, `discountPercentage`, `discountUpto`), `artistId?`.
 - **Artist** → has many `Music` and `Event`. Soft-deleted via `deletedAt`.
 - **Payment** → **Booking** (1..*) → **Ticket** (1..*). A booking groups the tickets from one purchase.
@@ -154,7 +165,7 @@ Key relationships & fields:
 - **CheckIn** — one per ticket, set when scanned.
 
 Enums:
-- `Role`: ADMIN, STAFF, MANAGER
+- `Role`: ADMIN, STAFF, MANAGER, **USER** (no capabilities; the `User.role` default — see §5)
 - `EventStatus`: DRAFT, PUBLISHED, CANCELLED, **COMPLETED**
 - `EventType`: CONCERT, FESTIVAL, CONFERENCE, SPORTS, PRIVATE, OTHER
 - `PaymentStatus` / `bookingStatus`: PAID, REFUND, PENDING, REJECTED
@@ -240,7 +251,7 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 ## 14. Migrations & DB gotchas
 
 - Build runs **`prisma generate && prisma migrate deploy && next build`**, so Vercel applies migrations and regenerates the client on deploy. `postinstall` also runs `prisma generate`.
-- Adding an enum value = a real migration (e.g. `ALTER TYPE "EventStatus" ADD VALUE 'COMPLETED';`). **A regenerated client + applied DB migration are two separate things** — a running `next dev` keeps the OLD generated client in memory until restarted, which surfaces as `PrismaClientValidationError: Expected <Enum>` even when the DB is fine. Restart the dev server after schema changes.
+- Adding an enum value = a real migration (e.g. `ALTER TYPE "EventStatus" ADD VALUE 'COMPLETED';`). **Postgres forbids *using* a new enum value in the same transaction that adds it**, so if the same change also needs that value (as a `DEFAULT`, in an `UPDATE`, …), split it across two migration folders — see `20260804120000_add_user_role_enum_value` followed by `20260804120100_user_soft_delete_default_role`. **A regenerated client + applied DB migration are two separate things** — a running `next dev` keeps the OLD generated client in memory until restarted, which surfaces as `PrismaClientValidationError: Expected <Enum>` even when the DB is fine. Restart the dev server after schema changes.
 - Migrations here were authored against empty DBs; some fail on populated data (e.g. NOT NULL backfills). Prisma **blocks `migrate reset` for AI agents** — don't fight it. Config is `prisma.config.ts` (loads env, configures `db seed` via `tsx prisma/seed.ts`).
 - Seed: `npm run db:seed`. Admin credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env (fallback to defaults in `prisma/seed.ts`).
 
@@ -258,6 +269,8 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 8. **Enum/status changes ripple**: DB migration → Prisma schema → `eventStatusSchema` (validations) → `src/types/event.ts` → any `EventStoredStatus`/UI union → the pages that filter on status. Update all of them.
 9. **`bookingDeadline` IS the event date.** Don't add a separate `date` column expecting persistence — the UI maps `date` from `bookingDeadline`.
 10. Keep the group **layout font declarations** when adding pages, or brand fonts break (§13).
+11. **`User.role` must stay `@default(USER)`.** Public sign-up creates `User` rows without a role; defaulting to `STAFF` (as it once did) hands every self-registered stranger a Control Center account with ticket-scanning rights.
+12. **Never return `User.password`.** API routes use an explicit `select` and go through `toStaffUserDto` in `src/lib/users.ts` rather than returning rows wholesale.
 
 ---
 

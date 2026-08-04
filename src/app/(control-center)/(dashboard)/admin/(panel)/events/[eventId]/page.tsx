@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { BarChart3 } from 'lucide-react'
 import { requirePageCapability, hasCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { TicketTable } from '@/components/tickets/TicketTable'
@@ -161,7 +162,17 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Event-specific analytics */}
+      {/* At-a-glance counts. The full analytics view lives on its own route. */}
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h2 className="text-sm font-medium text-gray-500">At a glance</h2>
+        <Link
+          href={`/admin/events/${eventId}/analytics`}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-black/10 rounded-md px-2.5 py-1.5 transition-colors"
+        >
+          <BarChart3 size={14} />
+          Full analytics
+        </Link>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {[
           { label: 'Sold', value: sold, cls: 'text-gray-900' },

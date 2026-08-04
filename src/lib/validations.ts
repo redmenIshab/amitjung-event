@@ -23,6 +23,14 @@ const eventFieldsSchema = z.object({
   status: eventStatusSchema.optional().default('DRAFT'),
   eventType: eventTypeSchema.optional().default('OTHER'),
   baseTicketPrice: z.number().int().min(0, 'Price must be non-negative'),
+  // Required for every new/edited event: it drives commission income in
+  // analytics, and a silent default would fabricate a financial figure.
+  // Pre-existing rows may still be null in the DB — see the migration.
+  commissionPercentage: z
+    .number({ message: 'Commission rate is required' })
+    .int('Commission rate must be a whole percent')
+    .min(0, 'Commission rate cannot be negative')
+    .max(100, 'Commission rate cannot exceed 100%'),
   hasDiscount: z.boolean().optional().default(false),
   discountPercentage: z.number().int().min(0).max(100).optional().default(0),
   discountUpto: z.string().datetime().optional(),
