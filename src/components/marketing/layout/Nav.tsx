@@ -20,12 +20,13 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // Public CTA only: participants get their tickets portal; everyone else logs in.
-  // Admins use their own /admin/login and are unaffected.
-  const cta =
-    session?.user?.role === 'PARTICIPANT'
-      ? { href: '/tickets', label: 'MY TICKETS' }
-      : { href: '/auth/login', label: 'LOGIN' }
+  // Public CTA. One entry for anyone signed in — My Tickets is a tab inside the
+  // account area (see AccountHeader), so it does not need its own nav slot.
+  // Keys off session presence, not PARTICIPANT alone: buyers self-registered as
+  // USER were previously shown LOGIN while already signed in.
+  const cta = session?.user
+    ? { href: '/profile', label: 'ACCOUNT' }
+    : { href: '/auth/login', label: 'LOGIN' }
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)

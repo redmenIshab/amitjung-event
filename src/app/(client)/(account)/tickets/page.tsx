@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Calendar, MapPin, Ticket, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 import { ticketsMineResponseSchema } from '@/lib/validations'
+import { AccountHeader } from '@/components/tickets/AccountHeader'
 
 export default function MyTicketsPage() {
   const router = useRouter()
@@ -48,13 +49,7 @@ export default function MyTicketsPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-24">
-      <header className="mb-8 md:mb-10">
-        <p className="section-label tracking-widest text-gold mb-2">Your Wallet</p>
-        <h1 className="font-bebas text-ivory text-[48px] md:text-[64px] leading-[0.85] tracking-tight uppercase">
-          My Tickets
-        </h1>
-        <div className="mt-4 h-px w-full bg-gradient-to-r from-gold/60 via-coal/40 to-transparent" />
-      </header>
+      <AccountHeader title="My Tickets" />
 
       {error ? (
         <div className="text-center py-20">

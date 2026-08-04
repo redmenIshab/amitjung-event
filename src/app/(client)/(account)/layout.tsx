@@ -2,6 +2,20 @@ import { Cormorant_Garamond, Bebas_Neue, DM_Sans } from 'next/font/google'
 import Nav from '@/components/marketing/layout/Nav'
 import Footer from '@/components/marketing/layout/Footer'
 
+/**
+ * Shared shell for the signed-in account area (`/profile` and `/tickets`).
+ *
+ * `(account)` is a route group, so it adds nothing to the URL — both pages keep
+ * their existing paths. Its purpose is to give the two tabs ONE common layout.
+ *
+ * Why it matters: they previously had a layout file each, as siblings. Switching
+ * tabs therefore unmounted an entire shell and mounted another — re-running the
+ * font setup, the glow, `Footer`, and `Nav` (which holds a session subscription
+ * and a scroll listener). With a shared parent, Next preserves this layout and
+ * re-renders only the page segment that actually changed.
+ *
+ * Keep new account tabs inside this group so they get the same treatment.
+ */
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['300', '700'],
@@ -22,12 +36,11 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
-export default function TicketsLayout({ children }: { children: React.ReactNode }) {
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`${cormorant.variable} ${bebas.variable} ${dmSans.variable} relative isolate min-h-screen bg-lyante-bg text-ivory font-dm-sans`}
     >
-      {/* Subtle Lyante brand glow */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
           className="absolute -top-[20%] right-[-10%] w-[70vw] h-[70vw] rounded-full blur-[140px] opacity-[0.08]"
