@@ -8,6 +8,7 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "db:seed": "prisma db seed",
+    "db:seed:demo": "tsx prisma/seed-demo.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "dev:amit": "pnpm --filter amit-jung-site dev -p 3100",

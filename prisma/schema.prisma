@@ -9,13 +9,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(STAFF)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String
+  // Defaults to USER (no capabilities) so public self-registration cannot
+  // mint CRM access. Staff roles are only assigned by an admin.
+  role     Role   @default(USER)
+  // Set = deactivated: blocked at login and downgraded on token refresh.
+  // Cleared = reactivated. Matches the soft-delete convention used elsewhere.
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Participant {
@@ -36,6 +41,8 @@ enum Role {
   ADMIN
   STAFF
   MANAGER
+  // Non-staff account (public sign-up). Holds no capability — see src/lib/rbac.ts.
+  USER
 }
 
 model Event {
@@ -55,6 +62,13 @@ model Event {
 
   // Number of tickets offered for sale (<= capacity; allows hold-backs).
   ticketsAvailable Int
+
+  // Lyante's agreed cut of this event's net ticket sales, as a whole percent.
+  // Varies per organizer, so it lives on the event rather than in config.
+  // Nullable ONLY so events predating the field stay honestly "unset" — the
+  // create/update schemas require it, and analytics renders unset as "—"
+  // rather than implying 0% income. See src/lib/analytics.ts.
+  commissionPercentage Int?
   status           EventStatus @default(DRAFT)
   eventType        EventType   @default(OTHER)
 
