@@ -40,37 +40,33 @@ describe('EventCard', () => {
     expect(buyLink()).toHaveClass('bg-gold')
   })
 
-  it('keeps past events navigable, without a buy link', () => {
+  it('keeps past events navigable, with no action slot at all', () => {
     card({ bucket: 'past', isPurchasable: false })
 
     expect(buyLink()).toBeNull()
     expect(detailsLink()).toHaveAttribute('href', '/events/evt-1')
     expect(screen.getByText('Ended')).toBeInTheDocument()
-    expect(screen.getByText('Sales Closed')).toBeInTheDocument()
+    // A finished event gets no purchase affordance — not even a muted one.
+    expect(screen.queryByText('Sales Closed')).toBeNull()
+    expect(screen.queryByText('Sold Out')).toBeNull()
   })
 
   it('badges a completed event without desaturating its artwork', () => {
     const { container } = card({ bucket: 'completed', isPurchasable: false })
 
     expect(screen.getByText('Completed')).toBeInTheDocument()
-    // The status bar is worded differently so the card does not say "Completed" twice.
-    expect(screen.getByText('Event Concluded')).toBeInTheDocument()
+    expect(buyLink()).toBeNull()
+    expect(screen.queryByText('Sales Closed')).toBeNull()
     // Regression guard on QA finding 5 — grayscale made completed events read as disabled.
     expect(container.querySelector('.grayscale')).toBeNull()
     expect(container.querySelector('.cursor-not-allowed')).toBeNull()
   })
 
-  it('shows Sold Out ahead of the bucket status', () => {
+  it('tells an upcoming event why it cannot be bought', () => {
     card({ bucket: 'upcoming', isPurchasable: false, soldOut: true })
 
     expect(buyLink()).toBeNull()
-    expect(screen.getByText('Sold Out')).toBeInTheDocument()
-  })
-
-  it('reserves the action slot at button height when not purchasable', () => {
-    card({ bucket: 'past', isPurchasable: false })
-
-    // Uniform height keeps grid rows aligned next to purchasable cards.
-    expect(screen.getByText('Sales Closed')).toHaveClass('min-h-11')
+    // Still upcoming, so the reason is worth surfacing where the button would be.
+    expect(screen.getByText('Sold Out')).toHaveClass('min-h-11')
   })
 })

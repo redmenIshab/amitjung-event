@@ -34,14 +34,12 @@ export function formatEventDate(date: string): string {
 }
 
 /**
- * Why the buy button is unavailable. Order matters: sold out wins over bucket.
- * Deliberately worded differently from the corner badge so a completed card does
- * not read "Completed" twice; mirrors `purchaseBlockedReason()` in lib/events.
+ * Why an upcoming event can't be bought. Only ever shown for the `upcoming`
+ * bucket — a finished event needs no purchase affordance at all, so past and
+ * completed cards render no action slot rather than a disabled-looking one.
  */
-export function cardStatusLabel(event: Pick<EventCardData, 'soldOut' | 'bucket'>): string {
-  if (event.soldOut) return 'Sold Out'
-  if (event.bucket === 'completed') return 'Event Concluded'
-  return 'Sales Closed'
+export function cardStatusLabel(event: Pick<EventCardData, 'soldOut'>): string {
+  return event.soldOut ? 'Sold Out' : 'Sales Closed'
 }
 
 export const BUY_BUTTON_CLASS =
@@ -144,14 +142,17 @@ export function EventCard({ event }: { event: EventCardData }) {
         )}
 
         <div className="mt-auto pt-4">
-          {event.isPurchasable ? (
-            <Link href={`/booking/${event.id}/checkout`} className={BUY_BUTTON_CLASS}>
-              <Ticket size={16} aria-hidden />
-              Buy Tickets
-            </Link>
-          ) : (
-            <span className={STATUS_BAR_CLASS}>{cardStatusLabel(event)}</span>
-          )}
+          {/* Past and completed events get no action slot — there is nothing to
+              buy, and a muted bar only reads as a broken button. */}
+          {event.bucket === 'upcoming' &&
+            (event.isPurchasable ? (
+              <Link href={`/booking/${event.id}/checkout`} className={BUY_BUTTON_CLASS}>
+                <Ticket size={16} aria-hidden />
+                Buy Tickets
+              </Link>
+            ) : (
+              <span className={STATUS_BAR_CLASS}>{cardStatusLabel(event)}</span>
+            ))}
           <span
             aria-hidden
             className="mt-2 block text-center text-[12px] tracking-wide text-ash transition-colors group-hover:text-gold-light"

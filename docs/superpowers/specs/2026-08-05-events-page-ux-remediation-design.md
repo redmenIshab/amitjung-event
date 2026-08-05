@@ -164,19 +164,21 @@ against the outlined and text-only elements around it. On the featured panel
 (§4.1) the same button renders larger (`min-h-14`, `text-lg`) and sits beside an
 outlined `View Details` button.
 
-**Slot is reserved when not purchasable.** Rather than collapsing, the button slot
-renders a non-interactive muted bar of identical height (`bg-lyante-surface-mid`,
-`text-ash`) carrying the status label. This keeps card heights uniform so grid
-rows align regardless of which events are purchasable. The label resolves in this
-order:
+**The action slot belongs to upcoming events only.** Past and completed cards
+render no button and no status bar — there is nothing to buy, and a muted bar in
+the button's position reads as a broken control. Their next step is
+`View Details →` plus the whole-card link, which is what finding 3 asks for. The
+`Completed` / `Ended` corner badge (§3.3) already carries the status, so a bar
+repeating it would be redundant as well as misleading.
 
-1. `soldOut` → `Sold Out`
-2. `bucket === 'completed'` → `Event Concluded`
-3. otherwise → `Sales Closed`
+For an **upcoming** event that cannot currently be bought, the reason *is* worth
+surfacing, so the slot holds a non-interactive muted bar of identical height to
+the button (`bg-lyante-surface-mid`, `text-ash`) — keeping rows aligned among
+live events. The label is `Sold Out` when `soldOut`, otherwise `Sales Closed`.
 
-The completed label deliberately differs from the corner badge (`Completed`, §3.3)
-so a concluded card does not print the same word twice; the wording mirrors
-`purchaseBlockedReason()`'s existing "This event has concluded".
+Card heights therefore differ between live and finished events. That is
+intentional: within any single filter the cards are uniform, and in the `All` view
+the taller live cards read as the more important ones.
 
 ### 3.3 Completed and past styling (finding 5)
 
@@ -329,10 +331,10 @@ tests and does not register DOM matchers globally.
 2. An ended card exposes the details link, no buy link, and an `Ended` badge.
 3. A completed card renders a `Completed` badge and its image carries no
    `grayscale` class — regression guard on finding 5.
-4. A sold-out card shows `Sold Out` and no buy link.
-5. The Buy Tickets action carries the `bg-gold` button fill, and the
-   non-purchasable variant renders the muted status bar in the same slot rather
-   than omitting it — guard on the uniform-height rule in §3.2.
+4. A sold-out *upcoming* card shows `Sold Out` at button height and no buy link.
+5. The Buy Tickets action carries the `bg-gold` button fill.
+6. Past and completed cards render neither a buy link nor a status bar — guard on
+   the upcoming-only action slot in §3.2.
 
 **`tests/components/EventsBrowser.test.tsx`**
 
