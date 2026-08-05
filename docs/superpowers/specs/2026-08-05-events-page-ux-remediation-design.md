@@ -21,6 +21,16 @@ specific cause in the current code:
 | 6 | Information hard to scan | Medium | Title at 16/18px; date and venue both 11px `text-ash` in one row — no tier separation |
 | 7 | No filter option | Medium | Page is three hardcoded stacked `<section>`s with no filter UI |
 
+### Added beyond the QA findings
+
+**Search.** Not in the QA document; added at the product owner's request alongside
+the filters. Frontend-only for now — see §4.3.
+
+**A stronger purchase CTA.** Finding 3 only asks for *a* call to action. The
+product owner asked specifically for a strong ticket-purchase button on upcoming
+shows, so Buy Tickets is specced as a solid filled button rather than a text link
+— see §3.2.
+
 QA's screenshots show only two sections (Upcoming, Completed). The page actually
 renders three — Upcoming, Past Events, Completed — because `PUBLISHED` events
 whose date has elapsed fall into a separate bucket from admin-marked `COMPLETED`
@@ -48,7 +58,7 @@ page.tsx (server)
   → computeEventAvailability() per event
   → EventCardData[]
       │
-      └─ EventsBrowser.tsx  ('use client')  — filter chips + grid
+      └─ EventsBrowser.tsx  ('use client')  — search + filter chips + grid
            ├─ FeaturedEvent.tsx  — soonest LIVE event, full-width
            └─ EventCard.tsx      — reworked grid card
 ```
@@ -58,7 +68,7 @@ Files:
 | File | Change |
 |------|--------|
 | `src/app/(public)/events/page.tsx` | Rewrite body; drop `UpcomingCard`/`PastCard`/`GRID` |
-| `src/components/events/EventsBrowser.tsx` | **New** — client, filter state + layout |
+| `src/components/events/EventsBrowser.tsx` | **New** — client; owns search + filter state and the grid layout |
 | `src/components/events/FeaturedEvent.tsx` | **New** — server-safe presentational |
 | `src/components/events/EventCard.tsx` | Rework — sizing, CTAs, hierarchy, status badges |
 
@@ -134,8 +144,31 @@ Linking straight to `/booking/{id}/checkout` is safe: that route gates itself fo
 unauthenticated visitors, which is exactly why `CheckoutButton.tsx:28-34` is
 allowed to push to it directly without checking a session first.
 
-When `isPurchasable` is false, Buy Tickets is replaced by a muted status line and
-only View Details remains. The label is resolved in this order:
+#### Buy Tickets is a button, not a text link
+
+Finding 3 is rated High and asks for a *clear next step*. A gold text link does
+not carry enough weight for the primary conversion action on a ticketing site, so
+Buy Tickets renders as a solid, full-width button pinned to the bottom of the card
+body:
+
+| Property | Value |
+|----------|-------|
+| Fill | `bg-gold` → `hover:bg-gold-light`, `text-lyante-bg` |
+| Type | `font-bebas text-base tracking-[0.1em] uppercase` |
+| Size | full card width, `min-h-11` (44px — touch target floor) |
+| Icon | `Ticket` from `lucide-react`, 16px, leading the label |
+| Focus | `focus-visible:ring-2 ring-gold-light ring-offset-2 ring-offset-lyante-bg` |
+
+It is the only solid-filled element on the card, so it reads as the primary action
+against the outlined and text-only elements around it. On the featured panel
+(§4.1) the same button renders larger (`min-h-14`, `text-lg`) and sits beside an
+outlined `View Details` button.
+
+**Slot is reserved when not purchasable.** Rather than collapsing, the button slot
+renders a non-interactive muted bar of identical height (`bg-lyante-surface-mid`,
+`text-ash`) carrying the status label. This keeps card heights uniform so grid
+rows align regardless of which events are purchasable. The label resolves in this
+order:
 
 1. `soldOut` → `Sold Out`
 2. `bucket === 'completed'` → `Completed`
@@ -180,7 +213,7 @@ one-line truncation of long festival names unnecessary.
 
 ---
 
-## 4. Layout — findings 1, 4, 7
+## 4. Layout — findings 1, 4, 7, plus search
 
 ### 4.1 Featured event (findings 4, 1)
 
@@ -189,10 +222,10 @@ The soonest `upcoming` event renders as a full-width split panel above the grid:
 - Artwork left (~55% at `md`+), content right; stacks vertically below `md`.
 - Content: `Next Show` eyebrow in `section-label`, title at
   `clamp(40px, 5vw, 72px)` in `font-bebas`, date and venue, sale badges, and both
-  CTAs (`Buy Tickets` solid gold, `View Details` outlined).
+  CTAs (`Buy Tickets` solid gold per §3.2, `View Details` outlined).
 - `min-h-[420px]` at `md`+.
-- Rendered only when the `upcoming` bucket is non-empty, and only when the active
-  filter is `all` or `upcoming`.
+- Rendered only when the `upcoming` bucket is non-empty, the active filter is
+  `all` or `upcoming`, **and no search query is active** (see §4.3).
 - **Excluded from the grid below** so it never appears twice.
 
 This is the actual fix for finding 1. QA's screenshot showed one upcoming event
@@ -205,23 +238,66 @@ spans the viewport.
 count.
 
 - Chips for empty buckets are not rendered.
-- The entire bar is hidden when fewer than two buckets are non-empty, so a
-  single-event site gets no filter UI it cannot use.
 - Default selection: `upcoming` when non-empty, otherwise `all`.
 - State is plain `useState`. Not URL-synced — no shareable-filter-link requirement
   exists, and `useSearchParams` would force a Suspense boundary for marginal gain.
 - Chips are `<button>` elements in a `role="tablist"`-free group with
   `aria-pressed` reflecting selection.
 
+### 4.3 Search (frontend-only)
+
+A search input sits in the same controls row as the chips, above the grid.
+
+**Frontend-only by decision.** All published events are already loaded into the
+page by the existing `getCachedEvents()` call, so filtering happens over the
+in-memory `EventCardData[]`. No API route, no query parameter, no database
+change. If the catalogue later outgrows a single page load, this becomes a
+server-side search — but that is not today's problem.
+
+| Aspect | Behaviour |
+|--------|-----------|
+| Matches against | `title`, `venue`, and the resolved `EVENT_TYPE_LABEL[eventType]` |
+| Matching | case-insensitive substring on the trimmed query |
+| Debounce | none — the array is small and filtering is synchronous |
+| Composition | search intersects with the active chip: results are `bucket ∩ query` |
+| Chip counts | reflect the current query, so a chip reads the number of results it would actually show |
+| Zero-match chips | rendered but `disabled`, not hidden — hiding chips on each keystroke makes the bar jump |
+| Clear | an `X` button inside the input, shown only when the query is non-empty |
+| A11y | `type="search"` with an `sr-only` `<label>`; result count announced via `aria-live="polite"` |
+
+**The featured panel is suppressed while a query is active** (§4.1). Promoting one
+event above the results when the user has asked for something specific fights the
+search; during search every match renders uniformly in the grid.
+
+### 4.4 Controls row visibility
+
+Search and chips share one controls row, but each has its own visibility rule,
+because they stop being useful at different points:
+
+| Control | Renders when |
+|---------|--------------|
+| Search input | 2 or more events in total |
+| Filter chips | 2 or more **non-empty buckets** |
+
+So a site with five events that are all upcoming gets a search box and no chips —
+a lone `Upcoming` chip would filter nothing. A one-event site gets neither. The
+row itself is omitted when both controls are hidden. Within a visible chip group,
+individual chips still follow the empty-bucket rule in §4.2 and the
+disabled-on-zero-match rule in §4.3.
+
 The three stacked `<section>` headings collapse into a single masthead
-(`LYANTE PRESENTS` / `UPCOMING SHOWS`, kept from the current design) plus the
-filter bar.
+(`LYANTE PRESENTS` / `UPCOMING SHOWS`, kept from the current design) plus this
+controls row.
 
-### 4.3 Empty states
+### 4.5 Empty states
 
-- No events at all: existing `stateScreen('No events yet.')` is retained.
-- A filter selected with zero results cannot occur, since empty buckets have no
-  chip.
+- **No events at all:** existing `stateScreen('No events yet.')` is retained.
+- **Filter with zero results:** cannot occur — empty buckets have no chip.
+- **Search with zero results:** reachable, since any query may match nothing.
+  The grid is replaced by an inline empty state — `No events match "<query>"` —
+  with a button that clears the query and restores the previous view. This is
+  inline, not the full-screen `stateScreen`, so the controls row stays on screen
+  and the user can correct the query without navigating.
 
 ---
 
@@ -250,13 +326,33 @@ tests and does not register DOM matchers globally.
 3. A completed card renders a `Completed` badge and its image carries no
    `grayscale` class — regression guard on finding 5.
 4. A sold-out card shows `Sold Out` and no buy link.
+5. The Buy Tickets action carries the `bg-gold` button fill, and the
+   non-purchasable variant renders the muted status bar in the same slot rather
+   than omitting it — guard on the uniform-height rule in §3.2.
 
 **`tests/components/EventsBrowser.test.tsx`**
-5. Selecting a filter chip narrows the rendered cards to that bucket.
-6. No chip is rendered for an empty bucket.
-7. The filter bar is absent when only one bucket is non-empty.
-8. The featured panel renders the soonest upcoming event, and that event does not
-   also appear in the grid.
+
+*Filters*
+
+6. Selecting a filter chip narrows the rendered cards to that bucket.
+7. No chip is rendered for an empty bucket.
+8. The controls row is absent entirely when the page has a single event.
+9. Chips are absent but the search input is present when every event falls in one
+   bucket — the split rule in §4.4.
+10. The featured panel renders the soonest upcoming event, and that event does not
+    also appear in the grid.
+
+*Search*
+
+11. Typing a query narrows the grid to title matches, case-insensitively.
+12. A query matches on `venue` as well as `title`.
+13. Search intersects with the active chip rather than replacing it — a query
+    matching events in two buckets shows only the active bucket's matches.
+14. Chip counts update to reflect the active query.
+15. A chip with zero matches under the current query is `disabled`, not removed.
+16. The featured panel is suppressed while a query is active.
+17. A zero-match query renders the inline empty state, and its clear button
+    restores the full result set.
 
 **Regression:** `npm test` (including the existing `tests/lib/events.test.ts`) and
 `npm run build` must both pass.
