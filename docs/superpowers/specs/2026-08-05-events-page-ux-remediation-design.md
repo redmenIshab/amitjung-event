@@ -171,8 +171,12 @@ rows align regardless of which events are purchasable. The label resolves in thi
 order:
 
 1. `soldOut` → `Sold Out`
-2. `bucket === 'completed'` → `Completed`
+2. `bucket === 'completed'` → `Event Concluded`
 3. otherwise → `Sales Closed`
+
+The completed label deliberately differs from the corner badge (`Completed`, §3.3)
+so a concluded card does not print the same word twice; the wording mirrors
+`purchaseBlockedReason()`'s existing "This event has concluded".
 
 ### 3.3 Completed and past styling (finding 5)
 
