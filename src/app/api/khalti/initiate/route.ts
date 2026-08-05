@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireSession } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { storePendingBooking } from '@/lib/ticketing'
 import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
@@ -9,8 +8,15 @@ import { isRedisConfigured } from '@/lib/upstash/upstash'
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'PARTICIPANT') {
+    // requireSession accepts the website's cookie *and* the mobile app's bearer
+    // token; the PARTICIPANT check below is what actually restricts purchasing,
+    // exactly as before.
+    const gate = await requireSession(request)
+    if (gate instanceof NextResponse) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 })
+    }
+    const { session } = gate
+    if (session.user.role !== 'PARTICIPANT') {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 })
     }
 
@@ -23,7 +29,9 @@ export async function POST(request: Request) {
       )
     }
 
-    const { eventId, attendees } = await request.json()
+    // `client` lets the callback know where to return the buyer. Anything
+    // other than the literal 'mobile' is treated as web.
+    const { eventId, attendees, client } = await request.json()
 
     if (!eventId || !attendees || !Array.isArray(attendees) || attendees.length === 0) {
       return NextResponse.json({ error: 'eventId and attendees are required' }, { status: 400 })
@@ -118,6 +126,7 @@ export async function POST(request: Request) {
         discountPercentage,
         finalAmount,
       },
+      client: client === 'mobile' ? 'mobile' : 'web',
     })
 
     return NextResponse.json({

@@ -44,8 +44,37 @@ export async function requirePageCapability(cap: Capability): Promise<Session> {
   return session
 }
 
-export async function requireSession(): Promise<{ session: Session } | NextResponse> {
+/**
+ * Any authenticated caller — the website's NextAuth cookie, or the mobile app's
+ * `Authorization: Bearer` token.
+ *
+ * The cookie is tried first so website behaviour is completely unchanged; the
+ * bearer path only runs when there is no cookie session. A bearer token always
+ * resolves to PARTICIPANT and never to a staff role, and note that
+ * `requireApiCapability` above does NOT consult bearer tokens at all — so the
+ * mobile surface is limited to buyer endpoints by construction, and a leaked
+ * app token can never reach the Control Center.
+ */
+export async function requireSession(
+  /**
+   * Pass the handler's Request to also accept a mobile bearer token. Omitted,
+   * only the website cookie is considered — so a route opts in to mobile access
+   * explicitly rather than by accident.
+   *
+   * Imported lazily: this module is also pulled into middleware and client
+   * bundles (proxy.ts, hasCapability), and keeping `jose` out of those is worth
+   * the dynamic import.
+   */
+  request?: Request,
+): Promise<{ session: Session } | NextResponse> {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return { session }
+  if (session) return { session }
+
+  if (request) {
+    const { sessionFromBearer } = await import('@/lib/mobileAuth')
+    const mobile = await sessionFromBearer(request)
+    if (mobile) return { session: mobile }
+  }
+
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }

@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const gate = await requireSession()
+    const gate = await requireSession(request)
     if (gate instanceof NextResponse) return gate
     const { session } = gate
 

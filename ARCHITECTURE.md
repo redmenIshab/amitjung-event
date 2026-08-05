@@ -146,6 +146,27 @@ Helpers:
 - Buyer gating pattern: unauthenticated → `/auth/login?callbackUrl=<encoded>`; after login, redirect back. Checkout self-gates.
 - The Nav CTA is a single entry: signed out → "Login" (`/auth/login`), signed in → "Account" (`/profile`). It keys off *whether* a session exists, not on `PARTICIPANT` alone — the older check showed "Login" to people who were already signed in.
 - **The account area is `/profile` + `/tickets` presented as two tabs**, via `AccountHeader` (`src/components/tickets/AccountHeader.tsx`) rendered at the top of both. The routes stay separate — including the drill-downs at `/tickets/[eventId]/…`, which keep the "My Tickets" tab lit through a `startsWith` check — so existing links and bookmarks are unaffected. Add a tab by editing `TABS` in that one component.
+- **Mobile clients authenticate with a bearer token, not the cookie.** The Expo
+  app (separate repo, `lyante-mobile`) signs in with Google natively and posts the
+  ID token to **`POST /api/auth/mobile`**, which verifies it against Google's JWKS
+  (`src/lib/mobileAuth.ts`), upserts the **same `Participant` row** the web
+  `signIn` callback would, and returns an app JWT signed with `NEXTAUTH_SECRET`.
+  Routes opt in by passing their `Request` to `requireSession(request)`; called
+  with no argument only the cookie is considered. ⚠️ **`requireApiCapability`
+  never consults bearer tokens**, and `sessionFromBearer` hard-codes
+  `PARTICIPANT` — so a leaked app token cannot reach the Control Center. Keep it
+  that way. Requires `GOOGLE_MOBILE_CLIENT_IDS` (the iOS/Android OAuth client
+  IDs) or sign-in returns 503.
+- **`mobileAuth.ts` must never import `next/headers`.** `rbac.ts` is pulled into
+  middleware (`proxy.ts`) and client bundles (`hasCapability`), where that API
+  does not exist — importing it fails the Turbopack build outright. That is why
+  `sessionFromBearer` takes a `Request`.
+- **Khalti knows which client started a purchase.** `initiate` accepts
+  `client: 'mobile'` and stores it with the pending booking in Redis; the callback
+  peeks it (without consuming the record, so failure paths work too) and redirects
+  to `lyante://booking?jobId=…` instead of `/booking/result`. It is stored in Redis
+  rather than smuggled through Khalti's `return_url` query, which is not
+  guaranteed to preserve extra params.
 - **`/profile`** (`GET /api/profile`) is the only sign-out route for non-staff; staff sign out from the Control Center sidebar. The endpoint resolves the caller against whichever identity table their role implies (§5) and is scoped to their own id.
 
 **Required env for auth in prod:** `NEXTAUTH_SECRET`, `NEXTAUTH_URL=https://lyante.art`, `GOOGLE_CLIENT_ID/SECRET`, Google redirect URI `https://lyante.art/api/auth/callback/google`.
@@ -276,7 +297,7 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 
 ## 16. Environment variables
 
-Auth: `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+Auth: `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_MOBILE_CLIENT_IDS` (comma-separated iOS/Android OAuth client IDs — required for mobile sign-in).
 App: `NEXT_PUBLIC_APP_URL` (e.g. `https://lyante.art`), `NODE_ENV`, `VERCEL_URL`.
 DB: `DATABASE_URL` (Neon; pooled).
 Payments: `KHALTI_SECRET_KEY`, `KHALTI_BASE_URL`.

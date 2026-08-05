@@ -6,9 +6,9 @@ import { ticketEventIdSchema } from '@/lib/validations'
 
 type Params = { params: Promise<{ eventId: string }> }
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   try {
-    const gate = await requireSession()
+    const gate = await requireSession(request)
     if (gate instanceof NextResponse) return gate
     const { session } = gate
 

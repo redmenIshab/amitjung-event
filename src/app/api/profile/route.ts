@@ -10,8 +10,8 @@ import { prisma } from '@/lib/prisma'
  * everything else against `User`. Scoped to the caller's own id — there is no
  * way to ask for someone else's record.
  */
-export async function GET() {
-  const gate = await requireSession()
+export async function GET(request: Request) {
+  const gate = await requireSession(request)
   if (gate instanceof NextResponse) return gate
 
   const { id, role } = gate.session.user

@@ -146,8 +146,36 @@ export async function storePendingBooking(pidx: string, data: {
   participantId: string
   attendees: AttendeeInput[]
   amounts: AmountsInput
+  /**
+   * Which client started the purchase. Recorded here rather than smuggled
+   * through Khalti's `return_url` query, because Khalti appends its own params
+   * to that URL and preserving extra ones is not guaranteed. The callback reads
+   * it to decide whether to finish on the website or hand back to the app via
+   * the `lyante://` deep link. Absent means web.
+   */
+  client?: 'web' | 'mobile'
 }) {
   await redisConfig.set(`booking:${pidx}`, JSON.stringify(data), { ex: 1800 })
+}
+
+/**
+ * Reads only which client started this purchase, WITHOUT consuming the record.
+ *
+ * The callback needs this before it knows whether the payment succeeded, so
+ * that its failure paths return the buyer to the right place too — a mobile
+ * buyer whose payment fails must still be handed back to the app rather than
+ * left staring at a web page inside a browser sheet. Returns 'web' when there
+ * is nothing to read, which is the safe default.
+ */
+export async function peekPendingBookingClient(pidx: string): Promise<'web' | 'mobile'> {
+  const raw = await redisConfig.get(`booking:${pidx}`)
+  if (!raw) return 'web'
+  try {
+    const data = typeof raw === 'string' ? JSON.parse(raw) : (raw as { client?: string })
+    return data?.client === 'mobile' ? 'mobile' : 'web'
+  } catch {
+    return 'web'
+  }
 }
 
 export async function getPendingBooking(pidx: string) {

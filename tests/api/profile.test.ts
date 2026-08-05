@@ -15,7 +15,11 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { GET } from '@/app/api/profile/route'
+import { GET as rawGET } from '@/app/api/profile/route'
+
+/** The route now takes a Request so it can read a mobile bearer token. */
+const req = () => new Request('http://localhost/api/profile')
+const GET = () => rawGET(req())
 
 const session = (id: string, role: string) => ({ session: { user: { id, role } } })
 const MADE = new Date('2026-01-15T00:00:00Z')
