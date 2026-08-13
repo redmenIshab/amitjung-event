@@ -243,4 +243,12 @@
     text-transform: uppercase;
     color: var(--gold-primary);
   }
+  /* Gold edge on nav text — the bar has no background, so the stroke is what
+     separates the links from whatever photo runs behind them. `paint-order`
+     puts the stroke behind the fill, otherwise it eats into the glyph and
+     thins the letterforms. */
+  .nav-text-outline {
+    -webkit-text-stroke: 0.6px var(--gold-light);
+    paint-order: stroke fill;
+  }
 }

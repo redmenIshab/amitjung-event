@@ -50,12 +50,15 @@ export default function Nav() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-20 h-16 md:h-20 transition-all duration-300 ${
-          scrolled ? 'bg-[rgba(8,8,8,0.92)] backdrop-blur-[12px]' : 'bg-transparent'
+        // No background fill at all — the bar sits directly on the page and the
+        // gold text outline carries legibility. Scrolling adds only a blur, so
+        // busy content passing underneath doesn't fight the links.
+        className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-20 h-16 md:h-20 bg-transparent transition-all duration-300 ${
+          scrolled ? 'backdrop-blur-[10px]' : ''
         }`}
       >
         <Link href="/" className="flex items-center gap-2" aria-label="Lyante Production home">
-          <span className="font-bebas text-xl tracking-widest text-gold">LYANTE</span>
+          <span className="font-bebas text-xl tracking-widest text-gold nav-text-outline">LYANTE</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
@@ -63,7 +66,7 @@ export default function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`font-bebas text-sm tracking-widest transition-colors duration-200 ${
+              className={`font-bebas text-sm tracking-widest nav-text-outline transition-colors duration-200 ${
                 isActive(link.href) ? 'text-gold' : 'text-ash hover:text-gold-light'
               }`}
             >
@@ -72,7 +75,7 @@ export default function Nav() {
           ))}
           <Link
             href={cta.href}
-            className="inline-flex items-center gap-2 px-5 py-2 font-bebas text-sm tracking-widest uppercase border border-gold text-gold hover:bg-gold hover:text-white hover:text-bg transition-all duration-250 min-h-[40px] ml-4"
+            className="inline-flex items-center gap-2 px-5 py-2 font-bebas text-sm tracking-widest uppercase border border-gold text-gold nav-text-outline hover:bg-gold hover:text-white hover:text-bg transition-all duration-250 min-h-[40px] ml-4"
           >
             {cta.label}
           </Link>
@@ -98,7 +101,7 @@ export default function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`font-bebas text-4xl tracking-widest transition-colors ${
+              className={`font-bebas text-4xl tracking-widest nav-text-outline transition-colors ${
                 isActive(link.href) ? 'text-gold' : 'text-ivory hover:text-gold'
               }`}
               onClick={() => setMenuOpen(false)}
