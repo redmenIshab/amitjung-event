@@ -1,13 +1,14 @@
 import Link from 'next/link'
+import VenturesHero from '@/components/marketing/about/VenturesHero'
 import WhyWorkWithUs from '@/components/marketing/sections/WhyWorkWithUs'
 import { WorkGallery } from '@/components/marketing/work/WorkGallery'
 
-export const metadata = { title: 'Work — Lyante Production' }
+export const metadata = { title: 'About Us — Lyante Production' }
 
-export default function WorkPage() {
+export default function AboutPage() {
   return (
     <>
-      <div className="pt-24" />
+      <VenturesHero />
       <WhyWorkWithUs />
       <WorkGallery />
       <div className="py-8 px-4 md:px-20 text-center">

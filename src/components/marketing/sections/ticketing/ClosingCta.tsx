@@ -15,7 +15,7 @@ export default function ClosingCta() {
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Button href="/contact" variant="gold">REQUEST A DEMO →</Button>
-          <Button href="/work" variant="outline">SEE OUR WORK</Button>
+          <Button href="/about#work" variant="outline">SEE OUR WORK</Button>
         </div>
         <div className="mt-12">
           <Link href="/" className="text-gold text-sm hover:underline">← Back to Home</Link>

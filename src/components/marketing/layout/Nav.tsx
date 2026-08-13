@@ -8,7 +8,7 @@ import { useSession } from 'next-auth/react'
 const NAV_LINKS = [
   { label: 'HOME', href: '/' },
   { label: 'EVENTS', href: '/events' },
-  { label: 'WORK', href: '/work' },
+  { label: 'ABOUT US', href: '/about' },
   { label: 'SERVICES', href: '/branding' },
   { label: 'TICKETING', href: '/ticketing' },
   { label: 'CONTACT', href: '/contact' },

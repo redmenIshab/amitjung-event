@@ -39,7 +39,7 @@ export default function BrandingPage() {
             <Button href="/contact" variant="gold">
               BRIEF US →
             </Button>
-            <Button href="/work" variant="outline">
+            <Button href="/about#work" variant="outline">
               SEE OUR WORK
             </Button>
           </div>

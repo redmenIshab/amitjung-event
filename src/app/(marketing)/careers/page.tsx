@@ -192,7 +192,7 @@ export default function CareersPage() {
             <Button href="mailto:lyanteprod@gmail.com?subject=Application%20—%20Lyante%20Production" variant="gold">
               EMAIL US →
             </Button>
-            <Button href="/work" variant="outline">
+            <Button href="/about#work" variant="outline">
               SEE OUR WORK
             </Button>
           </div>
