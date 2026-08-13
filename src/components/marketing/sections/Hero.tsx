@@ -169,6 +169,20 @@ export default function Hero() {
         <HeadlineText lines={current.headline} />
       </div>
 
+      {/* Persistent capability line. Deliberately outside the scene animation so
+          the three cinematic headlines stay untouched, while every visitor sees
+          the full service range on landing without scrolling the carousel. */}
+      <div className="absolute bottom-40 md:bottom-24 left-1/2 -translate-x-1/2 z-30 w-full px-6 pointer-events-none">
+        <div className="mx-auto flex max-w-fit flex-col items-center gap-2">
+          <span className="h-px w-16 bg-gold/40" />
+          <p className="font-bebas text-xs md:text-sm tracking-[0.2em] md:tracking-[0.28em] text-ivory/90 text-center leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+            EVENT TICKETING <span className="text-gold">·</span> SOFTWARE DEVELOPMENT{' '}
+            <span className="text-gold">·</span> BRANDING
+          </p>
+          <span className="h-px w-16 bg-gold/40" />
+        </div>
+      </div>
+
       {/* Top-left: scene label */}
       <div className="absolute top-20 left-4 md:top-24 md:left-20 z-30">
         <p className="section-label">{current.label}</p>

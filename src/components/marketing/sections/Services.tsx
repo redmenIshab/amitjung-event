@@ -31,6 +31,17 @@ const SERVICES = [
     body: 'Business branding, content creation, and marketing partnerships.',
     icon: <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 4l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z" /></svg>,
   },
+  {
+    // Delivered by our sister company Software Factory — carries its dark-green
+    // accent and links out, so it reads as a partner capability, not a Lyante
+    // service line.
+    number: '07', label: 'IT DEVELOPMENT', title: 'Software Development',
+    body: 'Custom software, web and mobile apps, cloud and AI — built by Software Factory, our IT arm of 5+ years serving clients worldwide.',
+    href: 'https://factorysoftwareai.com',
+    cta: 'Visit Software Factory ↗',
+    accent: { color: '#2f9e78', line: 'rgba(47, 158, 120, 0.26)', tint: 'rgba(20, 84, 64, 0.14)' },
+    icon: <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="9" y="9" width="14" height="14" rx="2" /><path d="M13 4v5M19 4v5M13 23v5M19 23v5M4 13h5M4 19h5M23 13h5M23 19h5" strokeWidth="1.2" /><path d="M14 14l-1.5 2 1.5 2M18 14l1.5 2-1.5 2" strokeWidth="1.2" /></svg>,
+  },
 ]
 
 export default function Services() {
