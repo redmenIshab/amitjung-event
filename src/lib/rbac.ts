@@ -32,6 +32,9 @@ export const CAPABILITY = {
   // SALES_READ — an organizer sees their revenue, not our margin, and never
   // another event's figures.
   FINANCE_READ: ['ADMIN'],
+  // Marking a payment refunded. Separate from TICKET_MANAGE because it moves
+  // money on the books, and it cascades: refunding cancels the tickets.
+  REFUND_MANAGE: ['ADMIN'],
 } as const satisfies Record<string, readonly AppRole[]>
 
 export type Capability = keyof typeof CAPABILITY

@@ -180,11 +180,17 @@ async function paymentTotals(scope?: { eventId?: string; eventIds?: string[] | n
     where,
     _sum: { finalAmount: true },
   })
+  // A refund flips the ORIGINAL payment from PAID to REFUND — one row per
+  // purchase, not a second subtracting row. So a REFUND row is money that WAS
+  // collected and then given back: it belongs in gross AND in refunds, netting
+  // to zero. Counting it only as a refund would subtract it from a gross it
+  // never contributed to, driving net negative.
   let gross = 0
   let refunds = 0
   for (const r of rows) {
-    if (r.paymentStatus === 'PAID') gross = r._sum.finalAmount ?? 0
-    if (r.paymentStatus === 'REFUND') refunds = r._sum.finalAmount ?? 0
+    const amount = r._sum.finalAmount ?? 0
+    if (r.paymentStatus === 'PAID' || r.paymentStatus === 'REFUND') gross += amount
+    if (r.paymentStatus === 'REFUND') refunds += amount
   }
   return { gross, refunds }
 }
@@ -298,9 +304,11 @@ export async function getEventPeerComparison(eventId: string): Promise<EventPeer
 
   const netByEvent = new Map<string, number>()
   for (const p of payments) {
-    if (p.paymentStatus !== 'PAID' && p.paymentStatus !== 'REFUND') continue
-    const signed = (p.paymentStatus === 'PAID' ? 1 : -1) * (p._sum.finalAmount ?? 0)
-    netByEvent.set(p.eventId, (netByEvent.get(p.eventId) ?? 0) + signed)
+    // Net = kept money. A PAID payment adds its amount; a REFUND payment was
+    // collected and returned, so it nets zero — never a negative, which is what
+    // subtracting it from a gross it no longer contributes to would produce.
+    if (p.paymentStatus !== 'PAID') continue
+    netByEvent.set(p.eventId, (netByEvent.get(p.eventId) ?? 0) + (p._sum.finalAmount ?? 0))
   }
 
   const soldByEvent = new Map<string, number>()
@@ -401,9 +409,11 @@ export async function getPlatformAnalytics(
   // Net per event, so each event's own commission rate can be applied.
   const netByEvent = new Map<string, number>()
   for (const p of perEventPayments) {
-    if (p.paymentStatus !== 'PAID' && p.paymentStatus !== 'REFUND') continue
-    const signed = (p.paymentStatus === 'PAID' ? 1 : -1) * (p._sum.finalAmount ?? 0)
-    netByEvent.set(p.eventId, (netByEvent.get(p.eventId) ?? 0) + signed)
+    // Net = kept money. A PAID payment adds its amount; a REFUND payment was
+    // collected and returned, so it nets zero — never a negative, which is what
+    // subtracting it from a gross it no longer contributes to would produce.
+    if (p.paymentStatus !== 'PAID') continue
+    netByEvent.set(p.eventId, (netByEvent.get(p.eventId) ?? 0) + (p._sum.finalAmount ?? 0))
   }
 
   let commissionTotal: number | null = null

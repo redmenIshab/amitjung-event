@@ -5,6 +5,7 @@ import { bulkGenerateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
 import { ensureSystemBooking } from '@/lib/ticketing'
+import { actorFromSession, recordTicketActivity } from '@/lib/ticketActivity'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -36,19 +37,35 @@ export async function POST(request: Request, { params }: Params) {
   // Create all tickets in a single transaction
   const bookingId = await ensureSystemBooking(eventId)
 
-  const createdTickets = await prisma.$transaction(
-    parsed.data.tickets.map((t) =>
-      prisma.ticket.create({
-        data: {
-          eventId,
-          bookingId,
-          attendeeName: t.attendeeName,
-          attendeeEmail: t.attendeeEmail,
-          source: 'ADMIN',
-        },
-      }),
-    ),
-  )
+  // Explicit timeout: this is an INTERACTIVE transaction (the log entry must
+  // share it), and Prisma defaults those to 5s. The previous batch form had no
+  // such limit, and a full run is up to 200 inserts over a pooled connection —
+  // the default would abort runs that used to succeed.
+  const createdTickets = await prisma.$transaction(async (tx) => {
+    const created = await Promise.all(
+      parsed.data.tickets.map((t) =>
+        tx.ticket.create({
+          data: {
+            eventId,
+            bookingId,
+            attendeeName: t.attendeeName,
+            attendeeEmail: t.attendeeEmail,
+            source: 'ADMIN',
+          },
+        }),
+      ),
+    )
+    // One aggregate row rather than N: a bulk run is one admin action, and N
+    // rows per run would bury the per-ticket state changes that matter.
+    await recordTicketActivity(tx, {
+      eventId,
+      action: 'ISSUED',
+      quantity: created.length,
+      actor: actorFromSession(gate.session),
+      meta: { bulk: true },
+    })
+    return created
+  }, { maxWait: 10_000, timeout: 60_000 })
 
   // Generate QR codes and send emails — collect per-ticket results
   const results: BulkTicketResult[] = await Promise.all(

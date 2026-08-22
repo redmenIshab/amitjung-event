@@ -128,7 +128,9 @@ export default function EventTicketsPage() {
             key={t.id}
             href={`/tickets/${eventId}/${t.id}`}
             className={`group block overflow-hidden rounded-lg border bg-lyante-surface transition-colors ${
-              isCompleted ? 'border-coal/40 opacity-60' : 'border-coal/40 hover:border-gold/50'
+              isCompleted || t.status === 'CANCELLED'
+                ? 'border-coal/40 opacity-60'
+                : 'border-coal/40 hover:border-gold/50'
             }`}
           >
             <div className="flex items-center p-4 gap-4">
@@ -136,7 +138,9 @@ export default function EventTicketsPage() {
                 <img
                   src={t.qrDataUrl}
                   alt="QR Code"
-                  className={`w-16 h-16 block ${isCompleted ? 'grayscale opacity-70' : ''}`}
+                  className={`w-16 h-16 block ${
+                    isCompleted || t.status === 'CANCELLED' ? 'grayscale opacity-70' : ''
+                  }`}
                 />
               </div>
               <div className="flex-1 min-w-0">

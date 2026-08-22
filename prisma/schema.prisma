@@ -88,6 +88,7 @@ model Event {
   payments Payment[]
 
   assignments EventAssignment[]
+  activities  TicketActivity[]
 }
 
 /// Grants one staff account (in practice an ORGANIZER) access to one event.
@@ -105,6 +106,64 @@ model EventAssignment {
   @@unique([userId, eventId])
   @@index([userId])
   @@index([eventId])
+}
+
+/// Append-only record of who did what to a ticket.
+///
+/// `ticketId`, `paymentId` and `actorId` are deliberately NOT foreign keys: a
+/// log that cascades away with its subject, or that resolves "who" through a
+/// join to a row someone later renamed, is not an audit log. Identity is
+/// snapshotted as text at write time.
+///
+/// `eventId` IS a cascading FK — events are hard-deleted and take their tickets
+/// with them, so per-event rows with no event and no viewer would be worse than
+/// losing them.
+model TicketActivity {
+  id      String       @id @default(cuid())
+  eventId String
+  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  action  TicketAction
+
+  /// The exact ticket, for state changes. Null on aggregate creation rows.
+  ticketId String?
+  /// The payment, for refunds.
+  paymentId String?
+  /// Tickets covered by this entry. >1 only on aggregate rows.
+  quantity Int @default(1)
+
+  actorType ActorType
+  actorId   String?
+  /// Snapshot, e.g. "Sita Thapa <sita@lyante.art>". Never resolved by join.
+  actorLabel String
+  actorRole  String?
+
+  /// Required on CANCELLED and REFUNDED.
+  reason String?
+  /// Refund amount, same unit as Payment.finalAmount.
+  amount Int?
+  /// Structured extras, e.g. { alreadyUsed: 1 } from a refund cascade.
+  meta Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId, createdAt])
+  @@index([ticketId])
+}
+
+enum TicketAction {
+  ISSUED
+  PURCHASED
+  SELF_REGISTERED
+  SCANNED
+  CANCELLED
+  REFUNDED
+  DELETED
+}
+
+enum ActorType {
+  USER
+  PARTICIPANT
+  SYSTEM
 }
 
 enum EventStatus {

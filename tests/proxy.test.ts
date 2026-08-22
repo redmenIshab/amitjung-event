@@ -46,6 +46,18 @@ describe('proxy — organizer event scoping', () => {
     expect(res.headers.get('location')).toBeNull()
   })
 
+  it('allows the activity log for an assigned event', async () => {
+    organizer(['e1'])
+    const res = await proxy(req('/admin/events/e1/activity'))
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('blocks the activity log of an unassigned event', async () => {
+    organizer(['e1'])
+    const res = await proxy(req('/admin/events/e2/activity'))
+    expect(res.headers.get('location')).toContain('/admin/events')
+  })
+
   it('blocks an unassigned event', async () => {
     organizer(['e1'])
     const res = await proxy(req('/admin/events/e2'))

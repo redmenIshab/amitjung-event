@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { distributorTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { ensureSystemBooking } from '@/lib/ticketing'
+import { actorFromSession, recordTicketActivity } from '@/lib/ticketActivity'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -34,13 +35,27 @@ export async function POST(request: Request, { params }: Params) {
   const bookingId = await ensureSystemBooking(eventId)
 
   // Create all tickets in one transaction
-  const tickets = await prisma.$transaction(
-    Array.from({ length: quantity }, () =>
-      prisma.ticket.create({
-        data: { eventId, bookingId, distributorName, category, source: 'ADMIN' },
-      }),
-    ),
-  )
+  // Explicit timeout: this is an INTERACTIVE transaction (the log entry must
+  // share it), and Prisma defaults those to 5s. The previous batch form had no
+  // such limit, and a full run is up to 500 inserts over a pooled connection —
+  // the default would abort runs that used to succeed.
+  const tickets = await prisma.$transaction(async (tx) => {
+    const created = await Promise.all(
+      Array.from({ length: quantity }, () =>
+        tx.ticket.create({
+          data: { eventId, bookingId, distributorName, category, source: 'ADMIN' },
+        }),
+      ),
+    )
+    await recordTicketActivity(tx, {
+      eventId,
+      action: 'ISSUED',
+      quantity: created.length,
+      actor: actorFromSession(gate.session),
+      meta: { distributorName },
+    })
+    return created
+  }, { maxWait: 10_000, timeout: 60_000 })
 
   // Generate QR codes in parallel
   const results: DistributorTicketResult[] = await Promise.all(

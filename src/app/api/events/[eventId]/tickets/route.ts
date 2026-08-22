@@ -6,6 +6,7 @@ import { generateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
 import { ensureSystemBooking } from '@/lib/ticketing'
+import { actorFromSession, recordTicketActivity } from '@/lib/ticketActivity'
 
 type Params = { params: Promise<{ eventId: string }> }
 
@@ -40,15 +41,24 @@ export async function POST(request: Request, { params }: Params) {
 
   const bookingId = await ensureSystemBooking(eventId)
 
-  const ticket = await prisma.ticket.create({
-    data: {
+  const ticket = await prisma.$transaction(async (tx) => {
+    const created = await tx.ticket.create({
+      data: {
+        eventId,
+        bookingId,
+        attendeeName: parsed.data.attendeeName,
+        attendeeEmail: parsed.data.attendeeEmail,
+        category: parsed.data.category,
+        source: 'ADMIN',
+      },
+    })
+    await recordTicketActivity(tx, {
       eventId,
-      bookingId,
-      attendeeName: parsed.data.attendeeName,
-      attendeeEmail: parsed.data.attendeeEmail,
-      category: parsed.data.category,
-      source: 'ADMIN',
-    },
+      action: 'ISSUED',
+      ticketId: created.id,
+      actor: actorFromSession(gate.session),
+    })
+    return created
   })
 
   const verifyUrl = buildVerifyUrl(ticket.token)

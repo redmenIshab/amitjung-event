@@ -132,6 +132,7 @@ CAPABILITY = {
   ARTIST_MANAGE:    [ADMIN]
   MARKETING_MANAGE: [ADMIN, MANAGER]
   USER_MANAGE:      [ADMIN]
+  REFUND_MANAGE:    [ADMIN]                              // marks a payment refunded; cascades to its tickets
 }
 ```
 
@@ -208,6 +209,7 @@ Models: `User`, `Participant`, `Event`, `Artist`, `Music`, `Payment`, `Booking`,
 
 Key relationships & fields:
 - **User** — staff/CRM identity. `role` defaults to `USER`; `deletedAt` marks a deactivated account. Its only relation is `EventAssignment` (cascading), and deactivation is a soft delete, so deactivating still has no FK fallout.
+- **TicketActivity** — append-only record of who did what to a ticket. `ticketId`, `paymentId` and `actorId` are **not** foreign keys (the log outlives its subjects; the actor is snapshotted as text in `actorLabel`); only `eventId` is, cascading. See §12b.
 - **EventAssignment** — grants one staff account access to one event (`@@unique([userId, eventId])`). Cascades on both sides; the **event-side cascade is required** because events are hard-deleted by `DELETE /api/events/[eventId]`.
 - **Event** — `bookingDeadline` (⚠️ this is *the event date* everywhere in the UI; code often maps `date: event.bookingDeadline`), `capacity`, `ticketsAvailable` (offered ≤ capacity), `isOpen`, `status`, `eventType`, pricing (`baseTicketPrice`, `hasDiscount`, `discountPercentage`, `discountUpto`), `artistId?`.
 - **Artist** → has many `Music` and `Event`. Soft-deleted via `deletedAt`.
@@ -216,6 +218,8 @@ Key relationships & fields:
 - **CheckIn** — one per ticket, set when scanned.
 
 Enums:
+- `TicketAction`: ISSUED, PURCHASED, SELF_REGISTERED, SCANNED, CANCELLED, REFUNDED, DELETED
+- `ActorType`: USER, PARTICIPANT, SYSTEM
 - `Role`: ADMIN, STAFF, MANAGER, **USER** (no capabilities; the `User.role` default — see §5), **ORGANIZER** (event-scoped — see §6)
 - `EventStatus`: DRAFT, PUBLISHED, CANCELLED, **COMPLETED**
 - `EventType`: CONCERT, FESTIVAL, CONFERENCE, SPORTS, PRIVATE, OTHER
@@ -277,6 +281,44 @@ When an event is COMPLETED, the buyer's tickets are disabled across the **My Tic
 
 ---
 
+## 12b. Ticket activity log
+
+Every security-critical ticket action is recorded in `TicketActivity` through the
+single funnel `recordTicketActivity(tx, entry)` in `src/lib/ticketActivity.ts`.
+
+**The helper takes a transaction client, not the Prisma singleton.** The log
+entry and the state change it describes must commit or roll back together — a
+check-in that succeeds without an attributable log entry is exactly the failure
+this exists to prevent. The only call site passing the singleton is
+`/api/stress/cleanup`, whose deletes are not in a transaction either.
+
+Actor identity is **snapshotted as text** (`actorLabel`, e.g.
+`"Sita Thapa <sita@lyante.art>"`), never resolved by join, so the record still
+names who acted after the account is renamed, deactivated or removed. Before
+this, `CheckIn` stored only `scannedAt` — a wrongful check-in was untraceable.
+
+Granularity: per-ticket rows for state changes (SCANNED, CANCELLED); one
+aggregate row carrying `quantity` for multi-ticket creation (bulk, distributor,
+checkout), since each of those is one action by one person.
+
+**Cancel and refund did not exist before this log.** Nothing wrote
+`TicketStatus.CANCELLED` or `PaymentStatus.REFUND`, so both analytics figures
+were structurally zero. Now:
+
+- `PATCH /api/events/[eventId]/tickets/[ticketId]` — `TICKET_MANAGE`, reason
+  required. Cancelling an already-scanned ticket is allowed and recorded as an
+  override (`meta.wasUsed`).
+- `POST /api/events/[eventId]/tickets/[ticketId]/refund` — `REFUND_MANAGE`. Marks
+  the payment `REFUND` **and cancels every ticket it paid for**, atomically —
+  refunding without cancelling would leave a refunded buyer able to walk in.
+  Already-scanned tickets are counted and reported, never reverted. Zero-value
+  comped payments (from `ensureSystemBooking`) are refused.
+
+Both hang off the ticket row because the Control Center has no payments UI. Read
+at `/admin/events/[id]/activity`, gated `EVENT_READ`, so organizers see their own
+event's log. Recording a refund does **not** move money — that happens out of
+band through Khalti's own dashboard.
+
 ## 13. Design system (Lyante brand)
 
 Tokens are CSS variables in `src/app/globals.css`, exposed as Tailwind colors:
@@ -326,6 +368,9 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 14. **`getEventPeerComparison` returns other events by name with their net revenue.** It is `FINANCE_READ`-only and must not even be *fetched* for anyone else — including for the analytics PDF input — or an organizer sees every other event's takings.
 15. **Scope-check before mutating in `verifyTicket`.** A wrong-event scan must return `WRONG_EVENT` without consuming the attendee's ticket, and the check sits ahead of the cancelled/already-used branches so it leaks no ticket state either.
 16. **An empty `visibleEventIds` array means "no events", not "all events".** Guard with `scope ? { id: { in: scope } } : undefined` — never with `scope?.length`.
+17. **`recordTicketActivity` must be passed the same `tx` as the state change it records.** Logging against the Prisma singleton beside a transaction lets the two diverge, which defeats the log.
+18. **The activity log has no update or delete path, and must not gain one.** It is append-only by construction, not by permission.
+19. **Ticket-creation routes now run inside INTERACTIVE transactions** (the log entry shares them). Prisma defaults those to a 5s timeout; bulk (200 tickets) and distributor (500) therefore set an explicit one. Converting a batch `$transaction([...])` to the interactive form without a timeout will abort large runs that used to succeed.
 
 ---
 
