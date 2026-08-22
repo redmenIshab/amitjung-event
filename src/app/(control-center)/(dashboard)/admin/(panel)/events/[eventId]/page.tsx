@@ -18,6 +18,7 @@ import {
   SALE_BADGE_LABEL,
   EVENT_TYPE_LABEL,
 } from '@/lib/events'
+import { mediaUrl } from '@/lib/media'
 
 type Props = { params: Promise<{ eventId: string }> }
 
@@ -145,7 +146,7 @@ export default async function EventDetailPage({ params }: Props) {
           <div className="flex items-center gap-3">
             {event.image && (
               <img
-                src={event.image}
+                src={mediaUrl(event.image, { width: 800 }) ?? ''}
                 alt=""
                 className="w-12 h-12 rounded-lg object-cover bg-gray-100 shrink-0"
               />
@@ -160,7 +161,7 @@ export default async function EventDetailPage({ params }: Props) {
           {event.artist && (
             <div className="flex items-center gap-2 pt-1">
               <img
-                src={event.artist.artistImage}
+                src={mediaUrl(event.artist.artistImage, { width: 160 }) ?? ''}
                 alt=""
                 className="w-7 h-7 rounded-full object-cover bg-gray-100"
               />

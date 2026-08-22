@@ -28,6 +28,7 @@ There is also a sibling site (`amit-jung-site`, deployed to `amit.lyante.art`) r
 | Validation | **Zod 4** | `src/lib/validations.ts`, `src/types/event.ts`. |
 | Styling | **Tailwind CSS v4** + shadcn/ui | Design tokens in `src/app/globals.css`. |
 | Email | **Resend** (optional) | `src/lib/email.ts`, gated by `ENABLE_EMAIL`. |
+| Media | **Cloudinary** | Signed direct-to-browser uploads. `src/lib/media.ts` (client-safe resolver) + `src/lib/cloudinary.ts` (server-only). |
 | QR | `qrcode` + `html5-qrcode` (scanner) | `src/lib/qr.ts`. |
 | PDF | `jspdf` (client-side ticket download) | |
 | 3D / motion | three.js, @react-three/*, gsap | Marketing visuals only. |
@@ -319,6 +320,41 @@ at `/admin/events/[id]/activity`, gated `EVENT_READ`, so organizers see their ow
 event's log. Recording a refund does **not** move money — that happens out of
 band through Khalti's own dashboard.
 
+## 12c. Media & blob storage (Cloudinary)
+
+Images and video live in Cloudinary, not in the repo. Two modules, split for
+the same reason `eventScope.ts` is split from `eventAccess.ts`:
+
+| Module | Imports | Runs |
+|---|---|---|
+| `src/lib/media.ts` | nothing | client + server — `mediaUrl()`, `mediaRefSchema` |
+| `src/lib/cloudinary.ts` | `cloudinary` SDK | **server only** — signing, `destroyAsset` |
+
+**What is stored is a Cloudinary `public_id`, not a URL.** `mediaUrl(value)`
+resolves it at render with `f_auto,q_auto`, and passes anything starting with
+`http` or `/` straight through — which is why adopting Cloudinary needed no
+data migration and every pre-existing pasted URL still works.
+
+**Uploads go browser → Cloudinary directly.** `POST /api/media/sign` mints a
+short-lived signature; bytes never cross the serverless function, which both
+keeps the API secret server-side and sidesteps Vercel's 4.5 MB body limit.
+The client sends a `purpose`, never a folder:
+
+| purpose | capability | folder |
+|---|---|---|
+| `event` | `EVENT_WRITE` | `lyante/events` |
+| `artist` | `ARTIST_MANAGE` | `lyante/artists` |
+| `gallery` | `MARKETING_MANAGE` | `lyante/gallery` |
+
+`DELETE /api/media` destroys an asset, and is reached only from the explicit
+"remove" control — replacing an image never deletes the old one. When a
+`recordId` is given it clears the column *before* destroying, so no saved row
+can point at a destroyed asset.
+
+Marketing media was migrated by `scripts/upload-media.ts` (idempotent, safe to
+re-run). Env: `CLOUDINARY_URL` (server, holds the secret) and
+`NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (browser, cloud name only).
+
 ## 13. Design system (Lyante brand)
 
 Tokens are CSS variables in `src/app/globals.css`, exposed as Tailwind colors:
@@ -371,6 +407,10 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 17. **`recordTicketActivity` must be passed the same `tx` as the state change it records.** Logging against the Prisma singleton beside a transaction lets the two diverge, which defeats the log.
 18. **The activity log has no update or delete path, and must not gain one.** It is append-only by construction, not by permission.
 19. **Ticket-creation routes now run inside INTERACTIVE transactions** (the log entry shares them). Prisma defaults those to a 5s timeout; bulk (200 tickets) and distributor (500) therefore set an explicit one. Converting a batch `$transaction([...])` to the interactive form without a timeout will abort large runs that used to succeed.
+20. **`src/lib/media.ts` must never import the `cloudinary` SDK.** It is bundled into client components; the SDK is configured from `CLOUDINARY_URL`, which holds the API secret. The `server-only` import at the top of `cloudinary.ts` turns a mistake here into a build failure instead of a silent leak.
+21. **`mediaUrl()` is applied at render, never on write.** The database and the API carry the raw stored value. Resolving on the way in bakes one transformation into stored data and destroys the legacy-URL passthrough.
+22. **The `purpose` map in `cloudinary.ts` is the upload authorisation boundary.** Accepting a client-supplied folder would let any upload-capable role write anywhere in the account. `DELETE /api/media` additionally checks the public id sits inside that purpose's folder — without it, `MARKETING_MANAGE` could destroy an event poster.
+23. **`ticket-background*.{png,jpg}` and `event-poster.jpg` must stay in `public/`.** They are rendered into the ticket that `captureTicketPdf` feeds to html2canvas, which runs with `allowTaint: true` and so does **not** set `crossOrigin`. Serving them cross-origin taints the canvas and makes `toDataURL` throw, breaking every ticket PDF download.
 
 ---
 
@@ -382,6 +422,7 @@ DB: `DATABASE_URL` (Neon; pooled).
 Payments: `KHALTI_SECRET_KEY`, `KHALTI_BASE_URL`.
 Cache/queue: `UPSTASH_URL`, `UPSTASH_TOKEN`.
 Email (optional): `ENABLE_EMAIL`, `RESEND_API_KEY`, `EMAIL_FROM`.
+Media: `CLOUDINARY_URL` (server-only; embeds the API secret), `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (cloud name, exposed to the browser).
 Seed: `ADMIN_EMAIL`, `ADMIN_PASSWORD`. Stress: `STRESS_TEST_KEY`.
 
 ---

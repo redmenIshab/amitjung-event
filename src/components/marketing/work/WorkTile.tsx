@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import type { Work } from './works'
+import { mediaUrl } from '@/lib/media'
 
 export function WorkTile({
   work,
@@ -65,18 +66,19 @@ export function WorkTile({
       <div className="relative w-full" style={{ aspectRatio: `${work.width} / ${work.height}` }}>
         {work.type === 'photo' ? (
           <Image
-            src={work.src}
+            src={mediaUrl(work.src, { width: 1200 }) ?? ''}
             alt={work.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
             priority={index < 4}
+            unoptimized
           />
         ) : (
           <video
             ref={videoRef}
-            src={work.src}
-            poster={work.poster}
+            src={mediaUrl(work.src, { resourceType: 'video', format: 'mp4' }) ?? ''}
+            poster={mediaUrl(work.poster, { width: 1200 }) ?? undefined}
             muted
             loop
             playsInline

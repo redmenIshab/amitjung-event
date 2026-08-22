@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UploadField } from '@/components/media/UploadField'
 
 export default function NewArtistPage() {
   const router = useRouter()
@@ -31,6 +32,12 @@ export default function NewArtistPage() {
 
     if (genreList.length === 0) {
       setError('At least one genre is required')
+      setLoading(false)
+      return
+    }
+
+    if (!form.artistImage) {
+      setError('An artist photo is required')
       setLoading(false)
       return
     }
@@ -69,16 +76,13 @@ export default function NewArtistPage() {
                 required
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="artistImage">Image URL</Label>
-              <Input
-                id="artistImage"
-                type="url"
-                value={form.artistImage}
-                onChange={(e) => setForm({ ...form, artistImage: e.target.value })}
-                required
-              />
-            </div>
+            <UploadField
+              purpose="artist"
+              label="Artist photo"
+              value={form.artistImage}
+              onChange={(v) => setForm({ ...form, artistImage: v })}
+              required
+            />
             <div className="space-y-1">
               <Label htmlFor="artistBand">Band</Label>
               <Input

@@ -2,25 +2,26 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
+import { mediaUrl } from '@/lib/media'
 
 const SCENES = [
   {
     headline: ['WE BRING', 'EVENTS', 'TO LIFE'],
     label: 'LYANTE PRODUCTION',
     tag: 'Live Events',
-    image: '/images/photo-21.jpg',
+    image: 'lyante/gallery/photo-21',
   },
   {
     headline: ['WE DOCUMENT', 'THE JOURNEY'],
     label: 'BEYOND THE MOMENT',
     tag: 'Documentary',
-    image: '/images/photo-3.jpg',
+    image: 'lyante/gallery/photo-3',
   },
   {
     headline: ['YOUR STORY', 'FOREVER'],
     label: 'FOR LIFETIME MEMORY',
     tag: 'Legacy',
-    image: '/images/photo-13.jpg',
+    image: 'lyante/gallery/photo-13',
   },
 ]
 
@@ -142,7 +143,18 @@ export default function Hero() {
           className="absolute inset-0 transition-opacity duration-700"
           style={{ opacity: i === scene ? 1 : 0 }}
         >
-          <Image src={s.image} alt="" fill className="object-cover" priority={i === 0} sizes="100vw" />
+          <Image
+            src={mediaUrl(s.image, { width: 1920 }) ?? ''}
+            alt=""
+            fill
+            className="object-cover"
+            priority={i === 0}
+            sizes="100vw"
+            // Cloudinary already delivers f_auto,q_auto at the requested width;
+            // routing it through the Next optimiser too would re-encode a CDN
+            // asset for nothing. Matches EventCard / FeaturedEvent.
+            unoptimized
+          />
         </div>
       ))}
 

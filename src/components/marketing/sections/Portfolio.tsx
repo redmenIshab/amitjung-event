@@ -2,22 +2,24 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { mediaUrl } from '@/lib/media'
+import { showreelUrl } from '@/components/marketing/media'
 
 const FILTERS = ['ALL', 'CONCERTS', 'CREATIVE'] as const
 type Filter = typeof FILTERS[number]
 
 const ITEMS: { id: number; category: Exclude<Filter, 'ALL'>; title: string; image: string; tall: boolean }[] = [
-  { id: 2,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-2.jpg',  tall: true  },
-  { id: 3,  category: 'CREATIVE',  title: 'Xtreme Action Shot',   image: '/images/photo-4.jpg',  tall: false },
-  { id: 4,  category: 'CREATIVE',  title: 'Xtreme Action Shot',         image: '/images/photo-5.jpg',  tall: true  },
-  { id: 5,  category: 'CREATIVE',  title: 'Xtreme Action Shot',image: '/images/photo-6.jpg',  tall: false },
-  { id: 6,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-7.jpg',  tall: true  },
-  { id: 7,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-8.jpg',  tall: false },
-  { id: 8,  category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-9.jpg',  tall: true  },
-  { id: 9,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-10.jpg', tall: false },
-  { id: 10, category: 'CONCERTS',  title: 'Amit Jung & Gorkhey',  image: '/images/photo-11.jpg', tall: false },
-  { id: 11, category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-12.jpg', tall: true  },
-  { id: 12, category: 'CREATIVE',  title: 'Xtreme Action Shot',     image: '/images/photo-14.jpg', tall: false },
+  { id: 2,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: 'lyante/gallery/photo-2',  tall: true  },
+  { id: 3,  category: 'CREATIVE',  title: 'Xtreme Action Shot',   image: 'lyante/gallery/photo-4',  tall: false },
+  { id: 4,  category: 'CREATIVE',  title: 'Xtreme Action Shot',         image: 'lyante/gallery/photo-5',  tall: true  },
+  { id: 5,  category: 'CREATIVE',  title: 'Xtreme Action Shot',image: 'lyante/gallery/photo-6',  tall: false },
+  { id: 6,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: 'lyante/gallery/photo-7',  tall: true  },
+  { id: 7,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: 'lyante/gallery/photo-8',  tall: false },
+  { id: 8,  category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: 'lyante/gallery/photo-9',  tall: true  },
+  { id: 9,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: 'lyante/gallery/photo-10', tall: false },
+  { id: 10, category: 'CONCERTS',  title: 'Amit Jung & Gorkhey',  image: 'lyante/gallery/photo-11', tall: false },
+  { id: 11, category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: 'lyante/gallery/photo-12', tall: true  },
+  { id: 12, category: 'CREATIVE',  title: 'Xtreme Action Shot',     image: 'lyante/gallery/photo-14', tall: false },
 ]
 
 export default function Portfolio() {
@@ -35,7 +37,7 @@ export default function Portfolio() {
         {/* Video showreel */}
         <div className="relative w-full h-64 md:h-96 bg-surface mb-10 rounded-sm overflow-hidden group">
           <video
-            src="/video/showreel.mov"
+            src={showreelUrl()}
             autoPlay
             muted
             loop
@@ -73,12 +75,13 @@ export default function Portfolio() {
               className={`relative ${item.tall ? 'h-72' : 'h-48'} rounded-sm overflow-hidden group break-inside-avoid`}
             >
               <Image
-                src={item.image}
+                src={mediaUrl(item.image, { width: 800 }) ?? ''}
                 alt={item.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 33vw"
-              />
+            unoptimized
+          />
               <div className="absolute inset-0 bg-bg/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 p-4">
                 <p className="font-cormorant italic text-gold text-xl text-center">{item.title}</p>
                 <p className="section-label">{item.category}</p>

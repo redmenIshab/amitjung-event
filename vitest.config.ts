@@ -16,6 +16,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` throws by design outside a react-server condition, which
+      // is exactly what makes it a useful build-time guard — and exactly what
+      // would stop a Node test importing any module that uses it. Stubbed so
+      // the guard stays real in the build without blinding the suite.
+      'server-only': path.resolve(__dirname, './tests/stubs/server-only.ts'),
     },
   },
 })

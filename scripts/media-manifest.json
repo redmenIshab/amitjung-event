@@ -1,0 +1,200 @@
+{
+  "logo.png": {
+    "publicId": "lyante/brand/logo",
+    "resourceType": "image",
+    "width": 2048,
+    "height": 2048
+  },
+  "logo-symbol.png": {
+    "publicId": "lyante/brand/logo-symbol",
+    "resourceType": "image",
+    "width": 2048,
+    "height": 2048
+  },
+  "images/photo-1.jpg": {
+    "publicId": "lyante/gallery/photo-1",
+    "resourceType": "image",
+    "width": 4284,
+    "height": 5712
+  },
+  "images/photo-10.jpg": {
+    "publicId": "lyante/gallery/photo-10",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-11.jpg": {
+    "publicId": "lyante/gallery/photo-11",
+    "resourceType": "image",
+    "width": 1600,
+    "height": 900
+  },
+  "images/photo-12.jpg": {
+    "publicId": "lyante/gallery/photo-12",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-13.jpg": {
+    "publicId": "lyante/gallery/photo-13",
+    "resourceType": "image",
+    "width": 3200,
+    "height": 4000
+  },
+  "images/photo-14.jpg": {
+    "publicId": "lyante/gallery/photo-14",
+    "resourceType": "image",
+    "width": 3000,
+    "height": 3750
+  },
+  "images/photo-15.jpg": {
+    "publicId": "lyante/gallery/photo-15",
+    "resourceType": "image",
+    "width": 2649,
+    "height": 3311
+  },
+  "images/photo-16.jpg": {
+    "publicId": "lyante/gallery/photo-16",
+    "resourceType": "image",
+    "width": 2649,
+    "height": 3311
+  },
+  "images/photo-17.jpg": {
+    "publicId": "lyante/gallery/photo-17",
+    "resourceType": "image",
+    "width": 2649,
+    "height": 3311
+  },
+  "images/photo-18.jpg": {
+    "publicId": "lyante/gallery/photo-18",
+    "resourceType": "image",
+    "width": 2649,
+    "height": 3311
+  },
+  "images/photo-19.jpg": {
+    "publicId": "lyante/gallery/photo-19",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-2.jpg": {
+    "publicId": "lyante/gallery/photo-2",
+    "resourceType": "image",
+    "width": 4284,
+    "height": 5712
+  },
+  "images/photo-20.jpg": {
+    "publicId": "lyante/gallery/photo-20",
+    "resourceType": "image",
+    "width": 3000,
+    "height": 3750
+  },
+  "images/photo-21.jpg": {
+    "publicId": "lyante/gallery/photo-21",
+    "resourceType": "image",
+    "width": 3200,
+    "height": 4000
+  },
+  "images/photo-22.jpg": {
+    "publicId": "lyante/gallery/photo-22",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-23.jpg": {
+    "publicId": "lyante/gallery/photo-23",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-24.jpg": {
+    "publicId": "lyante/gallery/photo-24",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-25.jpg": {
+    "publicId": "lyante/gallery/photo-25",
+    "resourceType": "image",
+    "width": 2649,
+    "height": 3311
+  },
+  "images/photo-26.jpg": {
+    "publicId": "lyante/gallery/photo-26",
+    "resourceType": "image",
+    "width": 1080,
+    "height": 1350
+  },
+  "images/photo-27.jpg": {
+    "publicId": "lyante/gallery/photo-27",
+    "resourceType": "image",
+    "width": 1080,
+    "height": 1350
+  },
+  "images/photo-28.jpg": {
+    "publicId": "lyante/gallery/photo-28",
+    "resourceType": "image",
+    "width": 3000,
+    "height": 3750
+  },
+  "images/photo-29.jpg": {
+    "publicId": "lyante/gallery/photo-29",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-3.jpg": {
+    "publicId": "lyante/gallery/photo-3",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-30.jpg": {
+    "publicId": "lyante/gallery/photo-30",
+    "resourceType": "image",
+    "width": 4000,
+    "height": 5000
+  },
+  "images/photo-4.jpg": {
+    "publicId": "lyante/gallery/photo-4",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-5.jpg": {
+    "publicId": "lyante/gallery/photo-5",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-6.jpg": {
+    "publicId": "lyante/gallery/photo-6",
+    "resourceType": "image",
+    "width": 1066,
+    "height": 1600
+  },
+  "images/photo-7.jpg": {
+    "publicId": "lyante/gallery/photo-7",
+    "resourceType": "image",
+    "width": 1600,
+    "height": 900
+  },
+  "images/photo-8.jpg": {
+    "publicId": "lyante/gallery/photo-8",
+    "resourceType": "image",
+    "width": 1600,
+    "height": 900
+  },
+  "images/photo-9.jpg": {
+    "publicId": "lyante/gallery/photo-9",
+    "resourceType": "image",
+    "width": 1600,
+    "height": 900
+  },
+  "video/showreel.mov": {
+    "publicId": "lyante/gallery/showreel",
+    "resourceType": "video",
+    "width": 1080,
+    "height": 1920
+  }
+}

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { isCompletableDate } from '@/lib/events'
+import { UploadField } from '@/components/media/UploadField'
 
 export type EventForEdit = {
   id: string
@@ -48,6 +49,9 @@ export function EditEventForm({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Held in state so the "remove" action can clear the preview; the hidden
+  // input inside UploadField still carries the value into FormData on submit.
+  const [image, setImage] = useState(event.image ?? '')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -187,10 +191,14 @@ export function EditEventForm({
         <Label htmlFor="discountUpto">Discount valid until</Label>
         <Input id="discountUpto" name="discountUpto" type="datetime-local" defaultValue={toLocalInput(event.discountUpto)} />
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="image">Poster Image URL (optional)</Label>
-        <Input id="image" name="image" type="url" defaultValue={event.image ?? ''} />
-      </div>
+      <UploadField
+        purpose="event"
+        name="image"
+        label="Poster image (optional)"
+        value={image}
+        onChange={setImage}
+        recordId={event.id}
+      />
       <div className="space-y-1">
         <Label htmlFor="genres">Genres (comma-separated, optional)</Label>
         <Input id="genres" name="genres" defaultValue={event.genres.join(', ')} />

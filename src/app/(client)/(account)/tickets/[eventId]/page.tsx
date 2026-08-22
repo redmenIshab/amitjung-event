@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, MapPin, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 import { eventTicketsResponseSchema } from '@/lib/validations'
+import { mediaUrl } from '@/lib/media'
 
 export default function EventTicketsPage() {
   const router = useRouter()
@@ -80,7 +81,7 @@ export default function EventTicketsPage() {
       {event.image && (
         <div className="w-full h-52 md:h-60 overflow-hidden rounded-lg border border-coal/40 mb-6 relative">
           <img
-            src={event.image}
+            src={mediaUrl(event.image, { width: 1200 }) ?? ''}
             alt={event.name}
             className="w-full h-full object-cover"
           />

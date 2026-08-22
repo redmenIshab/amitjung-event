@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Pencil, Trash2, Plus } from 'lucide-react'
+import { mediaUrl } from '@/lib/media'
 
 type Artist = {
   id: string
@@ -88,7 +89,7 @@ export default function ArtistsPage() {
                 <TableRow key={artist.id}>
                   <TableCell>
                     <img
-                      src={artist.artistImage}
+                      src={mediaUrl(artist.artistImage, { width: 160 }) ?? ''}
                       alt={artist.artistName}
                       className="w-10 h-10 rounded-full object-cover bg-gray-100"
                     />

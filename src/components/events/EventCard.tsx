@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, Calendar, Ticket } from 'lucide-react'
 import { SALE_BADGE_LABEL, EVENT_TYPE_LABEL, type EventSaleBadge } from '@/lib/events'
+import { mediaUrl } from '@/lib/media'
 
 export type EventCardBucket = 'upcoming' | 'past' | 'completed'
 
@@ -94,7 +95,7 @@ export function EventCard({ event }: { event: EventCardData }) {
           <Image
             alt={event.title}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            src={event.image}
+            src={mediaUrl(event.image, { width: 800 }) ?? ''}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             unoptimized
@@ -112,7 +113,7 @@ export function EventCard({ event }: { event: EventCardData }) {
 
         {event.artistImage && (
           <div className="absolute bottom-3 left-3 h-9 w-9 overflow-hidden rounded-full border border-gold/40">
-            <Image alt="" className="object-cover" src={event.artistImage} fill sizes="36px" unoptimized />
+            <Image alt="" className="object-cover" src={mediaUrl(event.artistImage, { width: 72 }) ?? ''} fill sizes="36px" unoptimized />
           </div>
         )}
       </div>

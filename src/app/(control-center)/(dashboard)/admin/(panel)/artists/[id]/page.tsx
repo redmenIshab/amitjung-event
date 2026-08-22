@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UploadField } from '@/components/media/UploadField'
 import Link from 'next/link'
 import { Music } from 'lucide-react'
 
@@ -52,6 +53,14 @@ export default function EditArtistPage() {
       .map((g) => g.trim())
       .filter(Boolean)
 
+    // The upload control carries no native `required`, so the check that the
+    // URL input used to provide lives here.
+    if (!form.artistImage) {
+      setError('An artist photo is required')
+      setLoading(false)
+      return
+    }
+
     const res = await fetch(`/api/artist/${params.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -90,16 +99,14 @@ export default function EditArtistPage() {
                 required
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="artistImage">Image URL</Label>
-              <Input
-                id="artistImage"
-                type="url"
-                value={form.artistImage}
-                onChange={(e) => setForm({ ...form, artistImage: e.target.value })}
-                required
-              />
-            </div>
+            <UploadField
+              purpose="artist"
+              label="Artist photo"
+              value={form.artistImage}
+              onChange={(v) => setForm({ ...form, artistImage: v })}
+              required
+              recordId={String(params.id)}
+            />
             <div className="space-y-1">
               <Label htmlFor="artistBand">Band</Label>
               <Input

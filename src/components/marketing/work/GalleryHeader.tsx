@@ -1,6 +1,7 @@
 'use client'
 
 import { GENRES, type Genre, type MediaFilter } from './works'
+import { showreelUrl } from '@/components/marketing/media'
 
 const MEDIA_OPTIONS: { value: MediaFilter; label: string }[] = [
   { value: 'all', label: 'ALL' },
@@ -24,7 +25,7 @@ export function GalleryHeader({
       {/* Showreel band */}
       <div className="relative w-full h-64 md:h-96 bg-surface mb-10 rounded-sm overflow-hidden group">
         <video
-          src="/video/showreel.mov"
+          src={showreelUrl()}
           autoPlay
           muted
           loop

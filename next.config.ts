@@ -3,7 +3,15 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // Prevent these server-only packages from being bundled by the Next.js
   // client bundler — they run only in Node.js (API routes / Server Components).
-  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs'],
+  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', 'cloudinary'],
+
+  // Marketing media is served from Cloudinary. Required, not cosmetic: the
+  // gallery components (WorkTile, Lightbox, Hero, Portfolio) render next/image
+  // WITHOUT `unoptimized`, and the optimiser refuses any remote host that is
+  // not allowlisted here.
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' }],
+  },
 
   // /work became /about (the work gallery now lives under the About Us page).
   // Kept permanent so old inbound links and indexed URLs still land.

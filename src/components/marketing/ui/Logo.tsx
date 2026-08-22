@@ -1,3 +1,5 @@
+import { mediaUrl } from '@/lib/media'
+
 interface LogoProps {
   variant?: 'default' | 'white'
   height?: number
@@ -15,7 +17,7 @@ export default function Logo({
     <div className={`flex items-center gap-2 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/logo.png"
+        src={mediaUrl('lyante/brand/logo', { width: height * 2, crop: 'fit' }) ?? ''}
         alt="Lyante Production"
         width={height}
         height={height}

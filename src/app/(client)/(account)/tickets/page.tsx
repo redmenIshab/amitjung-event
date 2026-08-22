@@ -8,6 +8,7 @@ import { Calendar, MapPin, Ticket, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 import { ticketsMineResponseSchema } from '@/lib/validations'
 import { AccountHeader } from '@/components/tickets/AccountHeader'
+import { mediaUrl } from '@/lib/media'
 
 export default function MyTicketsPage() {
   const router = useRouter()
@@ -86,7 +87,7 @@ export default function MyTicketsPage() {
                   {group.event.image && (
                     <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 overflow-hidden">
                       <img
-                        src={group.event.image}
+                        src={mediaUrl(group.event.image, { width: 240 }) ?? ''}
                         alt=""
                         className={`w-full h-full object-cover transition-all duration-500 ${
                           isCompleted

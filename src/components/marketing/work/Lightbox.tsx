@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useRef } from 'react'
 import type { Work } from './works'
+import { mediaUrl } from '@/lib/media'
 
 export function Lightbox({
   works,
@@ -75,18 +76,19 @@ export function Lightbox({
       >
         {work.type === 'photo' ? (
           <Image
-            src={work.src}
+            src={mediaUrl(work.src, { width: 1920 }) ?? ''}
             alt={work.title}
             fill
             className="object-contain"
             sizes="90vw"
             priority
+            unoptimized
           />
         ) : (
           <video
             key={work.src}
-            src={work.src}
-            poster={work.poster}
+            src={mediaUrl(work.src, { resourceType: 'video', format: 'mp4' }) ?? ''}
+            poster={mediaUrl(work.poster, { width: 1920 }) ?? undefined}
             controls
             autoPlay
             playsInline
