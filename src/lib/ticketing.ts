@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { recordTicketActivity } from '@/lib/ticketActivity'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
 import { redisConfig } from '@/lib/upstash/upstash'
@@ -73,6 +74,12 @@ export async function createBookingPipeline(
   amounts: AmountsInput,
 ) {
   const event = await prisma.event.findUniqueOrThrow({ where: { id: eventId } })
+  // Read once for the activity label; the log snapshots identity as text so it
+  // stays readable if the account is later removed.
+  const participant = await prisma.participant.findUnique({
+    where: { id: participantId },
+    select: { email: true },
+  })
 
   const { booking, tickets } = await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.create({
@@ -111,6 +118,22 @@ export async function createBookingPipeline(
         }),
       ),
     )
+
+    // The buyer is the actor: this is their purchase, executed by the queue
+    // worker on their behalf. One aggregate row for the whole basket.
+    await recordTicketActivity(tx, {
+      eventId,
+      action: 'PURCHASED',
+      paymentId: payment.id,
+      quantity: tickets.length,
+      amount: amounts.finalAmount,
+      actor: {
+        actorType: 'PARTICIPANT',
+        actorId: participantId,
+        actorLabel: participant?.email ?? participantId,
+        actorRole: 'PARTICIPANT',
+      },
+    })
 
     return { booking, tickets }
   })

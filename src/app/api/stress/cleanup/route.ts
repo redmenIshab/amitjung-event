@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { SYSTEM_ACTOR, recordTicketActivity } from '@/lib/ticketActivity'
 import { redisConfig } from '@/lib/upstash/upstash'
 
 export async function POST(request: NextRequest) {
@@ -34,6 +35,18 @@ export async function POST(request: NextRequest) {
 
     await prisma.checkIn.deleteMany({ where: { ticketId: { in: ticketIds } } })
     await prisma.ticket.deleteMany({ where: { id: { in: ticketIds } } })
+    // Deliberately logged even though this is the stress harness: bulk ticket
+    // deletion is exactly the kind of action an audit log must not be silent
+    // about, whoever triggered it.
+    if (ticketIds.length > 0) {
+      await recordTicketActivity(prisma, {
+        eventId,
+        action: 'DELETED',
+        quantity: ticketIds.length,
+        actor: SYSTEM_ACTOR,
+        meta: { source: 'stress-cleanup' },
+      })
+    }
     await prisma.booking.deleteMany({ where: { id: { in: bookingIds } } })
     await prisma.payment.deleteMany({ where: { id: { in: paymentIds } } })
 
