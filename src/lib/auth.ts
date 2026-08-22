@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rateLimit'
 import { isEventScopedRole } from '@/lib/eventScope'
 
 export const authOptions: NextAuthOptions = {
@@ -13,8 +14,21 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null
+
+        // Throttle credential stuffing. Keyed on the email being attacked and
+        // the source address, so neither a single account nor a single host can
+        // be hammered. Exceeding it returns null — indistinguishable from a bad
+        // password, which is what we want to show an attacker.
+        const forwarded = req?.headers?.['x-forwarded-for']
+        const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim()
+        const attempt = await rateLimit({
+          key: `login:${credentials.email.toLowerCase()}:${ip ?? 'unknown'}`,
+          limit: 10,
+          windowSeconds: 300,
+        })
+        if (!attempt.ok) return null
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },

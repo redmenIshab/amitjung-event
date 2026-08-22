@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { clientIp, rateLimit, tooManyRequests } from '@/lib/rateLimit'
 import { requireSession } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { storePendingBooking } from '@/lib/ticketing'
@@ -7,6 +8,15 @@ import { KHALTI_BASE_URL } from '@/lib/khalti'
 import { isRedisConfigured } from '@/lib/upstash/upstash'
 
 export async function POST(request: Request) {
+  // Payment initiation talks to Khalti and writes a pending booking to Redis.
+  // Limited per IP so a script cannot flood either.
+  const limit = await rateLimit({
+    key: `khalti:initiate:${clientIp(request)}`,
+    limit: 10,
+    windowSeconds: 60,
+  })
+  if (!limit.ok) return tooManyRequests(limit)
+
   try {
     // requireSession accepts the website's cookie *and* the mobile app's bearer
     // token; the PARTICIPANT check below is what actually restricts purchasing,
