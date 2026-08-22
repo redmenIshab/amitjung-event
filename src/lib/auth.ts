@@ -40,7 +40,15 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password)
         if (!isValid) return null
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role }
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          // Minted into the token below; a later reset moves the row's stamp
+          // past it and the session stops matching.
+          passwordChangedAt: user.passwordChangedAt?.getTime() ?? 0,
+        }
       },
     }),
     GoogleProvider({
@@ -75,7 +83,12 @@ export const authOptions: NextAuthOptions = {
           token.role = 'PARTICIPANT'
         } else {
           token.id = user.id
-          token.role = (user as { role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' | 'ORGANIZER' }).role
+          const staff = user as {
+            role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' | 'ORGANIZER'
+            passwordChangedAt?: number
+          }
+          token.role = staff.role
+          token.pwdAt = staff.passwordChangedAt ?? 0
         }
         return token
       }
@@ -88,12 +101,20 @@ export const authOptions: NextAuthOptions = {
 
       const current = await prisma.user.findUnique({
         where: { id: token.id },
-        select: { role: true, deletedAt: true },
+        select: { role: true, deletedAt: true, passwordChangedAt: true },
       })
 
-      // Deleted or deactivated collapses to USER, which holds no capability
-      // (see CAPABILITY in src/lib/rbac.ts), so every existing gate rejects it.
-      const revoked = !current || current.deletedAt !== null
+      // A password reset stamps the row. The token keeps the stamp it was
+      // minted with and is never re-stamped here, so a session issued before
+      // the reset mismatches on every refresh from now on — which is what makes
+      // resetting a compromised account's password actually evict the intruder.
+      const staleCredential =
+        !!current && (current.passwordChangedAt?.getTime() ?? 0) !== (token.pwdAt ?? 0)
+
+      // Deleted, deactivated, or holding a superseded credential collapses to
+      // USER, which holds no capability (see CAPABILITY in src/lib/rbac.ts), so
+      // every existing gate rejects it.
+      const revoked = !current || current.deletedAt !== null || staleCredential
       token.role = revoked ? 'USER' : current!.role
 
       // Event scope rides along so the edge proxy can block cross-event URLs

@@ -18,6 +18,8 @@ declare module 'next-auth' {
   }
   interface User {
     role: StaffRole
+    /** Epoch ms of the last password reset, minted into the token at sign-in. */
+    passwordChangedAt?: number
   }
 }
 
@@ -26,5 +28,10 @@ declare module 'next-auth/jwt' {
     role: StaffRole | 'PARTICIPANT'
     id: string
     eventIds?: string[]
+    /**
+     * The password stamp this token was minted with. Never refreshed, so a
+     * reset permanently invalidates every session issued beforehand.
+     */
+    pwdAt?: number
   }
 }

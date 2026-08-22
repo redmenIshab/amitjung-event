@@ -19,6 +19,11 @@ model User {
   // Set = deactivated: blocked at login and downgraded on token refresh.
   // Cleared = reactivated. Matches the soft-delete convention used elsewhere.
   deletedAt DateTime?
+  // Stamped every time the password is reset. The JWT carries the value it was
+  // minted with, so any session issued before a reset no longer matches and is
+  // revoked on its next refresh — otherwise, with JWT sessions, resetting a
+  // compromised account's password would not evict whoever is already in it.
+  passwordChangedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 

@@ -9,8 +9,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="dashboard-scope flex min-h-screen bg-[#f7f6f3]">
-      {/* ── Desktop sidebar (md+) ── */}
-      <aside className="hidden md:flex w-60 bg-[#131110] text-ivory flex-col shrink-0 border-r border-black/40">
+      {/* ── Desktop sidebar (md+) ──
+          Sticky and exactly one viewport tall. It used to be a stretched flex
+          child, so on a long page (an event's ticket table, the activity feed)
+          it grew to the full content height and scrolled out of sight along
+          with it. `self-start` stops the stretch that would otherwise override
+          the height. Narrower between md and lg, where 240px eats too much of
+          the content column. */}
+      <aside className="hidden md:flex md:sticky md:top-0 md:h-screen self-start md:w-52 lg:w-60 bg-[#131110] text-ivory flex-col shrink-0 border-r border-black/40">
         <div className="p-5">
           <h1 className="text-lg font-bold tracking-[0.2em] text-gold">LYANTE</h1>
           <p className="text-[10px] uppercase tracking-[0.25em] text-coal mt-0.5">Control Center</p>
@@ -41,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* ── Main content ── */}
       {/* pt-14 clears the fixed mobile header; md:pt-0 removes it on desktop */}
-      <main className="flex-1 pt-14 md:pt-0 p-4 md:p-8 overflow-auto min-w-0">
+      <main className="flex-1 pt-14 md:pt-0 p-4 md:p-8 min-w-0">
         {children}
       </main>
     </div>

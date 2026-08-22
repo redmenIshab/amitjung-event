@@ -3,6 +3,7 @@ import { requirePageCapability } from '@/lib/rbac'
 import { prisma } from '@/lib/prisma'
 import { toStaffUserDto } from '@/lib/users'
 import { EditUserForm } from '@/components/dashboard/EditUserForm'
+import { ResetPasswordCard } from '@/components/dashboard/ResetPasswordCard'
 
 export default async function EditUserPage({
   params,
@@ -24,11 +25,20 @@ export default async function EditUserPage({
     where: { role: 'ADMIN', deletedAt: null, id: { not: userId } },
   })
 
+  const isSelf = user.id === session.user.id
+
   return (
-    <EditUserForm
-      user={toStaffUserDto(user)}
-      isSelf={user.id === session.user.id}
-      isLastAdmin={user.role === 'ADMIN' && user.deletedAt === null && otherActiveAdmins === 0}
-    />
+    <div className="space-y-6">
+      <EditUserForm
+        user={toStaffUserDto(user)}
+        isSelf={isSelf}
+        isLastAdmin={user.role === 'ADMIN' && user.deletedAt === null && otherActiveAdmins === 0}
+      />
+      {/* Separate from the details form on purpose: a reset ends the account's
+          sessions, which should never ride along with a name change. */}
+      <div className="max-w-xl">
+        <ResetPasswordCard userId={user.id} userName={user.name} isSelf={isSelf} />
+      </div>
+    </div>
   )
 }
