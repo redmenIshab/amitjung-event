@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireApiCapability } from '@/lib/rbac'
 import { visibleEventIds } from '@/lib/eventAccess'
 import { verifyTicket } from '@/lib/verify'
+import { actorFromSession } from '@/lib/ticketActivity'
 
 type Params = { params: Promise<{ token: string }> }
 
@@ -14,7 +15,10 @@ export async function POST(_req: Request, { params }: Params) {
   const allowed = await visibleEventIds(gate.session)
 
   const { token } = await params
-  const result = await verifyTicket(token, allowed)
+  const result = await verifyTicket(token, {
+    allowedEventIds: allowed,
+    actor: actorFromSession(gate.session),
+  })
   const status = result.valid ? 200 : result.reason === 'NOT_FOUND' ? 404 : 200
   return NextResponse.json(result, { status })
 }

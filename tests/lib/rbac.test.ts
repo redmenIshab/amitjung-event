@@ -49,6 +49,13 @@ describe('hasCapability', () => {
     ['ADMIN', 'ARTIST_READ', true],
     ['STAFF', 'ARTIST_READ', true],
     ['MANAGER', 'ARTIST_READ', true],
+    // ── REFUND_MANAGE: money, so ADMIN alone ──
+    ['ADMIN', 'REFUND_MANAGE', true],
+    ['STAFF', 'REFUND_MANAGE', false],
+    ['MANAGER', 'REFUND_MANAGE', false],
+    ['ORGANIZER', 'REFUND_MANAGE', false],
+    ['USER', 'REFUND_MANAGE', false],
+    ['PARTICIPANT', 'REFUND_MANAGE', false],
     // ── EVENT_READ for existing staff ──
     ['STAFF', 'EVENT_READ', true],
     ['MANAGER', 'EVENT_READ', true],

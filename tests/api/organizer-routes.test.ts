@@ -114,8 +114,10 @@ describe('POST /api/verify/[token] — scanning', () => {
   function ticketFor(eventId: string) {
     const update = vi.fn()
     const create = vi.fn()
+    const logCreate = vi.fn()
     transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
       fn({
+        ticketActivity: { create: logCreate },
         ticket: {
           findUnique: vi.fn().mockResolvedValue({
             id: 't1',
@@ -133,7 +135,7 @@ describe('POST /api/verify/[token] — scanning', () => {
         checkIn: { create },
       }),
     )
-    return { update, create }
+    return { update, create, logCreate }
   }
 
   const params = { params: Promise.resolve({ token: 'tok' }) }
@@ -187,5 +189,51 @@ describe('GET /api/artist — outside the organizer’s world', () => {
       signIn(role)
       expect((await artistsGET()).status).toBe(200)
     }
+  })
+})
+
+describe('POST /api/verify/[token] — the scan is attributable', () => {
+  const params = { params: Promise.resolve({ token: 'tok' }) }
+
+  it('records WHO scanned, from the session', async () => {
+    mockGetServerSession.mockResolvedValue({
+      user: { id: 'u1', role: 'ORGANIZER', name: 'Ramesh', email: 'ramesh@crew.np' },
+    })
+    assignmentFindMany.mockResolvedValue([{ eventId: ASSIGNED }])
+
+    const logCreate = vi.fn()
+    transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+      fn({
+        ticketActivity: { create: logCreate },
+        ticket: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 't1',
+            status: 'UNUSED',
+            eventId: ASSIGNED,
+            attendeeName: 'Jane',
+            attendeeEmail: 'j@x.co',
+            distributorName: null,
+            category: 'GENERAL',
+            event: { name: 'My Event' },
+            checkIn: null,
+          }),
+          update: vi.fn(),
+        },
+        checkIn: { create: vi.fn() },
+      }),
+    )
+
+    await verifyPOST(req(), params)
+
+    expect(logCreate).toHaveBeenCalledOnce()
+    expect(logCreate.mock.calls[0][0].data).toMatchObject({
+      action: 'SCANNED',
+      ticketId: 't1',
+      eventId: ASSIGNED,
+      actorType: 'USER',
+      actorId: 'u1',
+      actorLabel: 'Ramesh <ramesh@crew.np>',
+      actorRole: 'ORGANIZER',
+    })
   })
 })

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { SYSTEM_ACTOR, recordTicketActivity, type ActivityActor } from '@/lib/ticketActivity'
 
 // ── Check-in (mutating) ──────────────────────────────────────────────────────
 
@@ -16,17 +17,33 @@ export type VerifyResult =
   /** Valid ticket, wrong event for this scanner. Never consumed. */
   | { valid: false; reason: 'WRONG_EVENT'; eventName: string }
 
+export interface VerifyOptions {
+  /**
+   * Restricts the scanner to these events. `null` or omitted means
+   * unrestricted (ADMIN/STAFF). The check runs before the update, so a
+   * wrong-event scan can never consume a ticket.
+   */
+  allowedEventIds?: string[] | null
+  /** Who is scanning. Recorded in the activity log; defaults to the system actor. */
+  actor?: ActivityActor
+}
+
 /**
  * Checks a ticket in.
  *
- * @param allowedEventIds Restricts the scanner to these events. `null` or
- *   omitted means unrestricted (ADMIN/STAFF — unchanged behaviour). The check
- *   runs before the update, so a wrong-event scan can never consume a ticket.
+ * Takes an options object rather than positional arguments: it needs both a
+ * scope and an actor, and the actor is what finally makes a check-in
+ * attributable (CheckIn records only `scannedAt`).
+ *
+ * Only a successful check-in is logged. A refusal changes nothing, so recording
+ * one would fill the event's log with noise that hides the real actions.
  */
 export async function verifyTicket(
   token: string,
-  allowedEventIds?: string[] | null,
+  options: VerifyOptions = {},
 ): Promise<VerifyResult> {
+  const { allowedEventIds, actor = SYSTEM_ACTOR } = options
+
   return prisma.$transaction(async (tx) => {
     const ticket = await tx.ticket.findUnique({
       where: { token },
@@ -56,6 +73,14 @@ export async function verifyTicket(
 
     await tx.ticket.update({ where: { id: ticket.id }, data: { status: 'USED' } })
     await tx.checkIn.create({ data: { ticketId: ticket.id } })
+    // Same transaction as the state change: a check-in that is not attributable
+    // is the exact failure the log exists to prevent.
+    await recordTicketActivity(tx, {
+      eventId: ticket.eventId,
+      action: 'SCANNED',
+      ticketId: ticket.id,
+      actor,
+    })
 
     return {
       valid: true,
