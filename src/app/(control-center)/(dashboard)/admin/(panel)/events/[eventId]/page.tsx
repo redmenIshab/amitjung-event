@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { CheckInChart } from '@/components/dashboard/CheckInChart'
 import { EventManageActions } from '@/components/events/EventManageActions'
+import { OrganizerTeamPanel } from '@/components/events/OrganizerTeamPanel'
+import { toStaffUserDto } from '@/lib/users'
 import {
   computeEventAvailability,
   SALE_BADGE_LABEL,
@@ -47,6 +49,27 @@ export default async function EventDetailPage({ params }: Props) {
     include: { checkIn: true },
     orderBy: { createdAt: 'desc' },
   })
+
+  // Only the admin who can change the team needs to load it.
+  const canManageTeam = hasCapability(session.user.role, 'USER_MANAGE')
+  const teamRows = canManageTeam
+    ? await prisma.eventAssignment.findMany({
+        where: { eventId },
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              deletedAt: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      })
+    : []
 
   const used = rawTickets.filter((t) => t.status === 'USED').length
   const unused = rawTickets.filter((t) => t.status === 'UNUSED').length
@@ -200,6 +223,15 @@ export default async function EventDetailPage({ params }: Props) {
       </p>
 
       <Separator className="mb-6" />
+
+      {canManageTeam && (
+        <div className="mb-6">
+          <OrganizerTeamPanel
+            eventId={eventId}
+            initialMembers={teamRows.map((t) => toStaffUserDto(t.user))}
+          />
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-4 gap-2">
         <h2 className="text-lg font-semibold">Tickets</h2>
