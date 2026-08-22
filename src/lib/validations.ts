@@ -55,6 +55,16 @@ export const createEventSchema = eventFieldsSchema
 
 export const updateEventSchema = eventFieldsSchema.partial()
 
+/**
+ * Cancelling and refunding both demand a reason: these are the actions an audit
+ * log exists to explain, and "why" is the half a status column cannot record.
+ */
+export const ticketReasonSchema = z.object({
+  reason: z.string().trim().min(1, 'A reason is required').max(500),
+})
+
+export type TicketReasonInput = z.infer<typeof ticketReasonSchema>
+
 export const ticketCategorySchema = z.enum(['GENERAL', 'VIP'])
 
 export const generateTicketSchema = z.object({
