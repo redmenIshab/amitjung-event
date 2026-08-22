@@ -5,13 +5,24 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
+/**
+ * Primary navigation.
+ *
+ * `/events` is the buyer-facing listing (browse shows, buy tickets);
+ * `/ticketing` is the organiser-facing product page. Labelled "EVENTS &
+ * TICKETS" and "SMART TICKETING" so the two stop reading as the same thing —
+ * the latter matches the name that page already gives itself in its metadata
+ * and hero.
+ *
+ * Contact deliberately lives only in the footer: it was the sixth item in a bar
+ * that was already crowded, and duplicating it here bought nothing.
+ */
 const NAV_LINKS = [
   { label: 'HOME', href: '/' },
-  { label: 'EVENTS', href: '/events' },
+  { label: 'EVENTS & TICKETS', href: '/events' },
   { label: 'ABOUT US', href: '/about' },
   { label: 'SERVICES', href: '/branding' },
-  { label: 'TICKETING', href: '/ticketing' },
-  { label: 'CONTACT', href: '/contact' },
+  { label: 'SMART TICKETING', href: '/ticketing' },
 ]
 
 export default function Nav() {
@@ -61,7 +72,11 @@ export default function Nav() {
           <span className="font-bebas text-xl tracking-widest text-gold nav-text-outline">LYANTE</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        {/* Tighter spacing between md and lg: the longer "EVENTS & TICKETS" and
+            "SMART TICKETING" labels overflow the bar at 768px on gap-8 (measured
+            624px against 608px available). gap-8 returns at lg, where the
+            original spacing was tuned. */}
+        <div className="hidden md:flex items-center gap-5 lg:gap-8">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
