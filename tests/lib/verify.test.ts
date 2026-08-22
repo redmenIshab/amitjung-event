@@ -93,3 +93,70 @@ describe('verifyTicket', () => {
     expect((result as any).reason).toBe('CANCELLED')
   })
 })
+
+describe('verifyTicket — event scope', () => {
+  const scopedTicket = (eventId: string, name: string) => ({
+    id: 'ticket-1',
+    token: 'tok-abc',
+    status: 'UNUSED',
+    eventId,
+    attendeeName: 'Jane Doe',
+    attendeeEmail: 'jane@example.com',
+    distributorName: null,
+    category: 'GENERAL',
+    event: { name },
+    checkIn: null,
+  })
+
+  it('refuses a ticket outside the allowed events without consuming it', async () => {
+    mockTx.ticket.findUnique.mockResolvedValue(scopedTicket('e2', 'Other Event'))
+
+    const result = await verifyTicket('tok-abc', ['e1'])
+
+    expect(result).toEqual({ valid: false, reason: 'WRONG_EVENT', eventName: 'Other Event' })
+    expect(mockTx.ticket.update).not.toHaveBeenCalled()
+    expect(mockTx.checkIn.create).not.toHaveBeenCalled()
+  })
+
+  it('checks in a ticket that is inside the allowed events', async () => {
+    mockTx.ticket.findUnique.mockResolvedValue(scopedTicket('e1', 'My Event'))
+
+    const result = await verifyTicket('tok-abc', ['e1'])
+
+    expect(result.valid).toBe(true)
+    expect(mockTx.ticket.update).toHaveBeenCalledOnce()
+    expect(mockTx.checkIn.create).toHaveBeenCalledOnce()
+  })
+
+  it('refuses everything when the scanner has no assigned events', async () => {
+    mockTx.ticket.findUnique.mockResolvedValue(scopedTicket('e1', 'My Event'))
+
+    const result = await verifyTicket('tok-abc', [])
+
+    expect((result as any).reason).toBe('WRONG_EVENT')
+    expect(mockTx.ticket.update).not.toHaveBeenCalled()
+  })
+
+  it('null scope is unrestricted — unchanged behaviour for ADMIN/STAFF', async () => {
+    mockTx.ticket.findUnique.mockResolvedValue(scopedTicket('e2', 'Other Event'))
+
+    const result = await verifyTicket('tok-abc', null)
+
+    expect(result.valid).toBe(true)
+    expect(mockTx.ticket.update).toHaveBeenCalledOnce()
+  })
+
+  it('scope is checked before the already-used branch, so no state leaks', async () => {
+    mockTx.ticket.findUnique.mockResolvedValue({
+      ...scopedTicket('e2', 'Other Event'),
+      status: 'USED',
+      checkIn: { scannedAt: new Date() },
+    })
+
+    const result = await verifyTicket('tok-abc', ['e1'])
+
+    // WRONG_EVENT, not ALREADY_USED — an out-of-scope scanner learns nothing
+    // about whether the ticket has been used.
+    expect((result as any).reason).toBe('WRONG_EVENT')
+  })
+})
