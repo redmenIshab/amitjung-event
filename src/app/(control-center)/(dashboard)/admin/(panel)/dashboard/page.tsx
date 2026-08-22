@@ -133,10 +133,12 @@ export default async function DashboardPage() {
             icon={CheckCircle2}
             accent="text-emerald-700 bg-emerald-50"
           />
-          {/* Platform-wide people counts are not scoped to an event, so they
-              stay with the platform owner rather than showing an organizer
-              figures that have nothing to do with their show. */}
-          {canSeeCommission && (
+          {/* Platform-wide people counts cannot be scoped to an event, so they
+              are hidden from event-scoped roles rather than shown as figures
+              that have nothing to do with their show. Keyed on `scope`, not on
+              a money capability — STAFF and MANAGER saw these before and must
+              keep seeing them. */}
+          {!scope && (
             <>
               <StatTile
                 label="Registered users"

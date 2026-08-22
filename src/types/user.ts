@@ -52,4 +52,6 @@ export interface StaffUserDto {
   role: string
   active: boolean
   createdAt: string
+  /** Events assigned to this account. Undefined when the caller didn't join them. */
+  assignedEvents?: number
 }

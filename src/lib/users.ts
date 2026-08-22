@@ -66,6 +66,13 @@ export function toStaffUserDto(row: {
   role: string
   deletedAt: Date | null
   createdAt: Date
+  /**
+   * Number of events this account is assigned to. Optional because most call
+   * sites do not join the assignments; where it IS supplied, the staff
+   * directory uses it to show that an ORGANIZER with zero events holds no
+   * access at all.
+   */
+  _count?: { assignments: number }
 }): StaffUserDto {
   return {
     id: row.id,
@@ -74,5 +81,6 @@ export function toStaffUserDto(row: {
     role: row.role,
     active: row.deletedAt === null,
     createdAt: row.createdAt.toISOString(),
+    assignedEvents: row._count?.assignments,
   }
 }

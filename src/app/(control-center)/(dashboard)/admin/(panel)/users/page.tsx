@@ -14,7 +14,17 @@ export default async function UsersPage() {
   // Read the DB directly: admin pages bypass the cache, and a server component
   // must never self-fetch its own API (ARCHITECTURE §11, landmine #2).
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, deletedAt: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      deletedAt: true,
+      createdAt: true,
+      // ORGANIZER access comes entirely from assignments, so the directory
+      // shows the count — otherwise an organizer with none looks provisioned.
+      _count: { select: { assignments: true } },
+    },
     orderBy: [{ deletedAt: 'asc' }, { createdAt: 'desc' }],
   })
 
