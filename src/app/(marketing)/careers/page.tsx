@@ -1,69 +1,12 @@
 import Link from 'next/link'
 import Button from '@/components/marketing/ui/Button'
+import { JOBS, DEFAULT_APPLY_EMAIL, type Job } from '@/components/marketing/careers/jobs'
 
 export const metadata = {
   title: 'Careers — Lyante Production',
   description:
-    'Join Lyante Production in Itahari, Nepal. Open roles: Digital Content Creator and Video Editor. Create content, coverage and brands with a team built by owners and proven on stage.',
+    'Join Lyante Production and Software Factory in Itahari, Nepal. Open roles: Digital Content Creator, Video Editor and Business Research & Client Acquisition Intern.',
 }
-
-type Job = {
-  title: string
-  tags: string[]
-  summary: string
-  responsibilities: string[]
-  requirements: string[]
-  niceToHave: string[]
-}
-
-const JOBS: Job[] = [
-  {
-    title: 'Digital Content Creator',
-    tags: ['Full-time', 'On-site · Itahari', 'Freshers welcome', 'Content & Social'],
-    summary:
-      'You live on the internet and know exactly what makes people stop scrolling. You’ll plan, shoot and publish content for Lyante and the brands we work with — turning events, cafés and businesses into feeds people actually follow.',
-    responsibilities: [
-      'Plan and own a content calendar across Instagram, TikTok and Facebook',
-      'Shoot photo, video and reels — both on-set at events and in-studio',
-      'Capture behind-the-scenes and on-ground coverage during live events',
-      'Write scroll-stopping captions and short-form copy (Nepali & English)',
-      'Schedule, publish and engage — comments, DMs and community',
-      'Track what works and adjust — reach, saves, follower growth',
-    ],
-    requirements: [
-      'A sharp sense of trends, aesthetics and timing',
-      'Comfortable shooting on a phone and a camera',
-      'Hands-on with editing tools (CapCut, Premiere, Lightroom or similar)',
-      'Deep familiarity with Instagram & TikTok formats and what performs',
-      'A portfolio or a personal/handled account that shows your eye',
-      'Self-driven, organised and reliable with deadlines',
-    ],
-    niceToHave: ['Basic graphic design (Canva / Figma / Photoshop)', 'Photography skills', 'Strong bilingual copywriting'],
-  },
-  {
-    title: 'Video Editor',
-    tags: ['Full-time', 'On-site · Itahari', 'Freshers welcome', 'Post-Production'],
-    summary:
-      'You turn raw footage into films people feel. You’ll cut reels, highlight films, sponsor reels and brand ads for concerts, festivals and businesses — with the pacing and polish that makes Lyante’s work stand out.',
-    responsibilities: [
-      'Edit short-form reels and long-form highlight films from event footage',
-      'Cut brand ads, promos and sponsor reels to brief',
-      'Colour grade and balance sound for a clean, cinematic finish',
-      'Add titles, lower-thirds and simple motion graphics',
-      'Organise and manage large volumes of footage across projects',
-      'Deliver fast and on time during tight event cycles',
-    ],
-    requirements: [
-      'Proficiency in Premiere Pro, DaVinci Resolve, CapCut or Final Cut',
-      'Strong instinct for pacing, rhythm and storytelling',
-      'A showreel or portfolio of edited work',
-      'Solid grasp of export settings for each platform',
-      'Well-organised with project files and media',
-      'Able to work quickly under event-driven deadlines',
-    ],
-    niceToHave: ['Motion graphics (After Effects)', 'Advanced colour grading', 'Sound design / music editing'],
-  },
-]
 
 function List({ label, items }: { label: string; items: string[] }) {
   return (
@@ -82,11 +25,18 @@ function List({ label, items }: { label: string; items: string[] }) {
 }
 
 function JobCard({ job }: { job: Job }) {
-  const mailto = `mailto:lyanteprod@gmail.com?subject=${encodeURIComponent(
-    `Application: ${job.title}`
-  )}&body=${encodeURIComponent(
-    `Hi Lyante team,\n\nI'd like to apply for the ${job.title} role.\n\n• Name:\n• Location:\n• Portfolio / reel link:\n\nA bit about me:\n`
-  )}`
+  // A role may be hired for by a different part of the business, and may screen
+  // on a written task rather than a reel — so the address, the subject and the
+  // prefilled body all follow the job rather than being fixed to Lyante.
+  const to = job.applyEmail ?? DEFAULT_APPLY_EMAIL
+  const subject = job.applySubject ?? `Application: ${job.title}`
+  const body = job.applySteps
+    ? `Hello,\n\nI'd like to apply for the ${job.title} role.\n\n• Name:\n• Location:\n\nAttached / below:\n${job.applySteps
+        .map((step, i) => `${i + 1}. ${step}`)
+        .join('\n')}\n`
+    : `Hi Lyante team,\n\nI'd like to apply for the ${job.title} role.\n\n• Name:\n• Location:\n• Portfolio / reel link:\n\nA bit about me:\n`
+
+  const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 
   return (
     <div className="gold-border rounded-sm bg-surface p-8 md:p-10">
@@ -120,6 +70,33 @@ function JobCard({ job }: { job: Job }) {
           <List label="NICE TO HAVE" items={job.niceToHave} />
         </div>
       </div>
+
+      {job.applySteps && (
+        <div className="mt-10 pt-8 border-t border-coal">
+          <p className="section-label mb-3">HOW TO APPLY</p>
+          <ol className="flex flex-col gap-2">
+            {job.applySteps.map((step, i) => (
+              <li key={step} className="flex items-start gap-2.5 text-ash text-sm leading-relaxed">
+                <span className="font-bebas text-gold text-sm tracking-widest shrink-0 mt-px">
+                  {i + 1}.
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          {job.applyNote && (
+            <p className="text-ash text-sm leading-relaxed mt-4 max-w-3xl italic">
+              {job.applyNote}
+            </p>
+          )}
+          <p className="text-ash text-sm mt-4">
+            Send to{' '}
+            <a href={`mailto:${to}`} className="text-gold hover:underline">
+              {to}
+            </a>
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -139,9 +116,10 @@ export default function CareersPage() {
           </h1>
           <p className="text-ash text-lg leading-relaxed max-w-2xl mb-8">
             Lyante Production is a creative event &amp; branding studio in the heart of Purba Nepal —
-            built by owners, proven on stage. All roles are on-site in Itahari. We&rsquo;re looking
-            for sharp, self-driven creators who want their work seen by real crowds. If that&rsquo;s
-            you, we&rsquo;d love to meet.
+            built by owners, proven on stage &mdash; alongside Software Factory, our IT wing.
+            Roles are based in Itahari, on-site or hybrid. We&rsquo;re looking for sharp,
+            self-driven people who want their work seen by real crowds. If that&rsquo;s you,
+            we&rsquo;d love to meet.
           </p>
           <p className="inline-flex items-center gap-2.5 gold-border rounded-sm px-4 py-2.5 text-ivory text-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
