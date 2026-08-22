@@ -65,6 +65,11 @@ export default function TicketDetailPage() {
   // Once the event is completed the ticket is retired: no more downloads,
   // sharing, or public-view actions.
   const isCompleted = ticket.event.status === 'COMPLETED'
+  // A cancelled ticket is retired for the same reason — it will be refused at
+  // the door, so offering a download and a crisp "scan for entry" QR would be
+  // actively misleading. Cancellation now reaches buyers (refunds cascade to
+  // it), so this is no longer a state that never occurs.
+  const isRetired = isCompleted || isCancelled
 
   const eventDate = new Date(ticket.event.bookingDeadline).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -77,7 +82,7 @@ export default function TicketDetailPage() {
     typeof window !== 'undefined' ? `${window.location.origin}/ticket/${ticket.token}` : ''
 
   async function handleDownload() {
-    if (!ticket || ticket.event.status === 'COMPLETED') return
+    if (!ticket || ticket.event.status === 'COMPLETED' || ticket.status === 'CANCELLED') return
     const { jsPDF } = await import('jspdf')
     const doc = new jsPDF({ unit: 'pt', format: 'a5' })
     doc.setFontSize(18)
@@ -95,7 +100,7 @@ export default function TicketDetailPage() {
   }
 
   async function handleShare() {
-    if (!ticket || ticket.event.status === 'COMPLETED') return
+    if (!ticket || ticket.event.status === 'COMPLETED' || ticket.status === 'CANCELLED') return
     const shareData = {
       title: ticket.event.name,
       text: `My ticket for ${ticket.event.name}`,
@@ -134,7 +139,7 @@ export default function TicketDetailPage() {
             <img
               src={ticket.event.image}
               alt=""
-              className={`w-full h-full object-cover ${isCompleted ? 'grayscale' : ''}`}
+              className={`w-full h-full object-cover ${isRetired ? 'grayscale' : ''}`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-lyante-bg/90 via-transparent to-transparent" />
             {isCompleted && (
@@ -193,6 +198,11 @@ export default function TicketDetailPage() {
               Event completed — this ticket is no longer active
             </div>
           )}
+          {isCancelled && !isCompleted && (
+            <div className="text-sm font-semibold text-center py-2 px-4 rounded-lg bg-red-500/15 text-red-400">
+              This ticket has been cancelled — it will not be accepted at the door
+            </div>
+          )}
 
           <div className="border-t border-dashed border-coal/40" />
 
@@ -225,21 +235,21 @@ export default function TicketDetailPage() {
             <div className="shrink-0">
               <div
                 className={`rounded-xl p-2 bg-white border-2 ${
-                  isCompleted ? 'border-coal' : isVip ? 'border-gold-light' : 'border-gold'
+                  isRetired ? 'border-coal' : isVip ? 'border-gold-light' : 'border-gold'
                 }`}
               >
                 <img
                   src={ticket.qrDataUrl}
                   alt="Entry QR Code"
-                  className={`w-32 h-32 block ${isCompleted ? 'grayscale opacity-60' : ''}`}
+                  className={`w-32 h-32 block ${isRetired ? 'grayscale opacity-60' : ''}`}
                 />
               </div>
               <p
                 className={`text-[9px] text-center mt-1.5 uppercase tracking-widest ${
-                  isCompleted ? 'text-ash' : 'text-gold'
+                  isRetired ? 'text-ash' : 'text-gold'
                 }`}
               >
-                {isCompleted ? 'No longer valid' : 'Scan for entry'}
+                {isRetired ? 'No longer valid' : 'Scan for entry'}
               </p>
             </div>
           </div>
@@ -256,7 +266,7 @@ export default function TicketDetailPage() {
       <div className="grid grid-cols-2 gap-3 mt-6">
         <button
           onClick={handleDownload}
-          disabled={isCompleted}
+          disabled={isRetired}
           className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md bg-gold text-lyante-bg hover:bg-gold-light transition-colors cursor-pointer disabled:bg-coal/40 disabled:text-ash disabled:cursor-not-allowed disabled:hover:bg-coal/40"
         >
           <Download size={15} />
@@ -264,7 +274,7 @@ export default function TicketDetailPage() {
         </button>
         <button
           onClick={handleShare}
-          disabled={isCompleted}
+          disabled={isRetired}
           className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide py-3 rounded-md border border-coal/40 text-ivory hover:border-gold/50 transition-colors cursor-pointer disabled:text-ash disabled:cursor-not-allowed disabled:hover:border-coal/40"
         >
           {copied ? <Check size={15} /> : <Share2 size={15} />}
@@ -272,7 +282,7 @@ export default function TicketDetailPage() {
         </button>
       </div>
 
-      {isCompleted ? (
+      {isRetired ? (
         <div
           aria-disabled="true"
           className="block w-full mt-3 text-center text-sm font-medium py-3 rounded-md bg-lyante-surface/60 text-coal border border-coal/30 cursor-not-allowed select-none"
