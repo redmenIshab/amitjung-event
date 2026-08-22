@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, ScrollText } from 'lucide-react'
 import { hasCapability } from '@/lib/rbac'
 import { requireEventPageCapability } from '@/lib/eventAccess'
 import { prisma } from '@/lib/prisma'
@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { CheckInChart } from '@/components/dashboard/CheckInChart'
 import { EventManageActions } from '@/components/events/EventManageActions'
 import { OrganizerTeamPanel } from '@/components/events/OrganizerTeamPanel'
+import { ActivityFeed, type ActivityRow } from '@/components/events/ActivityFeed'
 import { toStaffUserDto } from '@/lib/users'
 import {
   computeEventAvailability,
@@ -46,9 +47,34 @@ export default async function EventDetailPage({ params }: Props) {
 
   const rawTickets = await prisma.ticket.findMany({
     where: { eventId },
-    include: { checkIn: true },
+    include: {
+      checkIn: true,
+      // Drives whether a refund is offered: comped tickets hang off a synthetic
+      // zero-value payment (see ensureSystemBooking), which cannot be refunded.
+      booking: { select: { payment: { select: { finalAmount: true, paymentStatus: true } } } },
+    },
     orderBy: { createdAt: 'desc' },
   })
+
+  // Latest few entries for the strip; the full log lives on its own route.
+  const recentActivity = await prisma.ticketActivity.findMany({
+    where: { eventId },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  })
+  const activityRows: ActivityRow[] = recentActivity.map((r) => ({
+    id: r.id,
+    action: r.action,
+    ticketId: r.ticketId,
+    paymentId: r.paymentId,
+    quantity: r.quantity,
+    actorLabel: r.actorLabel,
+    actorRole: r.actorRole,
+    reason: r.reason,
+    amount: r.amount,
+    meta: (r.meta as Record<string, unknown> | null) ?? null,
+    createdAt: r.createdAt.toISOString(),
+  }))
 
   // Only the admin who can change the team needs to load it.
   const canManageTeam = hasCapability(session.user.role, 'USER_MANAGE')
@@ -107,6 +133,9 @@ export default async function EventDetailPage({ params }: Props) {
     source: t.source,
     createdAt: t.createdAt.toISOString(),
     checkIn: t.checkIn ? { scannedAt: t.checkIn.scannedAt.toISOString() } : null,
+    refundable:
+      (t.booking?.payment?.finalAmount ?? 0) > 0 &&
+      t.booking?.payment?.paymentStatus !== 'REFUND',
   }))
 
   return (
@@ -224,6 +253,20 @@ export default async function EventDetailPage({ params }: Props) {
 
       <Separator className="mb-6" />
 
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h2 className="text-sm font-medium text-gray-500">Recent activity</h2>
+        <Link
+          href={`/admin/events/${eventId}/activity`}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-black/10 rounded-md px-2.5 py-1.5 transition-colors"
+        >
+          <ScrollText size={14} />
+          Full log
+        </Link>
+      </div>
+      <div className="mb-6">
+        <ActivityFeed rows={activityRows} compact />
+      </div>
+
       {canManageTeam && (
         <div className="mb-6">
           <OrganizerTeamPanel
@@ -245,7 +288,12 @@ export default async function EventDetailPage({ params }: Props) {
         )}
       </div>
 
-      <TicketTable tickets={tickets} />
+      <TicketTable
+        tickets={tickets}
+        eventId={eventId}
+        canCancel={hasCapability(session.user.role, 'TICKET_MANAGE')}
+        canRefund={hasCapability(session.user.role, 'REFUND_MANAGE')}
+      />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { TicketActions } from './TicketActions'
 import {
   Table,
   TableBody,
@@ -20,6 +21,8 @@ type Ticket = {
   source: 'ADMIN' | 'SELF_REGISTERED'
   createdAt: string
   checkIn: { scannedAt: string } | null
+  /** False for comped tickets — their synthetic payment is worth nothing. */
+  refundable: boolean
 }
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -31,7 +34,17 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
 const categoryClass =
   'bg-amber-400 text-amber-900 border-amber-400 hover:bg-amber-400'
 
-export function TicketTable({ tickets }: { tickets: Ticket[] }) {
+export function TicketTable({
+  tickets,
+  eventId,
+  canCancel,
+  canRefund,
+}: {
+  tickets: Ticket[]
+  eventId: string
+  canCancel: boolean
+  canRefund: boolean
+}) {
   if (tickets.length === 0) {
     return (
       <div className="text-center text-gray-400 py-10 border rounded-lg bg-white">
@@ -73,6 +86,14 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
                 </span>
               )}
             </div>
+            <TicketActions
+              eventId={eventId}
+              ticketId={ticket.id}
+              status={ticket.status}
+              canCancel={canCancel}
+              canRefund={canRefund}
+              refundable={ticket.refundable}
+            />
           </div>
         ))}
       </div>
@@ -88,6 +109,7 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
               <TableHead>Source</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Check-in Time</TableHead>
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -121,6 +143,16 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
                   {ticket.checkIn
                     ? new Date(ticket.checkIn.scannedAt).toLocaleString()
                     : '—'}
+                </TableCell>
+                <TableCell>
+                  <TicketActions
+                    eventId={eventId}
+                    ticketId={ticket.id}
+                    status={ticket.status}
+                    canCancel={canCancel}
+                    canRefund={canRefund}
+                    refundable={ticket.refundable}
+                  />
                 </TableCell>
               </TableRow>
             ))}
