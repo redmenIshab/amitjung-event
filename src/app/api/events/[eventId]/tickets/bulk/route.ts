@@ -37,6 +37,10 @@ export async function POST(request: Request, { params }: Params) {
   // Create all tickets in a single transaction
   const bookingId = await ensureSystemBooking(eventId)
 
+  // Explicit timeout: this is an INTERACTIVE transaction (the log entry must
+  // share it), and Prisma defaults those to 5s. The previous batch form had no
+  // such limit, and a full run is up to 200 inserts over a pooled connection —
+  // the default would abort runs that used to succeed.
   const createdTickets = await prisma.$transaction(async (tx) => {
     const created = await Promise.all(
       parsed.data.tickets.map((t) =>
@@ -61,7 +65,7 @@ export async function POST(request: Request, { params }: Params) {
       meta: { bulk: true },
     })
     return created
-  })
+  }, { maxWait: 10_000, timeout: 60_000 })
 
   // Generate QR codes and send emails — collect per-ticket results
   const results: BulkTicketResult[] = await Promise.all(
