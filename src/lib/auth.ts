@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { isEventScopedRole } from '@/lib/eventScope'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -60,7 +61,7 @@ export const authOptions: NextAuthOptions = {
           token.role = 'PARTICIPANT'
         } else {
           token.id = user.id
-          token.role = (user as { role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' }).role
+          token.role = (user as { role: 'ADMIN' | 'STAFF' | 'MANAGER' | 'USER' | 'ORGANIZER' }).role
         }
         return token
       }
@@ -78,13 +79,32 @@ export const authOptions: NextAuthOptions = {
 
       // Deleted or deactivated collapses to USER, which holds no capability
       // (see CAPABILITY in src/lib/rbac.ts), so every existing gate rejects it.
-      token.role = !current || current.deletedAt ? 'USER' : current.role
+      const revoked = !current || current.deletedAt !== null
+      token.role = revoked ? 'USER' : current!.role
+
+      // Event scope rides along so the edge proxy can block cross-event URLs
+      // without a database round trip. Only scoped roles pay for the query.
+      // Revocation clears it in the same breath as the role, and a promotion
+      // out of ORGANIZER drops it so no stale scope lingers on the token.
+      if (revoked) {
+        token.eventIds = []
+      } else if (isEventScopedRole(token.role)) {
+        const rows = await prisma.eventAssignment.findMany({
+          where: { userId: token.id },
+          select: { eventId: true },
+        })
+        token.eventIds = rows.map((r) => r.eventId)
+      } else {
+        delete token.eventIds
+      }
 
       return token
     },
     async session({ session, token }) {
       session.user.id = token.id
       session.user.role = token.role
+      // Undefined for unscoped roles — meaning "not scoped", not "no events".
+      session.user.eventIds = token.eventIds
       return session
     },
   },
