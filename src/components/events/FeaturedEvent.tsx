@@ -8,6 +8,7 @@ import {
   formatEventDate,
   type EventCardData,
 } from './EventCard'
+import { mediaUrl } from '@/lib/media'
 
 const BADGE_BASE = 'px-2 py-0.5 text-[10px] font-bebas tracking-[0.15em] uppercase rounded-sm'
 
@@ -23,7 +24,7 @@ export function FeaturedEvent({ event }: { event: EventCardData }) {
           <Image
             alt={event.title}
             className="object-cover"
-            src={event.image}
+            src={mediaUrl(event.image, { width: 1600 }) ?? ''}
             fill
             sizes="(max-width: 768px) 100vw, 55vw"
             priority

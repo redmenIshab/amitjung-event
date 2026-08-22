@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { clientIp, rateLimit, tooManyRequests } from '@/lib/rateLimit'
 import { registerSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
 import { sendTicketEmail, isEmailEnabled } from '@/lib/email'
@@ -10,6 +11,16 @@ type Params = { params: Promise<{ eventId: string }> }
 
 export async function POST(request: Request, { params }: Params) {
   const { eventId } = await params
+
+  // Public and row-creating: without a limit, a script can mint tickets for an
+  // open event as fast as it can post. Keyed per IP per event so one abuser
+  // cannot lock everyone out of every event.
+  const limit = await rateLimit({
+    key: `register:${eventId}:${clientIp(request)}`,
+    limit: 5,
+    windowSeconds: 60,
+  })
+  if (!limit.ok) return tooManyRequests(limit)
 
   const event = await prisma.event.findUnique({ where: { id: eventId } })
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isCompletableDate } from '@/lib/events'
+import { mediaRefSchema } from '@/lib/media'
 
 export const eventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED'])
 export const eventTypeSchema = z.enum([
@@ -36,7 +37,9 @@ const eventFieldsSchema = z.object({
   discountUpto: z.string().datetime().optional(),
   description: z.string().max(1000).optional(),
   isOpen: z.boolean().optional().default(true),
-  image: z.string().url().optional().or(z.literal('')),
+  // Accepts a Cloudinary public id or a legacy pasted URL — a plain
+  // `.url()` here would reject every uploaded poster. See src/lib/media.ts.
+  image: mediaRefSchema.optional(),
   genres: z.array(z.string()).default([]),
   // Nullable so an edit can unassign the event's artist; the empty option in
   // the form posts null rather than '' (which would fail the FK).

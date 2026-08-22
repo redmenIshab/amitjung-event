@@ -5,6 +5,7 @@ import { CheckoutButton } from '@/components/events/CheckoutButton'
 import { computeEventAvailability, purchaseBlockedReason } from '@/lib/events'
 import { getCachedEvent } from '@/lib/upstash/services/event-cache'
 import { prisma } from '@/lib/prisma'
+import { mediaUrl } from '@/lib/media'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,11 +15,14 @@ export default async function EventDetailPage({ params }: Props) {
     const { id } = await params
 
     // Read directly from the data layer (no self-fetch over HTTP).
-    const eventRow = await getCachedEvent(id)
+    // Parallel: the cached event and its live sold count are independent.
+    const [eventRow, soldCount] = await Promise.all([
+        getCachedEvent(id),
+        prisma.ticket.count({
+            where: { eventId: id, status: { not: 'CANCELLED' } },
+        }),
+    ])
     if (!eventRow) notFound()
-    const soldCount = await prisma.ticket.count({
-        where: { eventId: id, status: { not: 'CANCELLED' } },
-    })
     const parsed = eventDetailSchema.safeParse(
         JSON.parse(JSON.stringify({ ...eventRow, soldCount })),
     )
@@ -52,7 +56,7 @@ export default async function EventDetailPage({ params }: Props) {
                     <Image
                         alt={event.name}
                         className="absolute inset-0 w-full h-full object-cover"
-                        src={event.image}
+                        src={mediaUrl(event.image, { width: 1600 }) ?? ''}
                         fill
                         sizes="60vw"
                         priority
@@ -69,7 +73,7 @@ export default async function EventDetailPage({ params }: Props) {
                                 <Image
                                     alt={artist.artistName}
                                     className="w-full h-full object-cover grayscale"
-                                    src={artist.artistImage}
+                                    src={mediaUrl(artist.artistImage, { width: 160 }) ?? ''}
                                     width={80}
                                     height={80}
                                     unoptimized
@@ -129,7 +133,7 @@ export default async function EventDetailPage({ params }: Props) {
                                             <Image
                                                 alt={artist.artistName}
                                                 className="w-full h-full object-cover grayscale"
-                                                src={artist.artistImage}
+                                                src={mediaUrl(artist.artistImage, { width: 160 }) ?? ''}
                                                 width={48}
                                                 height={48}
                                                 unoptimized

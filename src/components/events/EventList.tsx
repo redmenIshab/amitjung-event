@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { mediaUrl } from '@/lib/media'
 
 type Event = {
   id: string
@@ -103,7 +104,7 @@ export function EventList({ events }: { events: Event[] }) {
                   <div className="flex items-center gap-2">
                     {event.image && (
                       <img
-                        src={event.image}
+                        src={mediaUrl(event.image, { width: 600 }) ?? ''}
                         alt=""
                         className="w-8 h-8 rounded object-cover bg-gray-100 shrink-0"
                       />
@@ -116,7 +117,7 @@ export function EventList({ events }: { events: Event[] }) {
                   {event.artist ? (
                     <div className="flex items-center gap-1.5">
                       <img
-                        src={event.artist.artistImage}
+                        src={mediaUrl(event.artist.artistImage, { width: 96 }) ?? ''}
                         alt=""
                         className="w-6 h-6 rounded-full object-cover bg-gray-100"
                       />

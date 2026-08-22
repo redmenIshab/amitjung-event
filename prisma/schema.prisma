@@ -89,6 +89,12 @@ model Event {
 
   assignments EventAssignment[]
   activities  TicketActivity[]
+
+  // bookingDeadline IS the event date: ordered by it on every listing and
+  // filtered by it for "upcoming". status narrows the public listing.
+  @@index([bookingDeadline])
+  @@index([status])
+  @@index([artistId])
 }
 
 /// Grants one staff account (in practice an ORGANIZER) access to one event.
@@ -208,6 +214,8 @@ model Music {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([artistId])
 }
 
 model Payment {
@@ -229,6 +237,12 @@ model Payment {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   bookings  Booking[]
+
+  // Analytics groups payments by event and status; the sales trend scans PAID
+  // payments in date order.
+  @@index([eventId, paymentStatus])
+  @@index([paymentStatus, createdAt])
+  @@index([paymentInitiatorId])
 }
 
 enum PaymentStatus {
@@ -257,6 +271,12 @@ model Booking {
   updatedAt DateTime @updatedAt
 
   tickets   Ticket[]
+
+  // All three are foreign keys joined on constantly — Postgres does not index
+  // foreign keys automatically, and neither does Prisma.
+  @@index([paymentId])
+  @@index([eventId])
+  @@index([participantId])
 }
 
 enum bookingStatus {
@@ -287,6 +307,15 @@ model Ticket {
   updatedAt DateTime       @updatedAt
 
   checkIn CheckIn?
+
+  // The sold-count aggregate (`groupBy eventId where status != CANCELLED`) runs
+  // on every public /events view; without this it sequentially scans the whole
+  // table. The composite also serves plain eventId lookups via its leftmost
+  // column, so no separate eventId index is needed.
+  @@index([eventId, status])
+  @@index([bookingId])
+  // "My Tickets" matches on the buyer's email as well as their bookings.
+  @@index([attendeeEmail])
 }
 
 enum TicketCategory {
@@ -311,4 +340,7 @@ model CheckIn {
   ticket    Ticket   @relation(fields: [ticketId], references: [id])
   scannedAt DateTime @default(now())
   createdAt DateTime @default(now())
+
+  // Check-in timelines read scans in chronological order.
+  @@index([scannedAt])
 }

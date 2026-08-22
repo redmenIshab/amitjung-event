@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { isCompletableDate } from '@/lib/events'
+import { UploadField } from '@/components/media/UploadField'
 
 type Artist = { id: string; artistName: string }
 
@@ -175,10 +176,12 @@ export function EventForm() {
         <Label htmlFor="discountUpto">Discount valid until</Label>
         <Input id="discountUpto" name="discountUpto" type="datetime-local" />
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="image">Poster Image URL (optional)</Label>
-        <Input id="image" name="image" type="url" placeholder="https://example.com/poster.jpg" />
-      </div>
+      <UploadField
+        purpose="event"
+        name="image"
+        label="Poster image (optional)"
+        hint="JPG, PNG or WebP. Delivered at the size each page needs."
+      />
       <div className="space-y-1">
         <Label htmlFor="genres">Genres (comma-separated, optional)</Label>
         <Input id="genres" name="genres" placeholder="POP, R&B, LIVE" />

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback, FormEvent, ReactNode } from 'react'
 import Image from 'next/image'
+import { mediaUrl } from '@/lib/media'
+import { showreelUrl } from '@/components/marketing/media'
 
 // ─── ServiceCard ─────────────────────────────────────────────────────
 
@@ -211,19 +213,19 @@ const SCENES = [
     headline: ['WE BRING', 'EVENTS', 'TO LIFE'],
     label: 'LYANTE PRODUCTION',
     tag: 'Live Events',
-    image: '/images/photo-21.jpg',
+    image: 'lyante/gallery/photo-21',
   },
   {
     headline: ['WE DOCUMENT', 'THE JOURNEY'],
     label: 'BEYOND THE MOMENT',
     tag: 'Documentary',
-    image: '/images/photo-3.jpg',
+    image: 'lyante/gallery/photo-3',
   },
   {
     headline: ['YOUR STORY', 'FOREVER'],
     label: 'FOR LIFETIME MEMORY',
     tag: 'Legacy',
-    image: '/images/photo-13.jpg',
+    image: 'lyante/gallery/photo-13',
   },
 ]
 
@@ -338,7 +340,7 @@ function Hero() {
           className="absolute inset-0 transition-opacity duration-700"
           style={{ opacity: i === scene ? 1 : 0 }}
         >
-          <img src={s.image} alt="" className="object-cover w-full h-full" />
+          <img src={mediaUrl(s.image, { width: 1920 }) ?? ''} alt="" className="object-cover w-full h-full" />
         </div>
       ))}
 
@@ -1009,17 +1011,17 @@ const FILTERS = ['ALL', 'CONCERTS', 'CREATIVE'] as const
 type Filter = typeof FILTERS[number]
 
 const PORTFOLIO_ITEMS: { id: number; category: Exclude<Filter, 'ALL'>; title: string; image: string; tall: boolean }[] = [
-  { id: 2,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-2.jpg',  tall: true  },
-  { id: 3,  category: 'CREATIVE',  title: 'Xtreme Action Shot',   image: '/images/photo-4.jpg',  tall: false },
-  { id: 4,  category: 'CREATIVE',  title: 'Xtreme Action Shot',         image: '/images/photo-5.jpg',  tall: true  },
-  { id: 5,  category: 'CREATIVE',  title: 'Xtreme Action Shot',image: '/images/photo-6.jpg',  tall: false },
-  { id: 6,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-7.jpg',  tall: true  },
-  { id: 7,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: '/images/photo-8.jpg',  tall: false },
-  { id: 8,  category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-9.jpg',  tall: true  },
-  { id: 9,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: '/images/photo-10.jpg', tall: false },
-  { id: 10, category: 'CONCERTS',  title: 'Amit Jung & Gorkhey',  image: '/images/photo-11.jpg', tall: false },
-  { id: 11, category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: '/images/photo-12.jpg', tall: true  },
-  { id: 12, category: 'CREATIVE',  title: 'Xtreme Action Shot',     image: '/images/photo-14.jpg', tall: false },
+  { id: 2,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: 'lyante/gallery/photo-2',  tall: true  },
+  { id: 3,  category: 'CREATIVE',  title: 'Xtreme Action Shot',   image: 'lyante/gallery/photo-4',  tall: false },
+  { id: 4,  category: 'CREATIVE',  title: 'Xtreme Action Shot',         image: 'lyante/gallery/photo-5',  tall: true  },
+  { id: 5,  category: 'CREATIVE',  title: 'Xtreme Action Shot',image: 'lyante/gallery/photo-6',  tall: false },
+  { id: 6,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: 'lyante/gallery/photo-7',  tall: true  },
+  { id: 7,  category: 'CREATIVE',  title: 'Xtreme Action Shot',    image: 'lyante/gallery/photo-8',  tall: false },
+  { id: 8,  category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: 'lyante/gallery/photo-9',  tall: true  },
+  { id: 9,  category: 'CREATIVE',  title: 'Xtreme Action Shot',       image: 'lyante/gallery/photo-10', tall: false },
+  { id: 10, category: 'CONCERTS',  title: 'Amit Jung & Gorkhey',  image: 'lyante/gallery/photo-11', tall: false },
+  { id: 11, category: 'CREATIVE',  title: 'Xtreme Action Shot',        image: 'lyante/gallery/photo-12', tall: true  },
+  { id: 12, category: 'CREATIVE',  title: 'Xtreme Action Shot',     image: 'lyante/gallery/photo-14', tall: false },
 ]
 
 function Portfolio() {
@@ -1036,7 +1038,7 @@ function Portfolio() {
 
         <div className="relative w-full h-64 md:h-96 bg-surface mb-10 rounded-sm overflow-hidden group">
           <video
-            src="/video/showreel.mov"
+            src={showreelUrl()}
             autoPlay
             muted
             loop
@@ -1072,7 +1074,7 @@ function Portfolio() {
               className={`relative ${item.tall ? 'h-72' : 'h-48'} rounded-sm overflow-hidden group break-inside-avoid`}
             >
               <img
-                src={item.image}
+                src={mediaUrl(item.image, { width: 800 }) ?? ''}
                 alt={item.title}
                 className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
               />

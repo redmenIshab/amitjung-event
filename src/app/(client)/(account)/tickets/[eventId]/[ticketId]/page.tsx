@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, MapPin, Loader2, Download, Share2, Check } from 'lucide-react'
 import { z } from 'zod'
 import { ticketDetailResponseSchema } from '@/lib/validations'
+import { mediaUrl } from '@/lib/media'
 
 export default function TicketDetailPage() {
   const router = useRouter()
@@ -137,7 +138,7 @@ export default function TicketDetailPage() {
         {ticket.event.image && (
           <div className="relative h-48 overflow-hidden">
             <img
-              src={ticket.event.image}
+              src={mediaUrl(ticket.event.image, { width: 800 }) ?? ''}
               alt=""
               className={`w-full h-full object-cover ${isRetired ? 'grayscale' : ''}`}
             />

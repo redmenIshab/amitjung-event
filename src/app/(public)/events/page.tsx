@@ -56,12 +56,17 @@ function toCardData(event: EventDTO): EventCardData | null {
 export default async function PublicEventsPage() {
   // Read directly from the data layer (no self-fetch over HTTP), so it works in
   // any environment regardless of NEXT_PUBLIC_APP_URL / cold starts.
-  const events = await getCachedEvents()
-  const sold = await prisma.ticket.groupBy({
-    by: ['eventId'],
-    where: { status: { not: 'CANCELLED' } },
-    _count: true,
-  })
+  // Run in parallel: the cache read and the sold-count aggregate are
+  // independent, and awaiting them in sequence added a full round trip to every
+  // request for no reason.
+  const [events, sold] = await Promise.all([
+    getCachedEvents(),
+    prisma.ticket.groupBy({
+      by: ['eventId'],
+      where: { status: { not: 'CANCELLED' } },
+      _count: true,
+    }),
+  ])
   const soldByEvent = new Map(sold.map((s) => [s.eventId, s._count]))
   const withCounts = events.map((e) => ({ ...e, soldCount: soldByEvent.get(e.id) ?? 0 }))
   // Normalize Date → ISO strings (mirrors the API's JSON) before schema parse.
