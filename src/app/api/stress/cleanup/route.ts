@@ -38,6 +38,10 @@ export async function POST(request: NextRequest) {
     // Deliberately logged even though this is the stress harness: bulk ticket
     // deletion is exactly the kind of action an audit log must not be silent
     // about, whoever triggered it.
+    //
+    // The one call that passes the singleton rather than a transaction client:
+    // the deletes above are not in a transaction either, so there is nothing to
+    // be atomic WITH. Every production path passes `tx`.
     if (ticketIds.length > 0) {
       await recordTicketActivity(prisma, {
         eventId,
