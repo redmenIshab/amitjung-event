@@ -168,11 +168,16 @@ export interface EventAnalytics {
   checkInTimeline: { hour: string; count: number }[]
 }
 
-/** Sums PAID and REFUND amounts for an event in one grouped query. */
-async function paymentTotals(eventId?: string) {
+/** Sums PAID and REFUND amounts in one grouped query, optionally scoped. */
+async function paymentTotals(scope?: { eventId?: string; eventIds?: string[] | null }) {
+  const where = scope?.eventId
+    ? { eventId: scope.eventId }
+    : scope?.eventIds
+      ? { eventId: { in: scope.eventIds } }
+      : undefined
   const rows = await prisma.payment.groupBy({
     by: ['paymentStatus'],
-    where: eventId ? { eventId } : undefined,
+    where,
     _sum: { finalAmount: true },
   })
   let gross = 0
@@ -192,7 +197,7 @@ export async function getEventAnalytics(eventId: string): Promise<EventAnalytics
   if (!event) return null
 
   const [{ gross, refunds }, ticketRows, checkIns, paidTicketDates] = await Promise.all([
-    paymentTotals(eventId),
+    paymentTotals({ eventId }),
     prisma.ticket.findMany({
       where: { eventId },
       select: { status: true, source: true },
@@ -343,8 +348,20 @@ export interface PlatformAnalytics {
   topEvents: { id: string; name: string; net: number; sold: number }[]
 }
 
-export async function getPlatformAnalytics(): Promise<PlatformAnalytics> {
+/**
+ * Platform roll-up.
+ *
+ * @param eventIds Restricts every event aggregate to these events. `null` or
+ *   omitted is the platform-wide view (ADMIN). An event-scoped role passes its
+ *   assigned ids so the dashboard never totals events it cannot see — note an
+ *   empty array filters to nothing rather than falling through to "all".
+ */
+export async function getPlatformAnalytics(
+  eventIds?: string[] | null,
+): Promise<PlatformAnalytics> {
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  const eventWhere = eventIds ? { id: { in: eventIds } } : undefined
+  const byEventWhere = eventIds ? { eventId: { in: eventIds } } : undefined
 
   const [
     { gross, refunds },
@@ -356,20 +373,26 @@ export async function getPlatformAnalytics(): Promise<PlatformAnalytics> {
     staff,
     paidPayments,
   ] = await Promise.all([
-    paymentTotals(),
+    paymentTotals({ eventIds }),
     prisma.payment.groupBy({
       by: ['eventId', 'paymentStatus'],
+      where: byEventWhere,
       _sum: { finalAmount: true },
     }),
     prisma.event.findMany({
+      where: eventWhere,
       select: { id: true, name: true, status: true, commissionPercentage: true },
     }),
-    prisma.ticket.groupBy({ by: ['eventId', 'status', 'source'], _count: true }),
+    prisma.ticket.groupBy({
+      by: ['eventId', 'status', 'source'],
+      where: byEventWhere,
+      _count: true,
+    }),
     prisma.participant.count({ where: { deletedAt: null } }),
     prisma.participant.count({ where: { deletedAt: null, createdAt: { gte: since30d } } }),
     prisma.user.count({ where: { deletedAt: null, role: { not: 'USER' } } }),
     prisma.payment.findMany({
-      where: { paymentStatus: 'PAID' },
+      where: { paymentStatus: 'PAID', ...(byEventWhere ?? {}) },
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     }),
