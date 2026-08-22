@@ -97,12 +97,18 @@ There are **two distinct user tables and two distinct auth roles**. Confusing th
 | Table | `User` | `Participant` |
 | Created by | Seed / admin (`/admin/users`) / public sign-up | Google sign-in upsert (`auth.ts` `signIn` callback) |
 | Login | Credentials (email+password, bcrypt) at `/admin/login` | Google OAuth at `/auth/login` |
-| `session.user.role` | `ADMIN` \| `STAFF` \| `MANAGER` \| `USER` | `PARTICIPANT` (synthesized in the `jwt` callback) |
+| `session.user.role` | `ADMIN` \| `STAFF` \| `MANAGER` \| `USER` \| `ORGANIZER` | `PARTICIPANT` (synthesized in the `jwt` callback) |
 | Purpose | Run the Control Center | Buy & hold tickets |
 
 - `PARTICIPANT` is **not** in the DB `Role` enum — it only exists on the JWT/session for Google users. Credentials users carry their real DB `Role`.
 - **`USER` is the no-capability role** and the `User.role` **default**. Public self-registration (`/auth/register` → `/auth/api/register`) creates rows without an explicit role, so anyone signing up themselves lands on `USER` and cannot reach the Control Center. Staff roles are only ever granted by an admin. ⚠️ Do not restore the old `@default(STAFF)` — that made public sign-up an escalation path into the CRM.
 - **Staff accounts are soft-deleted** via `User.deletedAt` (set = deactivated, cleared = reactivated), matching `Participant` and `Artist`.
+- **`ORGANIZER` is an event-scoped staff role.** It holds read capabilities plus
+  `TICKET_SCAN`, but only for events listed in `EventAssignment` — an organizer
+  with no assignments can reach nothing. Scope is enforced by
+  `src/lib/eventAccess.ts`; the pure predicate lives in `src/lib/eventScope.ts`
+  so the edge proxy and client components can use it too. Granting the role
+  alone confers nothing; membership is managed on the event page (§6).
 - Purchase endpoints require `session.user.role === 'PARTICIPANT'` (see `/api/khalti/initiate`).
 - Admin endpoints/pages require a staff capability (see §6).
 
@@ -114,9 +120,13 @@ Capability → allowed roles map. **Check capabilities, never hardcode role stri
 
 ```
 CAPABILITY = {
-  DASHBOARD_VIEW:   [ADMIN, STAFF, MANAGER]
-  ANALYTICS_READ:   [ADMIN, STAFF, MANAGER]
-  TICKET_SCAN:      [ADMIN, STAFF]
+  DASHBOARD_VIEW:   [ADMIN, STAFF, MANAGER, ORGANIZER]
+  EVENT_READ:       [ADMIN, STAFF, MANAGER, ORGANIZER]   // event-scoped for ORGANIZER
+  ANALYTICS_READ:   [ADMIN, STAFF, MANAGER, ORGANIZER]   // event-scoped for ORGANIZER
+  TICKET_SCAN:      [ADMIN, STAFF, ORGANIZER]            // event-scoped for ORGANIZER
+  SALES_READ:       [ADMIN, ORGANIZER]                   // one event's OWN takings
+  FINANCE_READ:     [ADMIN]                              // commission, platform totals, peer data
+  ARTIST_READ:      [ADMIN, STAFF, MANAGER]
   EVENT_WRITE:      [ADMIN]
   TICKET_MANAGE:    [ADMIN]
   ARTIST_MANAGE:    [ADMIN]
@@ -125,13 +135,32 @@ CAPABILITY = {
 }
 ```
 
+**Event scoping — the second dimension.** `hasCapability` answers "may this role
+do X?"; `canAccessEvent` (in `src/lib/eventScope.ts`, pure) answers "…to THIS
+event?". Server gates combine both:
+
+- `requireEventApiCapability(cap, eventId)` — route handlers; 401/403, and the
+  out-of-scope refusal is byte-identical to the no-capability one so a prober
+  cannot enumerate event ids.
+- `requireEventPageCapability(cap, eventId)` — server components; an
+  out-of-scope organizer is redirected to `/admin/events`, not to `/`.
+- `visibleEventIds(session)` — `null` means every event; an array confines a
+  list query. An **empty** array means "nothing", never "everything".
+
+These live in `src/lib/eventAccess.ts`, **not** `rbac.ts`, because `rbac.ts` is
+bundled into `proxy.ts` (edge) and client components and must stay Prisma-free.
+
+**Organizer team membership** is managed on `/admin/events/[id]` via
+`/api/events/[eventId]/team` (all `USER_MANAGE`). Adding a member either
+assigns an existing account or mints a new `ORGANIZER` login inline.
+
 Helpers:
 - `hasCapability(role, cap)` — pure boolean.
 - `requireApiCapability(cap)` — in route handlers; returns `NextResponse` (401/403) or `{ session }`. Pattern: `const gate = await requireApiCapability('EVENT_WRITE'); if (gate instanceof NextResponse) return gate`.
 - `requirePageCapability(cap)` — in server components; **redirects** (`/admin/login` if unauthenticated, `/` if under-privileged) or returns the session.
 - `requireSession()` — any logged-in user (used by buyer `/api/tickets/mine`).
 
-**The `/admin` guard** is `src/proxy.ts` (matcher `['/admin/:path*']`): it lets `/admin/login` through, else requires `DASHBOARD_VIEW` or redirects to `/admin/login`. This is why admin login sits at `admin/login` **outside** `admin/(panel)/` — putting it inside the panel would infinite-loop the guard. **Do not move it in.**
+**The `/admin` guard** is `src/proxy.ts` (matcher `['/admin/:path*']`): it lets `/admin/login` through, else requires `DASHBOARD_VIEW` or redirects to `/admin/login`. For `ORGANIZER` it additionally blocks whole areas (`/admin/users`, `/admin/artists`, event create/edit, ticket generation) and any `/admin/events/<id>` outside the event ids carried in the JWT — coarse and possibly seconds stale, exactly like role revocation below; the page/route gate re-reads the database and is the authority. This is why admin login sits at `admin/login` **outside** `admin/(panel)/` — putting it inside the panel would infinite-loop the guard. **Do not move it in.**
 
 **Live role re-check.** The `jwt` callback in `auth.ts` re-reads the staff row on every token refresh and collapses `role` to `USER` when the account is missing or `deletedAt` is set, so a demotion or deactivation applies within seconds instead of waiting out the JWT. Buyers (`PARTICIPANT`) skip the lookup. Note the asymmetry: `proxy.ts` uses `getToken`, which only **decodes** the cookie and does *not* run callbacks — so a revoked user still clears the proxy and is stopped one layer later by `requirePageCapability` in `admin/(panel)/layout.tsx`. Enforcement is at the page/route gate, not the edge.
 
@@ -178,7 +207,8 @@ Helpers:
 Models: `User`, `Participant`, `Event`, `Artist`, `Music`, `Payment`, `Booking`, `Ticket`, `CheckIn`.
 
 Key relationships & fields:
-- **User** — staff/CRM identity. `role` defaults to `USER`; `deletedAt` marks a deactivated account. No relations to any other model, so deactivating has no FK fallout.
+- **User** — staff/CRM identity. `role` defaults to `USER`; `deletedAt` marks a deactivated account. Its only relation is `EventAssignment` (cascading), and deactivation is a soft delete, so deactivating still has no FK fallout.
+- **EventAssignment** — grants one staff account access to one event (`@@unique([userId, eventId])`). Cascades on both sides; the **event-side cascade is required** because events are hard-deleted by `DELETE /api/events/[eventId]`.
 - **Event** — `bookingDeadline` (⚠️ this is *the event date* everywhere in the UI; code often maps `date: event.bookingDeadline`), `capacity`, `ticketsAvailable` (offered ≤ capacity), `isOpen`, `status`, `eventType`, pricing (`baseTicketPrice`, `hasDiscount`, `discountPercentage`, `discountUpto`), `artistId?`.
 - **Artist** → has many `Music` and `Event`. Soft-deleted via `deletedAt`.
 - **Payment** → **Booking** (1..*) → **Ticket** (1..*). A booking groups the tickets from one purchase.
@@ -186,7 +216,7 @@ Key relationships & fields:
 - **CheckIn** — one per ticket, set when scanned.
 
 Enums:
-- `Role`: ADMIN, STAFF, MANAGER, **USER** (no capabilities; the `User.role` default — see §5)
+- `Role`: ADMIN, STAFF, MANAGER, **USER** (no capabilities; the `User.role` default — see §5), **ORGANIZER** (event-scoped — see §6)
 - `EventStatus`: DRAFT, PUBLISHED, CANCELLED, **COMPLETED**
 - `EventType`: CONCERT, FESTIVAL, CONFERENCE, SPORTS, PRIVATE, OTHER
 - `PaymentStatus` / `bookingStatus`: PAID, REFUND, PENDING, REJECTED
@@ -292,6 +322,10 @@ Fonts (CSS vars): `font-bebas` (display headings, uppercase), `font-cormorant` (
 10. Keep the group **layout font declarations** when adding pages, or brand fonts break (§13).
 11. **`User.role` must stay `@default(USER)`.** Public sign-up creates `User` rows without a role; defaulting to `STAFF` (as it once did) hands every self-registered stranger a Control Center account with ticket-scanning rights.
 12. **Never return `User.password`.** API routes use an explicit `select` and go through `toStaffUserDto` in `src/lib/users.ts` rather than returning rows wholesale.
+13. **`src/lib/rbac.ts` and `src/lib/eventScope.ts` must never import Prisma or `next/headers`.** Both are bundled into `src/proxy.ts` (edge) and into client components. DB-backed scoping belongs in `src/lib/eventAccess.ts`.
+14. **`getEventPeerComparison` returns other events by name with their net revenue.** It is `FINANCE_READ`-only and must not even be *fetched* for anyone else — including for the analytics PDF input — or an organizer sees every other event's takings.
+15. **Scope-check before mutating in `verifyTicket`.** A wrong-event scan must return `WRONG_EVENT` without consuming the attendee's ticket, and the check sits ahead of the cancelled/already-used branches so it leaks no ticket state either.
+16. **An empty `visibleEventIds` array means "no events", not "all events".** Guard with `scope ? { id: { in: scope } } : undefined` — never with `scope?.length`.
 
 ---
 

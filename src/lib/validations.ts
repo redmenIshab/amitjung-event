@@ -38,7 +38,9 @@ const eventFieldsSchema = z.object({
   isOpen: z.boolean().optional().default(true),
   image: z.string().url().optional().or(z.literal('')),
   genres: z.array(z.string()).default([]),
-  artistId: z.string().optional(),
+  // Nullable so an edit can unassign the event's artist; the empty option in
+  // the form posts null rather than '' (which would fail the FK).
+  artistId: z.string().min(1).nullish(),
 })
 
 export const createEventSchema = eventFieldsSchema

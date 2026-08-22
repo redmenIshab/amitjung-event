@@ -7,17 +7,30 @@ import { authOptions } from '@/lib/auth'
 export type AppRole = Session['user']['role']
 
 export const CAPABILITY = {
-  DASHBOARD_VIEW: ['ADMIN', 'STAFF', 'MANAGER'],
-  ANALYTICS_READ: ['ADMIN', 'STAFF', 'MANAGER'],
-  TICKET_SCAN: ['ADMIN', 'STAFF'],
+  // Control Center shell. ORGANIZER holds it so the proxy lets them in at all;
+  // every page behind it scopes its own data — see src/lib/eventAccess.ts.
+  DASHBOARD_VIEW: ['ADMIN', 'STAFF', 'MANAGER', 'ORGANIZER'],
+  // Read one event's CRM record: detail page, ticket list, attendee data.
+  // Event-scoped for ORGANIZER.
+  EVENT_READ: ['ADMIN', 'STAFF', 'MANAGER', 'ORGANIZER'],
+  ANALYTICS_READ: ['ADMIN', 'STAFF', 'MANAGER', 'ORGANIZER'],
+  TICKET_SCAN: ['ADMIN', 'STAFF', 'ORGANIZER'],
   EVENT_WRITE: ['ADMIN'],
   TICKET_MANAGE: ['ADMIN'],
   ARTIST_MANAGE: ['ADMIN'],
+  // Read artists/music. Split from ARTIST_MANAGE so the Artists nav link and
+  // pages hide from ORGANIZER by capability rather than by a role string,
+  // without narrowing what STAFF/MANAGER could already see.
+  ARTIST_READ: ['ADMIN', 'STAFF', 'MANAGER'],
   MARKETING_MANAGE: ['ADMIN', 'MANAGER'],
   USER_MANAGE: ['ADMIN'],
-  // Money: revenue, refunds, commission rates and margin. Deliberately
-  // narrower than ANALYTICS_READ — door staff need check-in numbers, not
-  // organizer commercial terms.
+  // An event's OWN sales: gross, refunds, net, average ticket price. The
+  // organizer's money, so they see it for their assigned events.
+  SALES_READ: ['ADMIN', 'ORGANIZER'],
+  // Lyante's side of the ledger: commission rates and income, platform-wide
+  // totals, and cross-event peer comparison. Deliberately narrower than
+  // SALES_READ — an organizer sees their revenue, not our margin, and never
+  // another event's figures.
   FINANCE_READ: ['ADMIN'],
 } as const satisfies Record<string, readonly AppRole[]>
 

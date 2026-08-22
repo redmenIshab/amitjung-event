@@ -21,6 +21,8 @@ model User {
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  assignments EventAssignment[]
 }
 
 model Participant {
@@ -43,6 +45,9 @@ enum Role {
   MANAGER
   // Non-staff account (public sign-up). Holds no capability — see src/lib/rbac.ts.
   USER
+  // Event organizer's team. Capabilities are event-scoped: they apply only to
+  // events listed in EventAssignment — see src/lib/eventScope.ts.
+  ORGANIZER
 }
 
 model Event {
@@ -81,6 +86,25 @@ model Event {
   tickets  Ticket[]
   bookings Booking[]
   payments Payment[]
+
+  assignments EventAssignment[]
+}
+
+/// Grants one staff account (in practice an ORGANIZER) access to one event.
+/// Scope is the rows here; the role is on User. Cascade on the event side is
+/// required — events are hard-deleted by DELETE /api/events/[eventId].
+model EventAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
 }
 
 enum EventStatus {

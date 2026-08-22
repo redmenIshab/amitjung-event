@@ -5,7 +5,7 @@ import { createMusicSchema } from '@/types/music'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ artistId: string }> }) {
   try {
-    const gate = await requireApiCapability('DASHBOARD_VIEW')
+    const gate = await requireApiCapability('ARTIST_READ')
     if (gate instanceof NextResponse) return gate
 
     const { artistId } = await params

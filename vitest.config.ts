@@ -8,6 +8,10 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // `.claude/worktrees/` holds checkouts of this same repo; without this,
+    // every run executes a second, stale copy of the suite and reports its
+    // pre-existing failures as ours.
+    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'],
   },
   resolve: {
     alias: {

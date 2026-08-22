@@ -24,6 +24,34 @@ describe('hasCapability', () => {
     ['MANAGER', 'MARKETING_MANAGE', true],
     ['STAFF', 'MARKETING_MANAGE', false],
     ['PARTICIPANT', 'MARKETING_MANAGE', false],
+    // ── ORGANIZER: event-scoped read + scan ──
+    ['ORGANIZER', 'DASHBOARD_VIEW', true],
+    ['ORGANIZER', 'EVENT_READ', true],
+    ['ORGANIZER', 'ANALYTICS_READ', true],
+    ['ORGANIZER', 'TICKET_SCAN', true],
+    ['ORGANIZER', 'SALES_READ', true],
+    // ── ORGANIZER: everything else denied ──
+    ['ORGANIZER', 'EVENT_WRITE', false],
+    ['ORGANIZER', 'TICKET_MANAGE', false],
+    ['ORGANIZER', 'ARTIST_MANAGE', false],
+    ['ORGANIZER', 'ARTIST_READ', false],
+    ['ORGANIZER', 'USER_MANAGE', false],
+    ['ORGANIZER', 'MARKETING_MANAGE', false],
+    ['ORGANIZER', 'FINANCE_READ', false],
+    // ── the FINANCE_READ split must not widen anyone ──
+    ['ADMIN', 'SALES_READ', true],
+    ['ADMIN', 'FINANCE_READ', true],
+    ['STAFF', 'SALES_READ', false],
+    ['STAFF', 'FINANCE_READ', false],
+    ['MANAGER', 'SALES_READ', false],
+    ['MANAGER', 'FINANCE_READ', false],
+    // ── ARTIST_READ keeps existing staff visibility ──
+    ['ADMIN', 'ARTIST_READ', true],
+    ['STAFF', 'ARTIST_READ', true],
+    ['MANAGER', 'ARTIST_READ', true],
+    // ── EVENT_READ for existing staff ──
+    ['STAFF', 'EVENT_READ', true],
+    ['MANAGER', 'EVENT_READ', true],
   ]
   it.each(cases)('%s + %s => %s', (role, cap, expected) => {
     expect(hasCapability(role, cap)).toBe(expected)

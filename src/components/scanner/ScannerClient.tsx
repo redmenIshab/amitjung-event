@@ -12,6 +12,7 @@ type ScanState =
 type ScanResult =
   | { valid: true; attendeeName: string | null; distributorName: string | null; category: string; eventName: string }
   | { valid: false; reason: 'NOT_FOUND' | 'CANCELLED' | 'ALREADY_USED'; usedAt?: string }
+  | { valid: false; reason: 'WRONG_EVENT'; eventName: string }
 
 function extractToken(raw: string): string | null {
   try {
@@ -97,13 +98,17 @@ export function ScannerClient() {
     const isAlreadyUsed = !result.valid && result.reason === 'ALREADY_USED'
     const isCancelled = !result.valid && result.reason === 'CANCELLED'
     const isNotFound = !result.valid && result.reason === 'NOT_FOUND'
+    // A real ticket, but not for an event this scanner covers. Deliberately
+    // amber rather than red: nothing is wrong with the ticket, and it has NOT
+    // been checked in.
+    const isWrongEvent = !result.valid && result.reason === 'WRONG_EVENT'
 
     return (
       <div
         className={`min-h-[60vh] flex flex-col items-center justify-center rounded-2xl p-8 text-center ${
           isValid
             ? 'bg-green-50 border-2 border-green-300'
-            : isAlreadyUsed
+            : isAlreadyUsed || isWrongEvent
             ? 'bg-orange-50 border-2 border-orange-300'
             : 'bg-red-50 border-2 border-red-300'
         }`}
@@ -152,6 +157,15 @@ export function ScannerClient() {
             <div className="text-7xl mb-4">❓</div>
             <p className="text-3xl font-black text-red-700 mb-2">INVALID</p>
             <p className="text-red-500 text-sm">Ticket not found in the system.</p>
+          </>
+        ) : isWrongEvent && !result.valid && result.reason === 'WRONG_EVENT' ? (
+          <>
+            <div className="text-7xl mb-4">🚫</div>
+            <p className="text-3xl font-black text-orange-700 mb-2">WRONG EVENT</p>
+            <p className="text-orange-700 text-sm">
+              This ticket is for {result.eventName}.
+            </p>
+            <p className="text-orange-500 text-xs mt-1">It has not been checked in.</p>
           </>
         ) : null}
 

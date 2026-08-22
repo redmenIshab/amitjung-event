@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireApiCapability } from '@/lib/rbac'
+import { requireEventApiCapability } from '@/lib/eventAccess'
 import { prisma } from '@/lib/prisma'
 import { generateTicketSchema } from '@/lib/validations'
 import { generateQRCodeDataURL, buildVerifyUrl } from '@/lib/qr'
@@ -9,10 +10,11 @@ import { ensureSystemBooking } from '@/lib/ticketing'
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
-  const gate = await requireApiCapability('DASHBOARD_VIEW')
-  if (gate instanceof NextResponse) return gate
-
   const { eventId } = await params
+  // Attendee PII: EVENT_READ scoped to this event, so an organizer cannot read
+  // another event's attendee list.
+  const gate = await requireEventApiCapability('EVENT_READ', eventId)
+  if (gate instanceof NextResponse) return gate
   const tickets = await prisma.ticket.findMany({
     where: { eventId },
     include: { checkIn: true },

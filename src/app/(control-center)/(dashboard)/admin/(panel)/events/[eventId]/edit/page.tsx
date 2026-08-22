@@ -14,6 +14,16 @@ export default async function EditEventPage({ params }: Props) {
   const event = await prisma.event.findUnique({ where: { id: eventId } })
   if (!event) notFound()
 
+  // Include the event's current artist even if soft-deleted, so reopening the
+  // form doesn't silently reassign the event to whichever artist sorts first.
+  const artists = await prisma.artist.findMany({
+    where: {
+      OR: [{ deletedAt: null }, ...(event.artistId ? [{ id: event.artistId }] : [])],
+    },
+    select: { id: true, artistName: true },
+    orderBy: { artistName: 'asc' },
+  })
+
   return (
     <div>
       <Link
@@ -45,6 +55,7 @@ export default async function EditEventPage({ params }: Props) {
           genres: event.genres,
           artistId: event.artistId,
         }}
+        artists={artists}
       />
     </div>
   )

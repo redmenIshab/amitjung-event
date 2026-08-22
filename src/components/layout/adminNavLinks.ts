@@ -17,7 +17,7 @@ export const ADMIN_NAV_LINKS: AdminNavLink[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/events', label: 'Events', icon: Calendar },
   { href: '/admin/scanner', label: 'Scanner', icon: ScanLine, cap: 'TICKET_SCAN' },
-  { href: '/admin/artists', label: 'Artists', icon: Music },
+  { href: '/admin/artists', label: 'Artists', icon: Music, cap: 'ARTIST_READ' },
   { href: '/admin/users', label: 'Users', icon: Users, cap: 'USER_MANAGE' },
 ]
 

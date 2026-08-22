@@ -29,6 +29,8 @@ export type EventForEdit = {
   artistId: string | null
 }
 
+export type ArtistOption = { id: string; artistName: string }
+
 function toLocalInput(iso?: string | null) {
   if (!iso) return ''
   const d = new Date(iso)
@@ -36,7 +38,13 @@ function toLocalInput(iso?: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export function EditEventForm({ event }: { event: EventForEdit }) {
+export function EditEventForm({
+  event,
+  artists,
+}: {
+  event: EventForEdit
+  artists: ArtistOption[]
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -68,6 +76,9 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
         .split(',')
         .map((g) => g.trim())
         .filter(Boolean),
+      // null (not '') so picking "None" clears the relation instead of writing
+      // an empty id that violates the foreign key.
+      artistId: (form.get('artistId') as string) || null,
     }
 
     if (payload.status === 'COMPLETED' && !isCompletableDate(payload.date)) {
@@ -183,6 +194,17 @@ export function EditEventForm({ event }: { event: EventForEdit }) {
       <div className="space-y-1">
         <Label htmlFor="genres">Genres (comma-separated, optional)</Label>
         <Input id="genres" name="genres" defaultValue={event.genres.join(', ')} />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="artistId">Artist (optional)</Label>
+        <select id="artistId" name="artistId" defaultValue={event.artistId ?? ''} className={selectCls}>
+          <option value="">None</option>
+          {artists.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.artistName}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="description">Description (optional)</Label>

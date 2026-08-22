@@ -13,8 +13,20 @@ export type VerifyResult =
     }
   | { valid: false; reason: 'NOT_FOUND' | 'CANCELLED' }
   | { valid: false; reason: 'ALREADY_USED'; usedAt: Date }
+  /** Valid ticket, wrong event for this scanner. Never consumed. */
+  | { valid: false; reason: 'WRONG_EVENT'; eventName: string }
 
-export async function verifyTicket(token: string): Promise<VerifyResult> {
+/**
+ * Checks a ticket in.
+ *
+ * @param allowedEventIds Restricts the scanner to these events. `null` or
+ *   omitted means unrestricted (ADMIN/STAFF — unchanged behaviour). The check
+ *   runs before the update, so a wrong-event scan can never consume a ticket.
+ */
+export async function verifyTicket(
+  token: string,
+  allowedEventIds?: string[] | null,
+): Promise<VerifyResult> {
   return prisma.$transaction(async (tx) => {
     const ticket = await tx.ticket.findUnique({
       where: { token },
@@ -25,6 +37,14 @@ export async function verifyTicket(token: string): Promise<VerifyResult> {
     })
 
     if (!ticket) return { valid: false, reason: 'NOT_FOUND' } as const
+
+    // Scope first: refusing after the update would burn the attendee's ticket,
+    // and answering CANCELLED/ALREADY_USED here would leak another event's
+    // ticket state to a scanner with no business seeing it.
+    if (allowedEventIds && !allowedEventIds.includes(ticket.eventId)) {
+      return { valid: false, reason: 'WRONG_EVENT', eventName: ticket.event.name } as const
+    }
+
     if (ticket.status === 'CANCELLED') return { valid: false, reason: 'CANCELLED' } as const
     if (ticket.status === 'USED') {
       return {

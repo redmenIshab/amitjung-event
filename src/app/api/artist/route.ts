@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { createArtistSchema } from '@/types/artist'
 
 export async function GET() {
-  const gate = await requireApiCapability('DASHBOARD_VIEW')
+  const gate = await requireApiCapability('ARTIST_READ')
   if (gate instanceof NextResponse) return gate
 
   const artists = await prisma.artist.findMany({

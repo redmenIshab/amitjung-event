@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { createEventSchema, generateTicketSchema, registerSchema } from '@/lib/validations'
+import {
+  createEventSchema,
+  updateEventSchema,
+  generateTicketSchema,
+  registerSchema,
+} from '@/lib/validations'
 
 describe('createEventSchema', () => {
   it('accepts a valid event payload', () => {
@@ -86,6 +91,24 @@ describe('createEventSchema', () => {
       capacity: 100,
       baseTicketPrice: 4500,
     })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('updateEventSchema', () => {
+  it('accepts an artist reassignment', () => {
+    const result = updateEventSchema.safeParse({ artistId: 'artist_1' })
+    expect(result.success).toBe(true)
+  })
+
+  // "None" in the edit form must clear the relation, not write an empty id.
+  it('accepts a null artistId to unassign the artist', () => {
+    const result = updateEventSchema.safeParse({ artistId: null })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects an empty-string artistId', () => {
+    const result = updateEventSchema.safeParse({ artistId: '' })
     expect(result.success).toBe(false)
   })
 })

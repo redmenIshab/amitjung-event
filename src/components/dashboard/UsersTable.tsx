@@ -20,6 +20,7 @@ const ROLE_STYLES: Record<string, string> = {
   MANAGER: 'bg-blue-100 text-blue-700',
   STAFF: 'bg-emerald-100 text-emerald-700',
   USER: 'bg-gray-100 text-gray-500',
+  ORGANIZER: 'bg-purple-100 text-purple-700',
 }
 
 export function UsersTable({
@@ -125,6 +126,17 @@ export function UsersTable({
                       >
                         {user.role}
                       </span>
+                      {user.role === 'ORGANIZER' && user.assignedEvents !== undefined && (
+                        <span
+                          className={`ml-2 text-[11px] ${
+                            user.assignedEvents === 0 ? 'text-amber-700' : 'text-gray-500'
+                          }`}
+                        >
+                          {user.assignedEvents === 0
+                            ? 'no events assigned'
+                            : `${user.assignedEvents} event${user.assignedEvents === 1 ? '' : 's'}`}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span
