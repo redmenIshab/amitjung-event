@@ -7,8 +7,12 @@ import { z } from 'zod'
  * self-registration and means "no capabilities". Admins grant staff access;
  * to take it away they deactivate the account rather than demote it to USER,
  * so there is exactly one revocation mechanism.
+ *
+ * `ORGANIZER` is assignable, but on its own it grants nothing — its
+ * capabilities apply only to events the account is assigned to on the event
+ * page. See src/lib/eventScope.ts.
  */
-export const assignableRoles = ['ADMIN', 'MANAGER', 'STAFF'] as const
+export const assignableRoles = ['ADMIN', 'MANAGER', 'STAFF', 'ORGANIZER'] as const
 export type AssignableRole = (typeof assignableRoles)[number]
 
 /** Min length for admin-set staff passwords (the public sign-up path allows 6). */
