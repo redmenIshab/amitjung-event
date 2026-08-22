@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,25 @@ export function OrganizerTeamPanel({
   const [error, setError] = useState('')
   /** Shown once when mail is disabled — otherwise the password is unrecoverable. */
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null)
+  /**
+   * Existing organizer accounts. A team can span events, so a returning
+   * organizer must be assignable rather than re-created — creating them again
+   * would just collide on the unique email.
+   */
+  const [existing, setExisting] = useState<StaffUserDto[]>([])
+  const [mode, setMode] = useState<'existing' | 'new'>('existing')
+
+  useEffect(() => {
+    if (!adding) return
+    fetch('/api/users')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((all: StaffUserDto[]) =>
+        setExisting(all.filter((u) => u.role === 'ORGANIZER' && u.active)),
+      )
+      .catch(() => {})
+  }, [adding])
+
+  const assignable = existing.filter((u) => !members.some((m) => m.id === u.id))
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -35,14 +54,19 @@ export function OrganizerTeamPanel({
     setIssuedPassword(null)
 
     const form = new FormData(e.currentTarget)
+    const payload =
+      mode === 'existing'
+        ? { userId: form.get('userId') as string }
+        : {
+            name: form.get('name') as string,
+            email: form.get('email') as string,
+            password: form.get('password') as string,
+          }
+
     const res = await fetch(`/api/events/${eventId}/team`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: form.get('name') as string,
-        email: form.get('email') as string,
-        password: form.get('password') as string,
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (res.ok) {
@@ -127,21 +151,66 @@ export function OrganizerTeamPanel({
 
       {adding && (
         <form onSubmit={handleAdd} className="mt-3 space-y-3 border-t pt-3">
-          <div className="space-y-1">
-            <Label htmlFor="team-name">Name</Label>
-            <Input id="team-name" name="name" required />
+          <div className="flex gap-1 rounded-md bg-gray-100 p-0.5 text-xs">
+            {(['existing', 'new'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  setMode(m)
+                  setError('')
+                }}
+                className={`flex-1 rounded px-2 py-1.5 font-medium transition-colors ${
+                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                {m === 'existing' ? 'Existing account' : 'New account'}
+              </button>
+            ))}
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="team-email">Email</Label>
-            <Input id="team-email" name="email" type="email" required />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="team-password">Temporary password</Label>
-            <Input id="team-password" name="password" type="text" minLength={8} required />
-            <p className="text-xs text-gray-500">
-              At least 8 characters. There is no reset flow yet, so record it.
-            </p>
-          </div>
+
+          {mode === 'existing' ? (
+            <div className="space-y-1">
+              <Label htmlFor="team-userId">Organizer account</Label>
+              <select
+                id="team-userId"
+                name="userId"
+                required
+                defaultValue=""
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="" disabled>
+                  {assignable.length === 0 ? 'No unassigned organizers' : 'Select an account…'}
+                </option>
+                {assignable.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} · {u.email}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                Organizer accounts already in the system, not yet on this event.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="team-name">Name</Label>
+                <Input id="team-name" name="name" required />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="team-email">Email</Label>
+                <Input id="team-email" name="email" type="email" required />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="team-password">Temporary password</Label>
+                <Input id="team-password" name="password" type="text" minLength={8} required />
+                <p className="text-xs text-gray-500">
+                  At least 8 characters. There is no reset flow yet, so record it.
+                </p>
+              </div>
+            </>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={loading}>
