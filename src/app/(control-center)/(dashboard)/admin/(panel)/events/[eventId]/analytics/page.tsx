@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Ticket, CheckCircle2, Gift, TrendingUp, Wallet, Percent } from 'lucide-react'
-import { requirePageCapability, hasCapability } from '@/lib/rbac'
+import { hasCapability } from '@/lib/rbac'
+import { requireEventPageCapability } from '@/lib/eventAccess'
 import { getEventAnalytics, getEventPeerComparison } from '@/lib/analytics'
 import { StatTile } from '@/components/dashboard/StatTile'
 import { ChartCard } from '@/components/dashboard/ChartCard'
@@ -30,15 +31,20 @@ type Props = { params: Promise<{ eventId: string }> }
 export const dynamic = 'force-dynamic'
 
 export default async function EventAnalyticsPage({ params }: Props) {
-  // Volume metrics are open to anyone who can read analytics; money is gated
-  // separately below so door staff don't see organizer commercial terms.
-  const session = await requirePageCapability('ANALYTICS_READ')
-  const canSeeMoney = hasCapability(session.user.role, 'FINANCE_READ')
-
   const { eventId } = await params
+  // Volume metrics for anyone who can read this event's analytics; money is
+  // split — an organizer sees their own sales, never Lyante's commission or
+  // any other event's figures.
+  const session = await requireEventPageCapability('ANALYTICS_READ', eventId)
+  const canSeeSales = hasCapability(session.user.role, 'SALES_READ')
+  const canSeeCommission = hasCapability(session.user.role, 'FINANCE_READ')
+
   const [a, peers] = await Promise.all([
     getEventAnalytics(eventId),
-    getEventPeerComparison(eventId),
+    // Peer comparison names OTHER events and their net revenue. Fetched only
+    // for the platform owner — for anyone else it must never reach the client
+    // payload or the PDF.
+    canSeeCommission ? getEventPeerComparison(eventId) : Promise.resolve(null),
   ])
   if (!a) notFound()
 
@@ -59,20 +65,21 @@ export default async function EventAnalyticsPage({ params }: Props) {
       ticketsAvailable: a.event.ticketsAvailable,
       baseTicketPrice: a.event.baseTicketPrice,
     },
-    money: canSeeMoney
+    money: canSeeSales
       ? {
           grossSales: a.money.grossSales,
           refunds: a.money.refunds,
           netCollected: a.money.netCollected,
-          commissionIncome: a.money.commissionIncome,
-          commissionRate: a.money.commissionRate,
+          // Lyante's margin, not the organizer's — omitted below FINANCE_READ.
+          commissionIncome: canSeeCommission ? a.money.commissionIncome : null,
+          commissionRate: canSeeCommission ? a.money.commissionRate : null,
           averageTicketPrice: a.averageTicketPrice,
         }
       : null,
     tickets: a.tickets,
     sellThrough: a.sellThrough,
     checkInRate: a.checkInRate,
-    peers: canSeeMoney
+    peers: peers
       ? {
           rankByNet: peers.rankByNet,
           totalRanked: peers.totalRanked,
@@ -86,7 +93,7 @@ export default async function EventAnalyticsPage({ params }: Props) {
       { id: CHART_IDS.status, caption: 'Ticket status' },
       { id: CHART_IDS.sales, caption: 'Cumulative paid sales' },
       { id: CHART_IDS.doors, caption: 'Door arrivals per hour' },
-      ...(canSeeMoney && peers.rankByNet !== null
+      ...(peers && peers.rankByNet !== null
         ? [{ id: CHART_IDS.peers, caption: 'Net sales by event' }]
         : []),
     ],
@@ -119,7 +126,7 @@ export default async function EventAnalyticsPage({ params }: Props) {
       </div>
 
       {/* ── Money ── */}
-      {canSeeMoney ? (
+      {canSeeSales ? (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-900">Financial</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -130,21 +137,23 @@ export default async function EventAnalyticsPage({ params }: Props) {
               icon={Wallet}
               accent="text-gold-deep bg-gold/10"
             />
-            <StatTile
-              label="Lyante commission"
-              value={
-                a.money.commissionIncome === null
-                  ? '—'
-                  : nprCompact(a.money.commissionIncome)
-              }
-              hint={
-                a.money.commissionRate === null
-                  ? 'No rate on record — set it on the event'
-                  : `${a.money.commissionRate}% of net collected`
-              }
-              icon={Percent}
-              accent="text-emerald-700 bg-emerald-50"
-            />
+            {canSeeCommission && (
+              <StatTile
+                label="Lyante commission"
+                value={
+                  a.money.commissionIncome === null
+                    ? '—'
+                    : nprCompact(a.money.commissionIncome)
+                }
+                hint={
+                  a.money.commissionRate === null
+                    ? 'No rate on record — set it on the event'
+                    : `${a.money.commissionRate}% of net collected`
+                }
+                icon={Percent}
+                accent="text-emerald-700 bg-emerald-50"
+              />
+            )}
             <StatTile
               label="Avg ticket price"
               value={nprOrDash(a.averageTicketPrice)}
@@ -168,7 +177,7 @@ export default async function EventAnalyticsPage({ params }: Props) {
               accent="text-gray-500 bg-gray-100"
             />
           </div>
-          {a.money.commissionRate === null && (
+          {canSeeCommission && a.money.commissionRate === null && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
               This event has no commission rate recorded, so its income cannot be
               calculated. Add the agreed rate in{' '}
@@ -181,7 +190,7 @@ export default async function EventAnalyticsPage({ params }: Props) {
         </section>
       ) : (
         <p className="text-xs text-gray-500 bg-gray-50 border border-black/5 rounded-md px-3 py-2">
-          Financial figures are restricted to administrators.
+          Financial figures are restricted for your role.
         </p>
       )}
 
@@ -268,7 +277,7 @@ export default async function EventAnalyticsPage({ params }: Props) {
         </ChartCard>
       </section>
 
-      {canSeeMoney && (
+      {peers && (
         <>
           <Separator />
           <section className="space-y-3">

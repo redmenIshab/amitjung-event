@@ -11,6 +11,7 @@ import {
   BarChart3,
 } from 'lucide-react'
 import { requirePageCapability, hasCapability } from '@/lib/rbac'
+import { visibleEventIds } from '@/lib/eventAccess'
 import { getPlatformAnalytics } from '@/lib/analytics'
 import { getCachedUpcomingEvents } from '@/lib/upstash/services/event-cache'
 import { StatTile } from '@/components/dashboard/StatTile'
@@ -27,13 +28,20 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const session = await requirePageCapability('DASHBOARD_VIEW')
-  // Money is admin-only; volume metrics are visible to all dashboard roles.
-  const canSeeMoney = hasCapability(session.user.role, 'FINANCE_READ')
+  // Money splits two ways: an organizer sees sales for their own events,
+  // ADMIN additionally sees commission and platform-wide figures.
+  const canSeeSales = hasCapability(session.user.role, 'SALES_READ')
+  const canSeeCommission = hasCapability(session.user.role, 'FINANCE_READ')
+  // null = the whole platform; an array confines every figure to those events.
+  const scope = await visibleEventIds(session)
 
-  const [a, upcomingEvents] = await Promise.all([
-    getPlatformAnalytics(),
+  const [a, allUpcoming] = await Promise.all([
+    getPlatformAnalytics(scope),
     getCachedUpcomingEvents(),
   ])
+  const upcomingEvents = scope
+    ? allUpcoming.filter((e) => scope.includes(e.id))
+    : allUpcoming
 
   const sold = a.tickets.total - a.tickets.cancelled
 
@@ -41,11 +49,15 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm">All-time performance across every event</p>
+        <p className="text-gray-500 text-sm">
+          {scope
+            ? 'All-time performance across your events'
+            : 'All-time performance across every event'}
+        </p>
       </div>
 
       {/* ── Financial ── */}
-      {canSeeMoney && (
+      {canSeeSales && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-900">Financial</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -56,17 +68,19 @@ export default async function DashboardPage() {
               icon={Wallet}
               accent="text-gold-deep bg-gold/10"
             />
-            <StatTile
-              label="Lyante commission"
-              value={a.commissionIncome === null ? '—' : nprCompact(a.commissionIncome)}
-              hint={
-                a.eventsWithoutRate > 0
-                  ? `${a.eventsWithoutRate} event${a.eventsWithoutRate === 1 ? '' : 's'} with sales have no rate set`
-                  : 'Summed per event at its own rate'
-              }
-              icon={Percent}
-              accent="text-emerald-700 bg-emerald-50"
-            />
+            {canSeeCommission && (
+              <StatTile
+                label="Lyante commission"
+                value={a.commissionIncome === null ? '—' : nprCompact(a.commissionIncome)}
+                hint={
+                  a.eventsWithoutRate > 0
+                    ? `${a.eventsWithoutRate} event${a.eventsWithoutRate === 1 ? '' : 's'} with sales have no rate set`
+                    : 'Summed per event at its own rate'
+                }
+                icon={Percent}
+                accent="text-emerald-700 bg-emerald-50"
+              />
+            )}
             <StatTile
               label="Refund rate"
               value={
@@ -90,7 +104,7 @@ export default async function DashboardPage() {
               accent="text-blue-700 bg-blue-50"
             />
           </div>
-          {a.eventsWithoutRate > 0 && (
+          {canSeeCommission && a.eventsWithoutRate > 0 && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
               Commission excludes {a.eventsWithoutRate} event
               {a.eventsWithoutRate === 1 ? '' : 's'} that made sales without a
@@ -119,20 +133,27 @@ export default async function DashboardPage() {
             icon={CheckCircle2}
             accent="text-emerald-700 bg-emerald-50"
           />
-          <StatTile
-            label="Registered users"
-            value={a.users.participants.toLocaleString()}
-            hint={`${a.users.staff} staff account${a.users.staff === 1 ? '' : 's'}`}
-            icon={Users}
-            accent="text-blue-700 bg-blue-50"
-          />
-          <StatTile
-            label="New users"
-            value={a.users.newParticipants30d.toLocaleString()}
-            hint="Joined in the last 30 days"
-            icon={UserPlus}
-            accent="text-gray-500 bg-gray-100"
-          />
+          {/* Platform-wide people counts are not scoped to an event, so they
+              stay with the platform owner rather than showing an organizer
+              figures that have nothing to do with their show. */}
+          {canSeeCommission && (
+            <>
+              <StatTile
+                label="Registered users"
+                value={a.users.participants.toLocaleString()}
+                hint={`${a.users.staff} staff account${a.users.staff === 1 ? '' : 's'}`}
+                icon={Users}
+                accent="text-blue-700 bg-blue-50"
+              />
+              <StatTile
+                label="New users"
+                value={a.users.newParticipants30d.toLocaleString()}
+                hint="Joined in the last 30 days"
+                icon={UserPlus}
+                accent="text-gray-500 bg-gray-100"
+              />
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -172,7 +193,9 @@ export default async function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard
           title="Purchases over time"
-          subtitle="Completed payments per day, all events"
+          subtitle={
+            scope ? 'Completed payments per day, your events' : 'Completed payments per day, all events'
+          }
           columns={['Day', 'Purchases']}
           rows={a.salesTrend.map((d) => [shortDay(d.day), d.count])}
           empty="No completed purchases yet."
@@ -182,7 +205,9 @@ export default async function DashboardPage() {
 
         <ChartCard
           title="Ticket status"
-          subtitle="Every issued ticket across the platform"
+          subtitle={
+            scope ? 'Every issued ticket for your events' : 'Every issued ticket across the platform'
+          }
           columns={['Status', 'Tickets']}
           rows={[
             ['Checked in', a.tickets.checkedIn],
@@ -199,7 +224,7 @@ export default async function DashboardPage() {
         </ChartCard>
       </section>
 
-      {canSeeMoney && (
+      {canSeeSales && (
         <ChartCard
           title="Top events by net sales"
           subtitle="Highest-earning events, after refunds"

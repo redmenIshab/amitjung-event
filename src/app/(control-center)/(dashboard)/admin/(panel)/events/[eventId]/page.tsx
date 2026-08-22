@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart3 } from 'lucide-react'
-import { requirePageCapability, hasCapability } from '@/lib/rbac'
+import { hasCapability } from '@/lib/rbac'
+import { requireEventPageCapability } from '@/lib/eventAccess'
 import { prisma } from '@/lib/prisma'
 import { TicketTable } from '@/components/tickets/TicketTable'
 import { buttonVariants } from '@/components/ui/button'
@@ -20,9 +21,9 @@ type Props = { params: Promise<{ eventId: string }> }
 export const dynamic = 'force-dynamic'
 
 export default async function EventDetailPage({ params }: Props) {
-  const session = await requirePageCapability('DASHBOARD_VIEW')
-
   const { eventId } = await params
+  // Scoped: an organizer reaches only the events they are assigned to.
+  const session = await requireEventPageCapability('EVENT_READ', eventId)
   // Read directly from the DB (not the cache) so admin sees the true state.
   const eventRow = await prisma.event.findUnique({
     where: { id: eventId },
