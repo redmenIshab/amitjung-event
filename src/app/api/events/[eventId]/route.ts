@@ -7,6 +7,9 @@ import { getCachedEvent, invalidateEventCache } from '@/lib/upstash/services/eve
 
 type Params = { params: Promise<{ eventId: string }> }
 
+// Public by design: the buyer-facing event page reads this. Event scoping
+// applies to Control Center data (analytics, attendees, team), not to the
+// public event record — see ARCHITECTURE §15.4.
 export async function GET(_req: Request, { params }: Params) {
   try {
     const { eventId } = await params

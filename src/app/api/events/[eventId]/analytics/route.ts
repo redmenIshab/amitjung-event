@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { requireApiCapability } from '@/lib/rbac'
+import { requireEventApiCapability } from '@/lib/eventAccess'
 import { prisma } from '@/lib/prisma'
 
 type Params = { params: Promise<{ eventId: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
-  const gate = await requireApiCapability('ANALYTICS_READ')
-  if (gate instanceof NextResponse) return gate
-
   const { eventId } = await params
+  const gate = await requireEventApiCapability('ANALYTICS_READ', eventId)
+  if (gate instanceof NextResponse) return gate
 
   const [tickets, checkIns] = await Promise.all([
     prisma.ticket.groupBy({
