@@ -14,11 +14,14 @@ export default async function EventDetailPage({ params }: Props) {
     const { id } = await params
 
     // Read directly from the data layer (no self-fetch over HTTP).
-    const eventRow = await getCachedEvent(id)
+    // Parallel: the cached event and its live sold count are independent.
+    const [eventRow, soldCount] = await Promise.all([
+        getCachedEvent(id),
+        prisma.ticket.count({
+            where: { eventId: id, status: { not: 'CANCELLED' } },
+        }),
+    ])
     if (!eventRow) notFound()
-    const soldCount = await prisma.ticket.count({
-        where: { eventId: id, status: { not: 'CANCELLED' } },
-    })
     const parsed = eventDetailSchema.safeParse(
         JSON.parse(JSON.stringify({ ...eventRow, soldCount })),
     )

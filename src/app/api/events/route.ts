@@ -9,8 +9,9 @@ export async function GET() {
   try {
     const events = await getCachedEvents()
 
-    // Sold counts are read live (never from the day-long event cache) so
-    // availability/badges stay accurate as tickets are purchased.
+    // Sold counts are read live (never from the 60s event cache) so
+    // availability/badges stay accurate as tickets are purchased. Cheap since
+    // Ticket(eventId, status) is indexed; before that this scanned the table.
     const sold = await prisma.ticket.groupBy({
       by: ['eventId'],
       where: { status: { not: 'CANCELLED' } },
